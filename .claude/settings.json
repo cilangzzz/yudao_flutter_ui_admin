@@ -5,7 +5,9 @@
       "Bash(flutter pub get)",
       "Bash(flutter analyze --no-fatal-infos)",
       "Bash(flutter analyze lib/models/system/ lib/api/system/)",
-      "Read(//h/Documents/toly_ui/**)"
+      "Read(//h/Documents/toly_ui/**)",
+      "Bash(flutter analyze lib/api/auth_api.dart lib/models/common/api_response.dart)",
+      "Bash(flutter analyze lib/core/api_client.dart)"
     ],
     "additionalDirectories": [
       "h:\\Documents\\toly_ui\\.claude\\skills"

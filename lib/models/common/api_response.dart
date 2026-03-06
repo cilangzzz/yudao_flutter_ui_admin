@@ -14,12 +14,20 @@ class ApiResponse<T> {
     Map<String, dynamic> json,
     T Function(dynamic)? fromJsonT,
   ) {
+    // 兼容 httpbin 响应格式（没有 code/msg 字段时视为成功）
+    final hasCode = json.containsKey('code');
+    final code = hasCode ? (json['code'] as int? ?? -1) : 0;
+    final msg = hasCode ? (json['msg'] as String? ?? '') : 'success';
+
+    // httpbin 响应：数据在 json 字段中；标准响应：数据在 data 字段中
+    final dataJson = json['json'] ?? json['data'];
+
     return ApiResponse(
-      code: json['code'] as int? ?? -1,
-      msg: json['msg'] as String? ?? '',
-      data: json['data'] != null && fromJsonT != null
-          ? fromJsonT(json['data'])
-          : json['data'] as T?,
+      code: code,
+      msg: msg,
+      data: dataJson != null && fromJsonT != null
+          ? fromJsonT(dataJson)
+          : dataJson as T?,
     );
   }
 

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'constants/app_constants.dart';
@@ -35,6 +36,11 @@ class ApiClient {
 
   ApiClient(this._dio);
 
+  /// JSON 请求选项
+  Options get _jsonOptions => Options(
+        headers: {'Content-Type': 'application/json'},
+      );
+
   /// GET 请求
   Future<ApiResponse<T>> get<T>(
     String path, {
@@ -45,12 +51,12 @@ class ApiClient {
     final response = await _dio.get<dynamic>(
       path,
       queryParameters: queryParameters,
-      options: options,
+      options: options ?? _jsonOptions,
     );
     return _handleResponse<T>(response, fromJsonT);
   }
 
-  /// POST 请求
+  /// POST 请求 (JSON 格式)
   Future<ApiResponse<T>> post<T>(
     String path, {
     dynamic data,
@@ -58,16 +64,18 @@ class ApiClient {
     T Function(dynamic)? fromJsonT,
     Options? options,
   }) async {
+    // 显式将数据转为 JSON 字符串
+    final jsonData = data != null ? jsonEncode(data) : null;
     final response = await _dio.post<dynamic>(
       path,
-      data: data,
+      data: jsonData,
       queryParameters: queryParameters,
-      options: options,
+      options: options ?? _jsonOptions,
     );
     return _handleResponse<T>(response, fromJsonT);
   }
 
-  /// PUT 请求
+  /// PUT 请求 (JSON 格式)
   Future<ApiResponse<T>> put<T>(
     String path, {
     dynamic data,
@@ -75,16 +83,17 @@ class ApiClient {
     T Function(dynamic)? fromJsonT,
     Options? options,
   }) async {
+    final jsonData = data != null ? jsonEncode(data) : null;
     final response = await _dio.put<dynamic>(
       path,
-      data: data,
+      data: jsonData,
       queryParameters: queryParameters,
-      options: options,
+      options: options ?? _jsonOptions,
     );
     return _handleResponse<T>(response, fromJsonT);
   }
 
-  /// DELETE 请求
+  /// DELETE 请求 (JSON 格式)
   Future<ApiResponse<T>> delete<T>(
     String path, {
     dynamic data,
@@ -92,11 +101,12 @@ class ApiClient {
     T Function(dynamic)? fromJsonT,
     Options? options,
   }) async {
+    final jsonData = data != null ? jsonEncode(data) : null;
     final response = await _dio.delete<dynamic>(
       path,
-      data: data,
+      data: jsonData,
       queryParameters: queryParameters,
-      options: options,
+      options: options ?? _jsonOptions,
     );
     return _handleResponse<T>(response, fromJsonT);
   }
