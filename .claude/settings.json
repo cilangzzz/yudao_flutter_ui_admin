@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "additionalDirectories": [
+      "h:\\Documents\\toly_ui\\.claude\\skills"
+    ],
+    "allow": [
+      "Bash(git ls-remote https://github.com/cilangzzz/yudao_flutter_ui_admin.git)"
+    ]
+  }
+}
