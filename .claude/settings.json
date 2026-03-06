@@ -3,7 +3,9 @@
     "allow": [
       "Bash(git ls-remote https://github.com/cilangzzz/yudao_flutter_ui_admin.git)",
       "Bash(flutter pub get)",
-      "Bash(flutter analyze --no-fatal-infos)"
+      "Bash(flutter analyze --no-fatal-infos)",
+      "Bash(flutter analyze lib/models/system/ lib/api/system/)",
+      "Read(//h/Documents/toly_ui/**)"
     ],
     "additionalDirectories": [
       "h:\\Documents\\toly_ui\\.claude\\skills"
