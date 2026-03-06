@@ -64,6 +64,12 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
       label: '菜单管理',
       path: Routes.menu,
     ),
+    _NavigationItem(
+      icon: Icons.account_tree_outlined,
+      selectedIcon: Icons.account_tree,
+      label: '部门管理',
+      path: Routes.dept,
+    ),
   ];
 
   void _handleNavigation(int index) {

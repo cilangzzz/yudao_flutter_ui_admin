@@ -1,3 +1,5 @@
+import '../common/page_param.dart';
+
 /// 角色模型
 class Role {
   final int? id;
@@ -97,5 +99,35 @@ class SimpleRole {
       name: json['name'] as String? ?? '',
       code: json['code'] as String? ?? '',
     );
+  }
+}
+
+/// 角色查询参数
+class RolePageParam extends PageParam {
+  final String? name;
+  final String? code;
+  final int? status;
+
+  const RolePageParam({
+    super.pageNum = 1,
+    super.pageSize = 10,
+    this.name,
+    this.code,
+    this.status,
+  });
+
+  @override
+  Map<String, dynamic> toJson() {
+    final json = super.toJson();
+    if (name != null && name!.isNotEmpty) {
+      json['name'] = name;
+    }
+    if (code != null && code!.isNotEmpty) {
+      json['code'] = code;
+    }
+    if (status != null) {
+      json['status'] = status;
+    }
+    return json;
   }
 }

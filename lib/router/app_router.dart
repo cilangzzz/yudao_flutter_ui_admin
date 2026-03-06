@@ -8,6 +8,7 @@ import '../pages/dashboard/dashboard_page.dart';
 import '../pages/system/user/user_page.dart';
 import '../pages/system/role/role_page.dart';
 import '../pages/system/menu/menu_page.dart';
+import '../pages/system/dept/dept_page.dart';
 
 /// 路由路径常量
 class Routes {
@@ -19,6 +20,7 @@ class Routes {
   static const String user = '/system/user';
   static const String role = '/system/role';
   static const String menu = '/system/menu';
+  static const String dept = '/system/dept';
 }
 
 /// 路由配置提供者
@@ -81,6 +83,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: Routes.menu,
             name: 'menu',
             builder: (context, state) => const MenuPage(),
+          ),
+
+          // 系统管理 - 部门管理
+          GoRoute(
+            path: Routes.dept,
+            name: 'dept',
+            builder: (context, state) => const DeptPage(),
           ),
         ],
       ),
