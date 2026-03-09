@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../api/system/operate_log_api.dart';
 import '../../../models/system/operate_log.dart';
 import '../../../models/common/page_result.dart';
+import '../../../i18n/i18n.dart';
 
 /// 操作日志管理页面
 class OperateLogPage extends ConsumerStatefulWidget {
@@ -76,14 +77,14 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(response.msg ?? '加载失败')),
+            SnackBar(content: Text(response.msg ?? S.current.operateLog_loadFailed)),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('加载失败: $e')),
+          SnackBar(content: Text('${S.current.operateLog_loadFailed}: $e')),
         );
       }
     } finally {
@@ -115,7 +116,7 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('操作日志详情'),
+        title: Text(S.current.operateLog_detailTitle),
         content: SizedBox(
           width: 600,
           child: SingleChildScrollView(
@@ -123,28 +124,28 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildDetailItem('日志编号', log.id?.toString() ?? '-'),
+                _buildDetailItem(S.current.operateLog_logId, log.id?.toString() ?? '-'),
                 if (log.traceId != null && log.traceId!.isNotEmpty)
-                  _buildDetailItem('链路追踪', log.traceId!),
-                _buildDetailItem('操作人编号', log.userId?.toString() ?? '-'),
-                _buildDetailItem('操作人类型', _getUserTypeText(log.userType)),
-                _buildDetailItem('操作人名字', log.userName ?? '-'),
-                _buildDetailItem('操作人 IP', log.userIp ?? '-'),
+                  _buildDetailItem(S.current.operateLog_traceId, log.traceId!),
+                _buildDetailItem(S.current.operateLog_userId, log.userId?.toString() ?? '-'),
+                _buildDetailItem(S.current.operateLog_userType, _getUserTypeText(log.userType)),
+                _buildDetailItem(S.current.operateLog_userName, log.userName ?? '-'),
+                _buildDetailItem(S.current.operateLog_userIp, log.userIp ?? '-'),
                 if (log.userAgent != null && log.userAgent!.isNotEmpty)
-                  _buildDetailItem('操作人 UA', log.userAgent!),
-                _buildDetailItem('操作模块', log.type ?? '-'),
-                _buildDetailItem('操作名', log.subType ?? '-'),
-                _buildDetailItem('操作内容', log.action ?? '-'),
+                  _buildDetailItem(S.current.operateLog_userAgent, log.userAgent!),
+                _buildDetailItem(S.current.operateLog_module, log.type ?? '-'),
+                _buildDetailItem(S.current.operateLog_actionName, log.subType ?? '-'),
+                _buildDetailItem(S.current.operateLog_actionContent, log.action ?? '-'),
                 if (log.extra != null && log.extra!.isNotEmpty)
-                  _buildDetailItem('操作拓展参数', log.extra!),
+                  _buildDetailItem(S.current.operateLog_extra, log.extra!),
                 _buildDetailItem(
-                  '请求 URL',
+                  S.current.operateLog_requestUrl,
                   log.requestMethod != null && log.requestUrl != null
                       ? '${log.requestMethod} ${log.requestUrl}'
                       : log.requestUrl ?? '-',
                 ),
-                _buildDetailItem('操作时间', log.createTime ?? '-'),
-                _buildDetailItem('业务编号', log.bizId?.toString() ?? '-'),
+                _buildDetailItem(S.current.operateLog_operateTime, log.createTime ?? '-'),
+                _buildDetailItem(S.current.operateLog_bizId, log.bizId?.toString() ?? '-'),
               ],
             ),
           ),
@@ -152,7 +153,7 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('关闭'),
+            child: Text(S.current.common_close),
           ),
         ],
       ),
@@ -186,9 +187,9 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
   String _getUserTypeText(int? userType) {
     switch (userType) {
       case 1:
-        return '管理员';
+        return S.current.operateLog_userTypeAdmin;
       case 2:
-        return '会员';
+        return S.current.operateLog_userTypeMember;
       default:
         return '-';
     }
@@ -224,10 +225,10 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
             width: 180,
             child: TextField(
               controller: _userNameController,
-              decoration: const InputDecoration(
-                hintText: '操作人',
-                prefixIcon: Icon(Icons.person),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: S.current.operateLog_userName,
+                prefixIcon: const Icon(Icons.person),
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
               onSubmitted: (_) => _search(),
@@ -239,10 +240,10 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
             width: 180,
             child: TextField(
               controller: _typeController,
-              decoration: const InputDecoration(
-                hintText: '操作模块',
-                prefixIcon: Icon(Icons.folder),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: S.current.operateLog_module,
+                prefixIcon: const Icon(Icons.folder),
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
               onSubmitted: (_) => _search(),
@@ -254,10 +255,10 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
             width: 180,
             child: TextField(
               controller: _subTypeController,
-              decoration: const InputDecoration(
-                hintText: '操作名',
-                prefixIcon: Icon(Icons.label),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: S.current.operateLog_actionName,
+                prefixIcon: const Icon(Icons.label),
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
               onSubmitted: (_) => _search(),
@@ -269,10 +270,10 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
             width: 180,
             child: TextField(
               controller: _actionController,
-              decoration: const InputDecoration(
-                hintText: '操作内容',
-                prefixIcon: Icon(Icons.description),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: S.current.operateLog_actionContent,
+                prefixIcon: const Icon(Icons.description),
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
               onSubmitted: (_) => _search(),
@@ -284,10 +285,10 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
             width: 180,
             child: TextField(
               controller: _bizIdController,
-              decoration: const InputDecoration(
-                hintText: '业务编号',
-                prefixIcon: Icon(Icons.tag),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: S.current.operateLog_bizId,
+                prefixIcon: const Icon(Icons.tag),
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
               onSubmitted: (_) => _search(),
@@ -312,16 +313,16 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
                 }
               },
               child: InputDecorator(
-                decoration: const InputDecoration(
-                  hintText: '操作时间',
-                  prefixIcon: Icon(Icons.date_range),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  hintText: S.current.operateLog_operateTime,
+                  prefixIcon: const Icon(Icons.date_range),
+                  border: const OutlineInputBorder(),
                   isDense: true,
                 ),
                 child: Text(
                   _dateRange != null
                       ? '${_dateRange!.start.toString().substring(0, 10)} ~ ${_dateRange!.end.toString().substring(0, 10)}'
-                      : '选择时间范围',
+                      : S.current.common_selectTimeRange,
                   style: TextStyle(
                     color: _dateRange != null ? null : Colors.grey,
                   ),
@@ -334,14 +335,14 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
           ElevatedButton.icon(
             onPressed: _search,
             icon: const Icon(Icons.search),
-            label: const Text('搜索'),
+            label: Text(S.current.common_search),
           ),
 
           // 重置按钮
           OutlinedButton.icon(
             onPressed: _reset,
             icon: const Icon(Icons.refresh),
-            label: const Text('重置'),
+            label: Text(S.current.common_reset),
           ),
         ],
       ),
@@ -356,7 +357,7 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: PaginatedDataTable(
-        header: Text('操作日志列表 (共 $_totalCount 条)'),
+        header: Text('${S.current.operateLog_list} (${S.current.common_totalCount(_totalCount)})'),
         rowsPerPage: _pageSize,
         availableRowsPerPage: const [10, 20, 50, 100],
         onPageChanged: (page) {
@@ -371,16 +372,16 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
             _loadData();
           }
         },
-        columns: const [
-          DataColumn(label: Text('日志编号')),
-          DataColumn(label: Text('操作人')),
-          DataColumn(label: Text('操作模块')),
-          DataColumn(label: Text('操作名')),
-          DataColumn(label: Text('操作内容')),
-          DataColumn(label: Text('操作时间')),
-          DataColumn(label: Text('业务编号')),
-          DataColumn(label: Text('操作IP')),
-          DataColumn(label: Text('操作')),
+        columns: [
+          DataColumn(label: Text(S.current.operateLog_logId)),
+          DataColumn(label: Text(S.current.operateLog_userName)),
+          DataColumn(label: Text(S.current.operateLog_module)),
+          DataColumn(label: Text(S.current.operateLog_actionName)),
+          DataColumn(label: Text(S.current.operateLog_actionContent)),
+          DataColumn(label: Text(S.current.operateLog_operateTime)),
+          DataColumn(label: Text(S.current.operateLog_bizId)),
+          DataColumn(label: Text(S.current.operateLog_userIp)),
+          DataColumn(label: Text(S.current.common_operation)),
         ],
         source: _OperateLogDataSource(_logs, context, _showDetail),
       ),
@@ -427,7 +428,7 @@ class _OperateLogDataSource extends DataTableSource {
           TextButton.icon(
             onPressed: () => onShowDetail(log),
             icon: const Icon(Icons.visibility, size: 18),
-            label: const Text('详情'),
+            label: Text(S.current.common_detail),
           ),
         ),
       ],

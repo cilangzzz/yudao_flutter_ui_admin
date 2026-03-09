@@ -1,0 +1,1618 @@
+import 'dart:convert';
+import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
+
+/// 国际化字符串类
+abstract class S {
+  static const LocalizationsDelegate<S> delegate = _AppLocalizationsDelegate();
+  static S? _current;
+
+  static S get current {
+    assert(_current != null, 'S.current is null. Did you forget to add S.delegate to MaterialApp?');
+    return _current!;
+  }
+
+  static S of(BuildContext context) {
+    return Localizations.of<S>(context, S)!;
+  }
+
+  // 支持的语言列表
+  static const List<Locale> supportedLocales = [
+    Locale('zh', 'CN'),
+    Locale('en', 'US'),
+  ];
+
+  // 通用翻译 - 应用信息
+  String get appName;
+  String get appVersion;
+
+  // 通用翻译 - 认证相关
+  String get login;
+  String get logout;
+  String get username;
+  String get password;
+  String get confirmPassword;
+  String get rememberMe;
+  String get forgetPassword;
+  String get register;
+  String get captcha;
+  String get sendCaptcha;
+
+  // 通用翻译 - 操作按钮
+  String get search;
+  String get reset;
+  String get add;
+  String get edit;
+  String get delete;
+  String get confirm;
+  String get cancel;
+  String get submit;
+  String get save;
+  String get close;
+  String get refresh;
+  String get export;
+  String get import;
+  String get download;
+  String get upload;
+  String get copy;
+  String get move;
+  String get view;
+  String get detail;
+  String get more;
+  String get expand;
+  String get collapse;
+  String get selectAll;
+  String get clearAll;
+  String get filter;
+  String get sort;
+
+  // 通用翻译 - 状态
+  String get status;
+  String get enabled;
+  String get disabled;
+  String get normal;
+  String get stopped;
+  String get pending;
+  String get processing;
+  String get success;
+  String get failed;
+  String get warning;
+  String get error;
+  String get info;
+  String get online;
+  String get offline;
+
+  // 通用翻译 - 时间
+  String get createTime;
+  String get updateTime;
+  String get startTime;
+  String get endTime;
+  String get expireTime;
+  String get lastLoginTime;
+  String get duration;
+  String get today;
+  String get yesterday;
+  String get thisWeek;
+  String get thisMonth;
+  String get thisYear;
+  String get custom;
+
+  // 通用翻译 - 表格/列表
+  String get operation;
+  String get action;
+  String get index;
+  String get total;
+  String get items;
+  String get page;
+  String get pageSize;
+  String get prevPage;
+  String get nextPage;
+  String get firstPage;
+  String get lastPage;
+  String get jumpTo;
+  String get rowsPerPage;
+
+  // 通用翻译 - 提示信息
+  String get loading;
+  String get loadFailed;
+  String get noData;
+  String get noMore;
+  String get retry;
+  String get operationSuccess;
+  String get operationFailed;
+  String get deleteSuccess;
+  String get deleteFailed;
+  String get saveSuccess;
+  String get saveFailed;
+  String get confirmDelete;
+  String get confirmOperation;
+  String get pleaseConfirm;
+  String get tips;
+  String get notice;
+  String get message;
+  String get notification;
+
+  // 通用翻译 - 用户相关
+  String get profile;
+  String get settings;
+  String get notLoggedIn;
+  String get welcome;
+  String get hello;
+  String get goodbye;
+  String get personalCenter;
+  String get changePassword;
+  String get oldPassword;
+  String get newPassword;
+
+  // 通用翻译 - 表单
+  String get pleaseEnter;
+  String get pleaseSelect;
+  String get pleaseInput;
+  String get pleaseChoose;
+  String get pleaseEnterUsername;
+  String get pleaseEnterPassword;
+  String get pleaseEnterConfirmPassword;
+  String get pleaseEnterOldPassword;
+  String get pleaseEnterNewPassword;
+  String get pleaseEnterCaptcha;
+  String get pleaseEnterKeyword;
+  String get requiredField;
+  String get invalidFormat;
+  String get minLength;
+  String get maxLength;
+  String get passwordNotMatch;
+  String get usernameOrPasswordError;
+  String get loginFailed;
+  String get loginSuccess;
+  String get logoutSuccess;
+  String get logoutFailed;
+
+  // 通用翻译 - 验证
+  String get validateSuccess;
+  String get validateFailed;
+  String get fieldRequired;
+  String get fieldInvalid;
+  String get emailInvalid;
+  String get phoneInvalid;
+  String get urlInvalid;
+  String get numberInvalid;
+  String get dateInvalid;
+
+  // 通用翻译 - 系统菜单
+  String get system;
+  String get user;
+  String get role;
+  String get menu;
+  String get dept;
+  String get post;
+  String get dict;
+  String get dictData;
+  String get dictType;
+  String get log;
+  String get loginLog;
+  String get operateLog;
+  String get config;
+  String get permission;
+  String get area;
+
+  // 通用翻译 - 其他
+  String get yes;
+  String get no;
+  String get ok;
+  String get back;
+  String get home;
+  String get dashboard;
+  String get help;
+  String get about;
+  String get feedback;
+  String get language;
+  String get theme;
+  String get darkMode;
+  String get lightMode;
+  String get systemMode;
+  String get version;
+  String get copyright;
+  String get allRightsReserved;
+
+  // 角色管理
+  String get roleManagement;
+  String get roleList;
+  String get addRole;
+  String get roleName;
+  String get roleCode;
+
+  // 菜单管理
+  String get menuManagement;
+  String get addMenu;
+  String get menuName;
+  String get icon;
+  String get routePath;
+
+  // 部门管理
+  String get deptManagement;
+  String get deptList;
+  String get addDept;
+  String get editDept;
+  String get deptName;
+  String get leader;
+  String get phone;
+  String get email;
+  String get searchDeptName;
+  String get expandAll;
+  String get collapseAll;
+  String get confirmDeleteDept;
+
+  // 地区管理
+  String get areaManagement;
+  String get areaCode;
+  String get areaName;
+  String get ipQuery;
+  String get ipAddress;
+  String get pleaseInputIp;
+  String get queryResult;
+  String get queryFailed;
+
+  // 通知消息管理
+  String get notifyMessageManagement;
+  String get notifyMessageList;
+  String get noMessages;
+  String get notifyMessage;
+  String get messageId;
+  String get senderName;
+  String get messageContent;
+  String get readStatus;
+  String get read;
+  String get unread;
+  String get readTime;
+  String get siteMessage;
+  String get mail;
+  String get sms;
+  String get unknown;
+
+  // 通知模板管理
+  String get notifyTemplateManagement;
+  String get addNotifyTemplate;
+  String get editNotifyTemplate;
+  String get noTemplateData;
+  String get templateList;
+  String get sender;
+  String get supportParamFormat;
+  String get sendTest;
+  String get receiverUserId;
+  String get inputUserId;
+  String get pleaseInputValidUserId;
+  String get sendSuccess;
+  String get sendFailed;
+  String get addTemplate;
+
+  // 邮件账号管理
+  String get mailAccountManagement;
+  String get mailAccountList;
+  String get addMailAccount;
+  String get editMailAccount;
+  String get mailAddress;
+  String get smtpServer;
+  String get smtpPort;
+  String get smtpServerPort;
+  String get sslEnable;
+  String get starttlsEnable;
+  String get pleaseInputMail;
+  String get pleaseInputUsername;
+  String get pleaseInputPassword;
+  String get pleaseInputSmtpServer;
+  String get pleaseInputPort;
+  String get confirmDeleteMailAccount;
+
+  // 邮件模板管理
+  String get mailTemplateManagement;
+  String get mailTemplateList;
+  String get addMailTemplate;
+  String get editMailTemplate;
+  String get templateTitle;
+  String get mailAccount;
+  String get pleaseInputTemplateName;
+  String get pleaseInputTemplateCode;
+  String get pleaseSelectMailAccount;
+  String get pleaseInputTemplateTitle;
+  String get pleaseInputTemplateContent;
+  String get confirmDeleteMailTemplate;
+  String get testSendMail;
+  String get toMail;
+  String get ccMail;
+  String get bccMail;
+  String get multipleMailsHint;
+  String get pleaseInputToMail;
+  String get pleaseInputParamValue;
+  String get param;
+  String get mailSendSuccess;
+  String get mailSendFailed;
+
+  // 邮件日志管理
+  String get mailLogManagement;
+  String get mailLogList;
+  String get userId;
+  String get templateId;
+  String get userType;
+  String get admin;
+  String get member;
+  String get sendStatus;
+  String get sending;
+  String get sendSuccessStatus;
+  String get sendFailedStatus;
+  String get notSend;
+  String get sendTime;
+  String get fromMail;
+  String get toMails;
+  String get ccMails;
+  String get bccMails;
+  String get mailTitle;
+  String get sendMessageId;
+  String get sendException;
+  String get mailLogDetail;
+
+  // 短信渠道管理
+  String get smsChannelManagement;
+  String get smsChannelList;
+  String get addSmsChannel;
+  String get editSmsChannel;
+  String get smsSignature;
+  String get channelCode;
+  String get channelStatus;
+  String get smsApiKey;
+  String get smsApiSecret;
+  String get smsCallbackUrl;
+  String get searchSmsSignature;
+  String get pleaseFillRequired;
+  String get confirmDeleteSmsChannel;
+  String get aliyun;
+  String get tencentCloud;
+  String get huaweiCloud;
+  String get yunpian;
+  String get apiAccount;
+
+  // 短信日志管理
+  String get smsLogManagement;
+  String get smsLogList;
+  String get mobile;
+  String get smsChannel;
+  String get smsContent;
+  String get receiveStatus;
+  String get receiveTime;
+  String get smsLogDetail;
+  String get apiSendCode;
+  String get apiSendMsg;
+  String get apiReceiveCode;
+  String get apiReceiveMsg;
+  String get apiRequestId;
+  String get apiSerialNo;
+  String get initialized;
+  String get waitingReceive;
+  String get receiveSuccess;
+  String get receiveFailed;
+  String get totalRecords;
+
+  // 短信模板管理
+  String get smsTemplateManagement;
+  String get smsTemplateList;
+  String get addSmsTemplate;
+  String get editSmsTemplate;
+  String get smsType;
+  String get verifyCode;
+  // String get notification;
+  String get marketing;
+  String get apiTemplateId;
+  String get apiTemplateNo;
+  String get smsTemplateContentHint;
+  String get confirmDeleteSmsTemplate;
+  String get testSendSms;
+  String get mobileNumber;
+  String get pleaseInputMobile;
+  String get smsSendSuccess;
+
+  // 其他通用
+  String get id;
+  String get code;
+  String get name;
+  String get nickname;
+  String get content;
+  String get type;
+  String get templateCode;
+  String get templateName;
+  String get templateContent;
+  String get templateType;
+  String get templateParams;
+  String get testBtn;
+  String get open;
+  String get closed;
+  String get all;
+
+  // 租户管理
+  String get tenantName;
+  String get tenantPackage;
+  String get contactName;
+  String get contactMobile;
+  String get accountLimit;
+  String get tenantList;
+  String get addTenant;
+  String get editTenant;
+  String get searchTenantName;
+  String get tenantNameRequired;
+  String get tenantPackageRequired;
+  String get expireTimeFormat;
+  String get bindDomain;
+  String get confirmDeleteTenant;
+
+  // 租户套餐管理
+  String get packageName;
+  String get packageNameRequired;
+  String get tenantPackageList;
+  String get addTenantPackageBtn;
+  String get editTenantPackage;
+  String get addTenantPackage;
+  String get searchPackageName;
+  String get pleaseFillPackageName;
+  String get relatedMenuIds;
+  String get menuIdsExample;
+  String get confirmDeletePackage;
+
+  // OAuth2 客户端管理
+  String get oauth2ClientList;
+  String get addOAuth2ClientTitle;
+  String get editOAuth2Client;
+  String get addClient;
+  String get searchClientName;
+  String get clientId;
+  String get clientIdRequired;
+  String get clientSecret;
+  // String get appName;
+  String get appNameRequired;
+  String get appIcon;
+  String get appDescription;
+  String get accessTokenValidity;
+  String get refreshTokenValidity;
+  String get seconds;
+  String get confirmDeleteOAuth2Client;
+
+  // OAuth2 令牌管理
+  String get oauth2TokenList;
+  String get accessToken;
+  String get refreshToken;
+  // String get userId;
+  // String get userType;
+  String get expiresTime;
+  String get searchClientId;
+  String get confirmDeleteToken;
+
+  // 用户类型
+  // String get admin;
+  // String get member;
+
+  // 社交客户端管理
+  String get socialClientList;
+  String get addSocialClient;
+  String get editSocialClient;
+  String get searchSocialClientName;
+  String get socialPlatform;
+  String get socialPlatformRequired;
+  String get userTypeRequired;
+  String get agentId;
+  String get publicKey;
+  String get confirmDeleteSocialClient;
+
+  // 社交平台类型
+  String get dingtalk;
+  String get wecom;
+  String get wechat;
+  String get qq;
+  String get weibo;
+  String get wechatMini;
+  String get wechatOpen;
+  String get qqMini;
+  String get alipayMini;
+
+  // 社交用户管理
+  String get socialUserList;
+  String get socialUserDetail;
+  String get searchNickname;
+  String get openid;
+  String get avatar;
+  String get rawUserInfo;
+  String get none;
+
+  // 提示信息
+  String get updateSuccess;
+  String get createSuccess;
+}
+
+/// 本地化代理
+class _AppLocalizationsDelegate extends LocalizationsDelegate<S> {
+  const _AppLocalizationsDelegate();
+
+  @override
+  bool isSupported(Locale locale) => ['zh', 'en'].contains(locale.languageCode);
+
+  @override
+  Future<S> load(Locale locale) async {
+    final String path = 'assets/i18n/${locale.languageCode}.json';
+    try {
+      final String json = await rootBundle.loadString(path);
+      final Map<String, dynamic> data = jsonDecode(json);
+      S._current = _AppLocalizations(data);
+    } catch (e) {
+      // 如果加载失败，使用默认中文
+      S._current = _AppLocalizations({});
+    }
+    return S._current!;
+  }
+
+  @override
+  bool shouldReload(LocalizationsDelegate<S> old) => false;
+}
+
+/// 本地化实现
+class _AppLocalizations extends S {
+  final Map<String, dynamic> _data;
+
+  _AppLocalizations(this._data);
+
+  String _get(String key, [String? defaultValue]) {
+    return _data[key]?.toString() ?? defaultValue ?? key;
+  }
+
+  // 应用信息
+  @override
+  String get appName => _get('appName', 'Yudao Admin');
+  @override
+  String get appVersion => _get('appVersion', 'Version');
+
+  // 认证相关
+  @override
+  String get login => _get('login', 'Login');
+  @override
+  String get logout => _get('logout', 'Logout');
+  @override
+  String get username => _get('username', 'Username');
+  @override
+  String get password => _get('password', 'Password');
+  @override
+  String get confirmPassword => _get('confirmPassword', 'Confirm Password');
+  @override
+  String get rememberMe => _get('rememberMe', 'Remember Me');
+  @override
+  String get forgetPassword => _get('forgetPassword', 'Forget Password');
+  @override
+  String get register => _get('register', 'Register');
+  @override
+  String get captcha => _get('captcha', 'Captcha');
+  @override
+  String get sendCaptcha => _get('sendCaptcha', 'Send Captcha');
+
+  // 操作按钮
+  @override
+  String get search => _get('search', 'Search');
+  @override
+  String get reset => _get('reset', 'Reset');
+  @override
+  String get add => _get('add', 'Add');
+  @override
+  String get edit => _get('edit', 'Edit');
+  @override
+  String get delete => _get('delete', 'Delete');
+  @override
+  String get confirm => _get('confirm', 'Confirm');
+  @override
+  String get cancel => _get('cancel', 'Cancel');
+  @override
+  String get submit => _get('submit', 'Submit');
+  @override
+  String get save => _get('save', 'Save');
+  @override
+  String get close => _get('close', 'Close');
+  @override
+  String get refresh => _get('refresh', 'Refresh');
+  @override
+  String get export => _get('export', 'Export');
+  @override
+  String get import => _get('import', 'Import');
+  @override
+  String get download => _get('download', 'Download');
+  @override
+  String get upload => _get('upload', 'Upload');
+  @override
+  String get copy => _get('copy', 'Copy');
+  @override
+  String get move => _get('move', 'Move');
+  @override
+  String get view => _get('view', 'View');
+  @override
+  String get detail => _get('detail', 'Detail');
+  @override
+  String get more => _get('more', 'More');
+  @override
+  String get expand => _get('expand', 'Expand');
+  @override
+  String get collapse => _get('collapse', 'Collapse');
+  @override
+  String get selectAll => _get('selectAll', 'Select All');
+  @override
+  String get clearAll => _get('clearAll', 'Clear All');
+  @override
+  String get filter => _get('filter', 'Filter');
+  @override
+  String get sort => _get('sort', 'Sort');
+
+  // 状态
+  @override
+  String get status => _get('status', 'Status');
+  @override
+  String get enabled => _get('enabled', 'Enabled');
+  @override
+  String get disabled => _get('disabled', 'Disabled');
+  @override
+  String get normal => _get('normal', 'Normal');
+  @override
+  String get stopped => _get('stopped', 'Stopped');
+  @override
+  String get pending => _get('pending', 'Pending');
+  @override
+  String get processing => _get('processing', 'Processing');
+  @override
+  String get success => _get('success', 'Success');
+  @override
+  String get failed => _get('failed', 'Failed');
+  @override
+  String get warning => _get('warning', 'Warning');
+  @override
+  String get error => _get('error', 'Error');
+  @override
+  String get info => _get('info', 'Info');
+  @override
+  String get online => _get('online', 'Online');
+  @override
+  String get offline => _get('offline', 'Offline');
+
+  // 时间
+  @override
+  String get createTime => _get('createTime', 'Create Time');
+  @override
+  String get updateTime => _get('updateTime', 'Update Time');
+  @override
+  String get startTime => _get('startTime', 'Start Time');
+  @override
+  String get endTime => _get('endTime', 'End Time');
+  @override
+  String get expireTime => _get('expireTime', 'Expire Time');
+  @override
+  String get lastLoginTime => _get('lastLoginTime', 'Last Login Time');
+  @override
+  String get duration => _get('duration', 'Duration');
+  @override
+  String get today => _get('today', 'Today');
+  @override
+  String get yesterday => _get('yesterday', 'Yesterday');
+  @override
+  String get thisWeek => _get('thisWeek', 'This Week');
+  @override
+  String get thisMonth => _get('thisMonth', 'This Month');
+  @override
+  String get thisYear => _get('thisYear', 'This Year');
+  @override
+  String get custom => _get('custom', 'Custom');
+
+  // 表格/列表
+  @override
+  String get operation => _get('operation', 'Operation');
+  @override
+  String get action => _get('action', 'Action');
+  @override
+  String get index => _get('index', 'Index');
+  @override
+  String get total => _get('total', 'Total');
+  @override
+  String get items => _get('items', 'Items');
+  @override
+  String get page => _get('page', 'Page');
+  @override
+  String get pageSize => _get('pageSize', 'Page Size');
+  @override
+  String get prevPage => _get('prevPage', 'Previous');
+  @override
+  String get nextPage => _get('nextPage', 'Next');
+  @override
+  String get firstPage => _get('firstPage', 'First');
+  @override
+  String get lastPage => _get('lastPage', 'Last');
+  @override
+  String get jumpTo => _get('jumpTo', 'Jump to');
+  @override
+  String get rowsPerPage => _get('rowsPerPage', 'Rows per page');
+
+  // 提示信息
+  @override
+  String get loading => _get('loading', 'Loading...');
+  @override
+  String get loadFailed => _get('loadFailed', 'Load Failed');
+  @override
+  String get noData => _get('noData', 'No Data');
+  @override
+  String get noMore => _get('noMore', 'No More');
+  @override
+  String get retry => _get('retry', 'Retry');
+  @override
+  String get operationSuccess => _get('operationSuccess', 'Operation Success');
+  @override
+  String get operationFailed => _get('operationFailed', 'Operation Failed');
+  @override
+  String get deleteSuccess => _get('deleteSuccess', 'Delete Success');
+  @override
+  String get deleteFailed => _get('deleteFailed', 'Delete Failed');
+  @override
+  String get saveSuccess => _get('saveSuccess', 'Save Success');
+  @override
+  String get saveFailed => _get('saveFailed', 'Save Failed');
+  @override
+  String get confirmDelete => _get('confirmDelete', 'Are you sure to delete?');
+  @override
+  String get confirmOperation => _get('confirmOperation', 'Confirm Operation');
+  @override
+  String get pleaseConfirm => _get('pleaseConfirm', 'Please Confirm');
+  @override
+  String get tips => _get('tips', 'Tips');
+  @override
+  String get notice => _get('notice', 'Notice');
+  @override
+  String get message => _get('message', 'Message');
+  @override
+  String get notification => _get('notification', 'Notification');
+
+  // 用户相关
+  @override
+  String get profile => _get('profile', 'Profile');
+  @override
+  String get settings => _get('settings', 'Settings');
+  @override
+  String get notLoggedIn => _get('notLoggedIn', 'Not Logged In');
+  @override
+  String get welcome => _get('welcome', 'Welcome');
+  @override
+  String get hello => _get('hello', 'Hello');
+  @override
+  String get goodbye => _get('goodbye', 'Goodbye');
+  @override
+  String get personalCenter => _get('personalCenter', 'Personal Center');
+  @override
+  String get changePassword => _get('changePassword', 'Change Password');
+  @override
+  String get oldPassword => _get('oldPassword', 'Old Password');
+  @override
+  String get newPassword => _get('newPassword', 'New Password');
+
+  // 表单
+  @override
+  String get pleaseEnter => _get('pleaseEnter', 'Please Enter');
+  @override
+  String get pleaseSelect => _get('pleaseSelect', 'Please Select');
+  @override
+  String get pleaseInput => _get('pleaseInput', 'Please Input');
+  @override
+  String get pleaseChoose => _get('pleaseChoose', 'Please Choose');
+  @override
+  String get pleaseEnterUsername => _get('pleaseEnterUsername', 'Please enter username');
+  @override
+  String get pleaseEnterPassword => _get('pleaseEnterPassword', 'Please enter password');
+  @override
+  String get pleaseEnterConfirmPassword => _get('pleaseEnterConfirmPassword', 'Please enter confirm password');
+  @override
+  String get pleaseEnterOldPassword => _get('pleaseEnterOldPassword', 'Please enter old password');
+  @override
+  String get pleaseEnterNewPassword => _get('pleaseEnterNewPassword', 'Please enter new password');
+  @override
+  String get pleaseEnterCaptcha => _get('pleaseEnterCaptcha', 'Please enter captcha');
+  @override
+  String get pleaseEnterKeyword => _get('pleaseEnterKeyword', 'Please enter keyword');
+  @override
+  String get requiredField => _get('requiredField', 'Required Field');
+  @override
+  String get invalidFormat => _get('invalidFormat', 'Invalid Format');
+  @override
+  String get minLength => _get('minLength', 'Min Length');
+  @override
+  String get maxLength => _get('maxLength', 'Max Length');
+  @override
+  String get passwordNotMatch => _get('passwordNotMatch', 'Password Not Match');
+  @override
+  String get usernameOrPasswordError => _get('usernameOrPasswordError', 'Username or Password Error');
+  @override
+  String get loginFailed => _get('loginFailed', 'Login Failed');
+  @override
+  String get loginSuccess => _get('loginSuccess', 'Login Success');
+  @override
+  String get logoutSuccess => _get('logoutSuccess', 'Logout Success');
+  @override
+  String get logoutFailed => _get('logoutFailed', 'Logout Failed');
+
+  // 验证
+  @override
+  String get validateSuccess => _get('validateSuccess', 'Validate Success');
+  @override
+  String get validateFailed => _get('validateFailed', 'Validate Failed');
+  @override
+  String get fieldRequired => _get('fieldRequired', 'Field Required');
+  @override
+  String get fieldInvalid => _get('fieldInvalid', 'Field Invalid');
+  @override
+  String get emailInvalid => _get('emailInvalid', 'Email Invalid');
+  @override
+  String get phoneInvalid => _get('phoneInvalid', 'Phone Invalid');
+  @override
+  String get urlInvalid => _get('urlInvalid', 'URL Invalid');
+  @override
+  String get numberInvalid => _get('numberInvalid', 'Number Invalid');
+  @override
+  String get dateInvalid => _get('dateInvalid', 'Date Invalid');
+
+  // 系统菜单
+  @override
+  String get system => _get('system', 'System');
+  @override
+  String get user => _get('user', 'User');
+  @override
+  String get role => _get('role', 'Role');
+  @override
+  String get menu => _get('menu', 'Menu');
+  @override
+  String get dept => _get('dept', 'Department');
+  @override
+  String get post => _get('post', 'Post');
+  @override
+  String get dict => _get('dict', 'Dictionary');
+  @override
+  String get dictData => _get('dictData', 'Dictionary Data');
+  @override
+  String get dictType => _get('dictType', 'Dictionary Type');
+  @override
+  String get log => _get('log', 'Log');
+  @override
+  String get loginLog => _get('loginLog', 'Login Log');
+  @override
+  String get operateLog => _get('operateLog', 'Operation Log');
+  @override
+  String get config => _get('config', 'Config');
+  @override
+  String get permission => _get('permission', 'Permission');
+  @override
+  String get area => _get('area', 'Area');
+
+  // 其他
+  @override
+  String get yes => _get('yes', 'Yes');
+  @override
+  String get no => _get('no', 'No');
+  @override
+  String get ok => _get('ok', 'OK');
+  @override
+  String get back => _get('back', 'Back');
+  @override
+  String get home => _get('home', 'Home');
+  @override
+  String get dashboard => _get('dashboard', 'Dashboard');
+  @override
+  String get help => _get('help', 'Help');
+  @override
+  String get about => _get('about', 'About');
+  @override
+  String get feedback => _get('feedback', 'Feedback');
+  @override
+  String get language => _get('language', 'Language');
+  @override
+  String get theme => _get('theme', 'Theme');
+  @override
+  String get darkMode => _get('darkMode', 'Dark Mode');
+  @override
+  String get lightMode => _get('lightMode', 'Light Mode');
+  @override
+  String get systemMode => _get('systemMode', 'System Mode');
+  @override
+  String get version => _get('version', 'Version');
+  @override
+  String get copyright => _get('copyright', 'Copyright');
+  @override
+  String get allRightsReserved => _get('allRightsReserved', 'All Rights Reserved');
+
+  // 角色管理
+  @override
+  String get roleManagement => _get('roleManagement', 'Role Management');
+  @override
+  String get roleList => _get('roleList', 'Role List');
+  @override
+  String get addRole => _get('addRole', 'Add Role');
+  @override
+  String get roleName => _get('roleName', 'Role Name');
+  @override
+  String get roleCode => _get('roleCode', 'Role Code');
+
+  // 菜单管理
+  @override
+  String get menuManagement => _get('menuManagement', 'Menu Management');
+  @override
+  String get addMenu => _get('addMenu', 'Add Menu');
+  @override
+  String get menuName => _get('menuName', 'Menu Name');
+  @override
+  String get icon => _get('icon', 'Icon');
+  @override
+  String get routePath => _get('routePath', 'Route Path');
+
+  // 部门管理
+  @override
+  String get deptManagement => _get('deptManagement', 'Department Management');
+  @override
+  String get deptList => _get('deptList', 'Department List');
+  @override
+  String get addDept => _get('addDept', 'Add Department');
+  @override
+  String get editDept => _get('editDept', 'Edit Department');
+  @override
+  String get deptName => _get('deptName', 'Department Name');
+  @override
+  String get leader => _get('leader', 'Leader');
+  @override
+  String get phone => _get('phone', 'Phone');
+  @override
+  String get email => _get('email', 'Email');
+  @override
+  String get searchDeptName => _get('searchDeptName', 'Search Department Name');
+  @override
+  String get expandAll => _get('expandAll', 'Expand All');
+  @override
+  String get collapseAll => _get('collapseAll', 'Collapse All');
+  @override
+  String get confirmDeleteDept => _get('confirmDeleteDept', 'Are you sure to delete this department?');
+
+  // 地区管理
+  @override
+  String get areaManagement => _get('areaManagement', 'Area Management');
+  @override
+  String get areaCode => _get('areaCode', 'Area Code');
+  @override
+  String get areaName => _get('areaName', 'Area Name');
+  @override
+  String get ipQuery => _get('ipQuery', 'IP Query');
+  @override
+  String get ipAddress => _get('ipAddress', 'IP Address');
+  @override
+  String get pleaseInputIp => _get('pleaseInputIp', 'Please input IP');
+  @override
+  String get queryResult => _get('queryResult', 'Query Result');
+  @override
+  String get queryFailed => _get('queryFailed', 'Query Failed');
+
+  // 通知消息管理
+  @override
+  String get notifyMessageManagement => _get('notifyMessageManagement', 'Notify Message Management');
+  @override
+  String get notifyMessageList => _get('notifyMessageList', 'Notify Message List');
+  @override
+  String get noMessages => _get('noMessages', 'No Messages');
+  @override
+  String get notifyMessage => _get('notifyMessage', 'Notify Message');
+  @override
+  String get messageId => _get('messageId', 'Message ID');
+  @override
+  String get senderName => _get('senderName', 'Sender Name');
+  @override
+  String get messageContent => _get('messageContent', 'Message Content');
+  @override
+  String get readStatus => _get('readStatus', 'Read Status');
+  @override
+  String get read => _get('read', 'Read');
+  @override
+  String get unread => _get('unread', 'Unread');
+  @override
+  String get readTime => _get('readTime', 'Read Time');
+  @override
+  String get siteMessage => _get('siteMessage', 'Site Message');
+  @override
+  String get mail => _get('mail', 'Mail');
+  @override
+  String get sms => _get('sms', 'SMS');
+  @override
+  String get unknown => _get('unknown', 'Unknown');
+
+  // 通知模板管理
+  @override
+  String get notifyTemplateManagement => _get('notifyTemplateManagement', 'Notify Template Management');
+  @override
+  String get addNotifyTemplate => _get('addNotifyTemplate', 'Add Notify Template');
+  @override
+  String get editNotifyTemplate => _get('editNotifyTemplate', 'Edit Notify Template');
+  @override
+  String get noTemplateData => _get('noTemplateData', 'No Template Data');
+  @override
+  String get templateList => _get('templateList', 'Template List');
+  @override
+  String get sender => _get('sender', 'Sender');
+  @override
+  String get supportParamFormat => _get('supportParamFormat', 'Support param format');
+  @override
+  String get sendTest => _get('sendTest', 'Send Test');
+  @override
+  String get receiverUserId => _get('receiverUserId', 'Receiver User ID');
+  @override
+  String get inputUserId => _get('inputUserId', 'Input User ID');
+  @override
+  String get pleaseInputValidUserId => _get('pleaseInputValidUserId', 'Please input valid user ID');
+  @override
+  String get sendSuccess => _get('sendSuccess', 'Send Success');
+  @override
+  String get sendFailed => _get('sendFailed', 'Send Failed');
+  @override
+  String get addTemplate => _get('addTemplate', 'Add Template');
+
+  // 邮件账号管理
+  @override
+  String get mailAccountManagement => _get('mailAccountManagement', 'Mail Account Management');
+  @override
+  String get mailAccountList => _get('mailAccountList', 'Mail Account List');
+  @override
+  String get addMailAccount => _get('addMailAccount', 'Add Mail Account');
+  @override
+  String get editMailAccount => _get('editMailAccount', 'Edit Mail Account');
+  @override
+  String get mailAddress => _get('mailAddress', 'Mail Address');
+  @override
+  String get smtpServer => _get('smtpServer', 'SMTP Server');
+  @override
+  String get smtpPort => _get('smtpPort', 'SMTP Port');
+  @override
+  String get smtpServerPort => _get('smtpServerPort', 'SMTP Server:Port');
+  @override
+  String get sslEnable => _get('sslEnable', 'SSL Enable');
+  @override
+  String get starttlsEnable => _get('starttlsEnable', 'STARTTLS Enable');
+  @override
+  String get pleaseInputMail => _get('pleaseInputMail', 'Please input mail');
+  @override
+  String get pleaseInputUsername => _get('pleaseInputUsername', 'Please input username');
+  @override
+  String get pleaseInputPassword => _get('pleaseInputPassword', 'Please input password');
+  @override
+  String get pleaseInputSmtpServer => _get('pleaseInputSmtpServer', 'Please input SMTP server');
+  @override
+  String get pleaseInputPort => _get('pleaseInputPort', 'Please input port');
+  @override
+  String get confirmDeleteMailAccount => _get('confirmDeleteMailAccount', 'Are you sure to delete this mail account?');
+
+  // 邮件模板管理
+  @override
+  String get mailTemplateManagement => _get('mailTemplateManagement', 'Mail Template Management');
+  @override
+  String get mailTemplateList => _get('mailTemplateList', 'Mail Template List');
+  @override
+  String get addMailTemplate => _get('addMailTemplate', 'Add Mail Template');
+  @override
+  String get editMailTemplate => _get('editMailTemplate', 'Edit Mail Template');
+  @override
+  String get templateTitle => _get('templateTitle', 'Template Title');
+  @override
+  String get mailAccount => _get('mailAccount', 'Mail Account');
+  @override
+  String get pleaseInputTemplateName => _get('pleaseInputTemplateName', 'Please input template name');
+  @override
+  String get pleaseInputTemplateCode => _get('pleaseInputTemplateCode', 'Please input template code');
+  @override
+  String get pleaseSelectMailAccount => _get('pleaseSelectMailAccount', 'Please select mail account');
+  @override
+  String get pleaseInputTemplateTitle => _get('pleaseInputTemplateTitle', 'Please input template title');
+  @override
+  String get pleaseInputTemplateContent => _get('pleaseInputTemplateContent', 'Please input template content');
+  @override
+  String get confirmDeleteMailTemplate => _get('confirmDeleteMailTemplate', 'Are you sure to delete this mail template?');
+  @override
+  String get testSendMail => _get('testSendMail', 'Test Send Mail');
+  @override
+  String get toMail => _get('toMail', 'To Mail');
+  @override
+  String get ccMail => _get('ccMail', 'CC Mail');
+  @override
+  String get bccMail => _get('bccMail', 'BCC Mail');
+  @override
+  String get multipleMailsHint => _get('multipleMailsHint', 'Multiple emails separated by comma');
+  @override
+  String get pleaseInputToMail => _get('pleaseInputToMail', 'Please input to mail');
+  @override
+  String get pleaseInputParamValue => _get('pleaseInputParamValue', 'Please input param value');
+  @override
+  String get param => _get('param', 'Param');
+  @override
+  String get mailSendSuccess => _get('mailSendSuccess', 'Mail Send Success');
+  @override
+  String get mailSendFailed => _get('mailSendFailed', 'Mail Send Failed');
+
+  // 邮件日志管理
+  @override
+  String get mailLogManagement => _get('mailLogManagement', 'Mail Log Management');
+  @override
+  String get mailLogList => _get('mailLogList', 'Mail Log List');
+  @override
+  String get userId => _get('userId', 'User ID');
+  @override
+  String get templateId => _get('templateId', 'Template ID');
+  @override
+  String get userType => _get('userType', 'User Type');
+  @override
+  String get admin => _get('admin', 'Admin');
+  @override
+  String get member => _get('member', 'Member');
+  @override
+  String get sendStatus => _get('sendStatus', 'Send Status');
+  @override
+  String get sending => _get('sending', 'Sending');
+  @override
+  String get sendSuccessStatus => _get('sendSuccessStatus', 'Send Success');
+  @override
+  String get sendFailedStatus => _get('sendFailedStatus', 'Send Failed');
+  @override
+  String get notSend => _get('notSend', 'Not Send');
+  @override
+  String get sendTime => _get('sendTime', 'Send Time');
+  @override
+  String get fromMail => _get('fromMail', 'From Mail');
+  @override
+  String get toMails => _get('toMails', 'To Mails');
+  @override
+  String get ccMails => _get('ccMails', 'CC Mails');
+  @override
+  String get bccMails => _get('bccMails', 'BCC Mails');
+  @override
+  String get mailTitle => _get('mailTitle', 'Mail Title');
+  @override
+  String get sendMessageId => _get('sendMessageId', 'Send Message ID');
+  @override
+  String get sendException => _get('sendException', 'Send Exception');
+  @override
+  String get mailLogDetail => _get('mailLogDetail', 'Mail Log Detail');
+
+  // 短信渠道管理
+  @override
+  String get smsChannelManagement => _get('smsChannelManagement', 'SMS Channel Management');
+  @override
+  String get smsChannelList => _get('smsChannelList', 'SMS Channel List');
+  @override
+  String get addSmsChannel => _get('addSmsChannel', 'Add SMS Channel');
+  @override
+  String get editSmsChannel => _get('editSmsChannel', 'Edit SMS Channel');
+  @override
+  String get smsSignature => _get('smsSignature', 'SMS Signature');
+  @override
+  String get channelCode => _get('channelCode', 'Channel Code');
+  @override
+  String get channelStatus => _get('channelStatus', 'Channel Status');
+  @override
+  String get smsApiKey => _get('smsApiKey', 'SMS API Key');
+  @override
+  String get smsApiSecret => _get('smsApiSecret', 'SMS API Secret');
+  @override
+  String get smsCallbackUrl => _get('smsCallbackUrl', 'SMS Callback URL');
+  @override
+  String get searchSmsSignature => _get('searchSmsSignature', 'Search SMS Signature');
+  @override
+  String get pleaseFillRequired => _get('pleaseFillRequired', 'Please fill required fields');
+  @override
+  String get confirmDeleteSmsChannel => _get('confirmDeleteSmsChannel', 'Are you sure to delete this SMS channel?');
+  @override
+  String get aliyun => _get('aliyun', 'Aliyun');
+  @override
+  String get tencentCloud => _get('tencentCloud', 'Tencent Cloud');
+  @override
+  String get huaweiCloud => _get('huaweiCloud', 'Huawei Cloud');
+  @override
+  String get yunpian => _get('yunpian', 'Yunpian');
+  @override
+  String get apiAccount => _get('apiAccount', 'API Account');
+
+  // 短信日志管理
+  @override
+  String get smsLogManagement => _get('smsLogManagement', 'SMS Log Management');
+  @override
+  String get smsLogList => _get('smsLogList', 'SMS Log List');
+  @override
+  String get mobile => _get('mobile', 'Mobile');
+  @override
+  String get smsChannel => _get('smsChannel', 'SMS Channel');
+  @override
+  String get smsContent => _get('smsContent', 'SMS Content');
+  @override
+  String get receiveStatus => _get('receiveStatus', 'Receive Status');
+  @override
+  String get receiveTime => _get('receiveTime', 'Receive Time');
+  @override
+  String get smsLogDetail => _get('smsLogDetail', 'SMS Log Detail');
+  @override
+  String get apiSendCode => _get('apiSendCode', 'API Send Code');
+  @override
+  String get apiSendMsg => _get('apiSendMsg', 'API Send Message');
+  @override
+  String get apiReceiveCode => _get('apiReceiveCode', 'API Receive Code');
+  @override
+  String get apiReceiveMsg => _get('apiReceiveMsg', 'API Receive Message');
+  @override
+  String get apiRequestId => _get('apiRequestId', 'API Request ID');
+  @override
+  String get apiSerialNo => _get('apiSerialNo', 'API Serial No');
+  @override
+  String get initialized => _get('initialized', 'Initialized');
+  @override
+  String get waitingReceive => _get('waitingReceive', 'Waiting Receive');
+  @override
+  String get receiveSuccess => _get('receiveSuccess', 'Receive Success');
+  @override
+  String get receiveFailed => _get('receiveFailed', 'Receive Failed');
+  @override
+  String get totalRecords => _get('totalRecords', 'Total Records');
+
+  // 短信模板管理
+  @override
+  String get smsTemplateManagement => _get('smsTemplateManagement', 'SMS Template Management');
+  @override
+  String get smsTemplateList => _get('smsTemplateList', 'SMS Template List');
+  @override
+  String get addSmsTemplate => _get('addSmsTemplate', 'Add SMS Template');
+  @override
+  String get editSmsTemplate => _get('editSmsTemplate', 'Edit SMS Template');
+  @override
+  String get smsType => _get('smsType', 'SMS Type');
+  @override
+  String get verifyCode => _get('verifyCode', 'Verify Code');
+  // @override
+  // String get notification => _get('notification', 'Notification');
+  @override
+  String get marketing => _get('marketing', 'Marketing');
+  @override
+  String get apiTemplateId => _get('apiTemplateId', 'API Template ID');
+  @override
+  String get apiTemplateNo => _get('apiTemplateNo', 'API Template No');
+  @override
+  String get smsTemplateContentHint => _get('smsTemplateContentHint', 'SMS Template Content Hint');
+  @override
+  String get confirmDeleteSmsTemplate => _get('confirmDeleteSmsTemplate', 'Are you sure to delete this SMS template?');
+  @override
+  String get testSendSms => _get('testSendSms', 'Test Send SMS');
+  @override
+  String get mobileNumber => _get('mobileNumber', 'Mobile Number');
+  @override
+  String get pleaseInputMobile => _get('pleaseInputMobile', 'Please input mobile number');
+  @override
+  String get smsSendSuccess => _get('smsSendSuccess', 'SMS Send Success');
+
+  // 其他通用
+  @override
+  String get id => _get('id', 'ID');
+  @override
+  String get code => _get('code', 'Code');
+  @override
+  String get name => _get('name', 'Name');
+  @override
+  String get nickname => _get('nickname', 'Nickname');
+  @override
+  String get content => _get('content', 'Content');
+  @override
+  String get type => _get('type', 'Type');
+  @override
+  String get templateCode => _get('templateCode', 'Template Code');
+  @override
+  String get templateName => _get('templateName', 'Template Name');
+  @override
+  String get templateContent => _get('templateContent', 'Template Content');
+  @override
+  String get templateType => _get('templateType', 'Template Type');
+  @override
+  String get templateParams => _get('templateParams', 'Template Params');
+  @override
+  String get testBtn => _get('testBtn', 'Test');
+  @override
+  String get open => _get('open', 'Open');
+  @override
+  String get closed => _get('closed', 'Closed');
+  @override
+  String get all => _get('all', 'All');
+
+  @override
+  // TODO: implement accessToken
+  String get accessToken => throw UnimplementedError();
+
+  @override
+  // TODO: implement accessTokenValidity
+  String get accessTokenValidity => throw UnimplementedError();
+
+  @override
+  // TODO: implement accountLimit
+  String get accountLimit => throw UnimplementedError();
+
+  @override
+  // TODO: implement addClient
+  String get addClient => throw UnimplementedError();
+
+  @override
+  // TODO: implement addOAuth2ClientTitle
+  String get addOAuth2ClientTitle => throw UnimplementedError();
+
+  @override
+  // TODO: implement addSocialClient
+  String get addSocialClient => throw UnimplementedError();
+
+  @override
+  // TODO: implement addTenant
+  String get addTenant => throw UnimplementedError();
+
+  @override
+  // TODO: implement addTenantPackage
+  String get addTenantPackage => throw UnimplementedError();
+
+  @override
+  // TODO: implement addTenantPackageBtn
+  String get addTenantPackageBtn => throw UnimplementedError();
+
+  @override
+  // TODO: implement agentId
+  String get agentId => throw UnimplementedError();
+
+  @override
+  // TODO: implement alipayMini
+  String get alipayMini => throw UnimplementedError();
+
+  @override
+  // TODO: implement appDescription
+  String get appDescription => throw UnimplementedError();
+
+  @override
+  // TODO: implement appIcon
+  String get appIcon => throw UnimplementedError();
+
+  @override
+  // TODO: implement appNameRequired
+  String get appNameRequired => throw UnimplementedError();
+
+  @override
+  // TODO: implement avatar
+  String get avatar => throw UnimplementedError();
+
+  @override
+  // TODO: implement bindDomain
+  String get bindDomain => throw UnimplementedError();
+
+  @override
+  // TODO: implement clientId
+  String get clientId => throw UnimplementedError();
+
+  @override
+  // TODO: implement clientIdRequired
+  String get clientIdRequired => throw UnimplementedError();
+
+  @override
+  // TODO: implement clientSecret
+  String get clientSecret => throw UnimplementedError();
+
+  @override
+  // TODO: implement confirmDeleteOAuth2Client
+  String get confirmDeleteOAuth2Client => throw UnimplementedError();
+
+  @override
+  // TODO: implement confirmDeletePackage
+  String get confirmDeletePackage => throw UnimplementedError();
+
+  @override
+  // TODO: implement confirmDeleteSocialClient
+  String get confirmDeleteSocialClient => throw UnimplementedError();
+
+  @override
+  // TODO: implement confirmDeleteTenant
+  String get confirmDeleteTenant => throw UnimplementedError();
+
+  @override
+  // TODO: implement confirmDeleteToken
+  String get confirmDeleteToken => throw UnimplementedError();
+
+  @override
+  // TODO: implement contactMobile
+  String get contactMobile => throw UnimplementedError();
+
+  @override
+  // TODO: implement contactName
+  String get contactName => throw UnimplementedError();
+
+  @override
+  // TODO: implement createSuccess
+  String get createSuccess => throw UnimplementedError();
+
+  @override
+  // TODO: implement dingtalk
+  String get dingtalk => throw UnimplementedError();
+
+  @override
+  // TODO: implement editOAuth2Client
+  String get editOAuth2Client => throw UnimplementedError();
+
+  @override
+  // TODO: implement editSocialClient
+  String get editSocialClient => throw UnimplementedError();
+
+  @override
+  // TODO: implement editTenant
+  String get editTenant => throw UnimplementedError();
+
+  @override
+  // TODO: implement editTenantPackage
+  String get editTenantPackage => throw UnimplementedError();
+
+  @override
+  // TODO: implement expireTimeFormat
+  String get expireTimeFormat => throw UnimplementedError();
+
+  @override
+  // TODO: implement expiresTime
+  String get expiresTime => throw UnimplementedError();
+
+  @override
+  // TODO: implement menuIdsExample
+  String get menuIdsExample => throw UnimplementedError();
+
+  @override
+  // TODO: implement none
+  String get none => throw UnimplementedError();
+
+  @override
+  // TODO: implement oauth2ClientList
+  String get oauth2ClientList => throw UnimplementedError();
+
+  @override
+  // TODO: implement oauth2TokenList
+  String get oauth2TokenList => throw UnimplementedError();
+
+  @override
+  // TODO: implement openid
+  String get openid => throw UnimplementedError();
+
+  @override
+  // TODO: implement packageName
+  String get packageName => throw UnimplementedError();
+
+  @override
+  // TODO: implement packageNameRequired
+  String get packageNameRequired => throw UnimplementedError();
+
+  @override
+  // TODO: implement pleaseFillPackageName
+  String get pleaseFillPackageName => throw UnimplementedError();
+
+  @override
+  // TODO: implement publicKey
+  String get publicKey => throw UnimplementedError();
+
+  @override
+  // TODO: implement qq
+  String get qq => throw UnimplementedError();
+
+  @override
+  // TODO: implement qqMini
+  String get qqMini => throw UnimplementedError();
+
+  @override
+  // TODO: implement rawUserInfo
+  String get rawUserInfo => throw UnimplementedError();
+
+  @override
+  // TODO: implement refreshToken
+  String get refreshToken => throw UnimplementedError();
+
+  @override
+  // TODO: implement refreshTokenValidity
+  String get refreshTokenValidity => throw UnimplementedError();
+
+  @override
+  // TODO: implement relatedMenuIds
+  String get relatedMenuIds => throw UnimplementedError();
+
+  @override
+  // TODO: implement searchClientId
+  String get searchClientId => throw UnimplementedError();
+
+  @override
+  // TODO: implement searchClientName
+  String get searchClientName => throw UnimplementedError();
+
+  @override
+  // TODO: implement searchNickname
+  String get searchNickname => throw UnimplementedError();
+
+  @override
+  // TODO: implement searchPackageName
+  String get searchPackageName => throw UnimplementedError();
+
+  @override
+  // TODO: implement searchSocialClientName
+  String get searchSocialClientName => throw UnimplementedError();
+
+  @override
+  // TODO: implement searchTenantName
+  String get searchTenantName => throw UnimplementedError();
+
+  @override
+  // TODO: implement seconds
+  String get seconds => throw UnimplementedError();
+
+  @override
+  // TODO: implement socialClientList
+  String get socialClientList => throw UnimplementedError();
+
+  @override
+  // TODO: implement socialPlatform
+  String get socialPlatform => throw UnimplementedError();
+
+  @override
+  // TODO: implement socialPlatformRequired
+  String get socialPlatformRequired => throw UnimplementedError();
+
+  @override
+  // TODO: implement socialUserDetail
+  String get socialUserDetail => throw UnimplementedError();
+
+  @override
+  // TODO: implement socialUserList
+  String get socialUserList => throw UnimplementedError();
+
+  @override
+  // TODO: implement tenantList
+  String get tenantList => throw UnimplementedError();
+
+  @override
+  // TODO: implement tenantName
+  String get tenantName => throw UnimplementedError();
+
+  @override
+  // TODO: implement tenantNameRequired
+  String get tenantNameRequired => throw UnimplementedError();
+
+  @override
+  // TODO: implement tenantPackage
+  String get tenantPackage => throw UnimplementedError();
+
+  @override
+  // TODO: implement tenantPackageList
+  String get tenantPackageList => throw UnimplementedError();
+
+  @override
+  // TODO: implement tenantPackageRequired
+  String get tenantPackageRequired => throw UnimplementedError();
+
+  @override
+  // TODO: implement updateSuccess
+  String get updateSuccess => throw UnimplementedError();
+
+  @override
+  // TODO: implement userTypeRequired
+  String get userTypeRequired => throw UnimplementedError();
+
+  @override
+  // TODO: implement wechat
+  String get wechat => throw UnimplementedError();
+
+  @override
+  // TODO: implement wechatMini
+  String get wechatMini => throw UnimplementedError();
+
+  @override
+  // TODO: implement wechatOpen
+  String get wechatOpen => throw UnimplementedError();
+
+  @override
+  // TODO: implement wecom
+  String get wecom => throw UnimplementedError();
+
+  @override
+  // TODO: implement weibo
+  String get weibo => throw UnimplementedError();
+}
+
+/// 全局访问点
+S get s => S.current;

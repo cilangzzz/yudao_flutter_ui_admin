@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../i18n/i18n.dart';
 
 /// 部门管理页面
 class DeptPage extends StatefulWidget {
@@ -37,7 +38,7 @@ class _DeptPageState extends State<DeptPage> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showDeptDialog(context),
         icon: const Icon(Icons.add),
-        label: const Text('添加部门'),
+        label: Text(S.current.addDept),
       ),
     );
   }
@@ -52,8 +53,8 @@ class _DeptPageState extends State<DeptPage> {
             flex: 2,
             child: TextField(
               controller: _searchController,
-              decoration: const InputDecoration(
-                hintText: '搜索部门名称',
+              decoration: InputDecoration(
+                hintText: S.current.searchDeptName,
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
                 isDense: true,
@@ -67,7 +68,7 @@ class _DeptPageState extends State<DeptPage> {
           ElevatedButton.icon(
             onPressed: _refresh,
             icon: const Icon(Icons.refresh),
-            label: const Text('刷新'),
+            label: Text(S.current.refresh),
           ),
           const SizedBox(width: 8),
 
@@ -75,7 +76,7 @@ class _DeptPageState extends State<DeptPage> {
           OutlinedButton.icon(
             onPressed: () {},
             icon: const Icon(Icons.unfold_more),
-            label: const Text('展开全部'),
+            label: Text(S.current.expandAll),
           ),
           const SizedBox(width: 8),
 
@@ -83,7 +84,7 @@ class _DeptPageState extends State<DeptPage> {
           OutlinedButton.icon(
             onPressed: () {},
             icon: const Icon(Icons.unfold_less),
-            label: const Text('折叠全部'),
+            label: Text(S.current.collapseAll),
           ),
         ],
       ),
@@ -172,17 +173,17 @@ class _DeptPageState extends State<DeptPage> {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: PaginatedDataTable(
-        header: const Text('部门列表'),
+        header: Text(S.current.deptList),
         rowsPerPage: 10,
-        columns: const [
-          DataColumn(label: Text('部门名称')),
-          DataColumn(label: Text('负责人')),
-          DataColumn(label: Text('联系电话')),
-          DataColumn(label: Text('邮箱')),
-          DataColumn(label: Text('状态')),
-          DataColumn(label: Text('排序')),
-          DataColumn(label: Text('创建时间')),
-          DataColumn(label: Text('操作')),
+        columns: [
+          DataColumn(label: Text(S.current.deptName)),
+          DataColumn(label: Text(S.current.leader)),
+          DataColumn(label: Text(S.current.phone)),
+          DataColumn(label: Text(S.current.email)),
+          DataColumn(label: Text(S.current.status)),
+          DataColumn(label: Text(S.current.sort)),
+          DataColumn(label: Text(S.current.createTime)),
+          DataColumn(label: Text(S.current.operation)),
         ],
         source: _DeptDataSource(depts, context),
       ),
@@ -197,43 +198,43 @@ class _DeptPageState extends State<DeptPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(dept == null ? '添加部门' : '编辑部门'),
+        title: Text(dept == null ? S.current.addDept : S.current.editDept),
         content: SizedBox(
           width: 400,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                decoration: const InputDecoration(
-                  labelText: '部门名称',
+                decoration: InputDecoration(
+                  labelText: S.current.deptName,
                   border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
-                decoration: const InputDecoration(
-                  labelText: '负责人',
+                decoration: InputDecoration(
+                  labelText: S.current.leader,
                   border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
-                decoration: const InputDecoration(
-                  labelText: '联系电话',
+                decoration: InputDecoration(
+                  labelText: S.current.phone,
                   border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
-                decoration: const InputDecoration(
-                  labelText: '邮箱',
+                decoration: InputDecoration(
+                  labelText: S.current.email,
                   border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
-                decoration: const InputDecoration(
-                  labelText: '排序',
+                decoration: InputDecoration(
+                  labelText: S.current.sort,
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.number,
@@ -244,11 +245,11 @@ class _DeptPageState extends State<DeptPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(S.current.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('确定'),
+            child: Text(S.current.confirm),
           ),
         ],
       ),
@@ -334,12 +335,12 @@ class _DeptDataSource extends DataTableSource {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: dept.status == 0
-                  ? Colors.green.withOpacity(0.1)
-                  : Colors.red.withOpacity(0.1),
+                  ? Colors.green.withValues(alpha: 0.1)
+                  : Colors.red.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
-              dept.status == 0 ? '正常' : '停用',
+              dept.status == 0 ? S.current.normal : S.current.stopped,
               style: TextStyle(
                 color: dept.status == 0 ? Colors.green : Colors.red,
                 fontSize: 12,
@@ -354,32 +355,32 @@ class _DeptDataSource extends DataTableSource {
             children: [
               TextButton(
                 onPressed: () {},
-                child: const Text('编辑'),
+                child: Text(S.current.edit),
               ),
               TextButton(
                 onPressed: () {
                   showDialog(
                     context: context,
                     builder: (context) => AlertDialog(
-                      title: const Text('确认删除'),
-                      content: Text('确定要删除部门 "${dept.name}" 吗？'),
+                      title: Text(S.current.confirmDelete),
+                      content: Text(S.current.confirmDeleteDept),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: const Text('取消'),
+                          child: Text(S.current.cancel),
                         ),
                         ElevatedButton(
                           onPressed: () => Navigator.pop(context),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red,
                           ),
-                          child: const Text('删除'),
+                          child: Text(S.current.delete),
                         ),
                       ],
                     ),
                   );
                 },
-                child: const Text('删除', style: TextStyle(color: Colors.red)),
+                child: Text(S.current.delete, style: TextStyle(color: Colors.red)),
               ),
             ],
           ),

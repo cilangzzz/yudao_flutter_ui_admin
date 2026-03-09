@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../router/router.dart';
 import '../../stores/stores.dart';
 import '../../api/core/auth_api.dart';
+import '../../i18n/i18n.dart';
 
 /// 响应式断点
 class Breakpoints {
@@ -71,7 +72,7 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
     if (isMobile) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Yudao Admin'),
+          title: Text(S.current.appName),
           actions: _buildActions(userInfo),
         ),
         body: widget.child,
@@ -133,7 +134,7 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16),
               child: Text(
-                'Yudao Admin',
+                S.current.appName,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -161,7 +162,7 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16),
               child: Text(
-                'Yudao Admin',
+                S.current.appName,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -173,11 +174,11 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
           ),
         ],
       ),
-      destinations: const [
+      destinations: [
         NavigationRailDestination(
-          icon: Icon(Icons.dashboard_outlined),
-          selectedIcon: Icon(Icons.dashboard),
-          label: Text('仪表板'),
+          icon: const Icon(Icons.dashboard_outlined),
+          selectedIcon: const Icon(Icons.dashboard),
+          label: Text(S.current.dashboard),
         ),
       ],
     );
@@ -239,10 +240,10 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.primaryContainer,
             ),
-            child: const Center(
+            child: Center(
               child: Text(
-                'Yudao Admin',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                S.current.appName,
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -361,7 +362,7 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
 
   PreferredSizeWidget _buildTopAppBar(UserInfo? userInfo, bool isMobile) {
     return AppBar(
-      title: isMobile ? const Text('Yudao Admin') : null,
+      title: isMobile ? Text(S.current.appName) : null,
       actions: _buildActions(userInfo),
     );
   }
@@ -411,7 +412,7 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  userInfo?.nickname ?? '未登录',
+                  userInfo?.nickname ?? S.current.notLoggedIn,
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
                 Text(
@@ -422,34 +423,34 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
             ),
           ),
           const PopupMenuDivider(),
-          const PopupMenuItem(
+          PopupMenuItem(
             value: 'profile',
             child: Row(
               children: [
-                Icon(Icons.person_outline),
-                SizedBox(width: 8),
-                Text('个人中心'),
+                const Icon(Icons.person_outline),
+                const SizedBox(width: 8),
+                Text(S.current.personalCenter),
               ],
             ),
           ),
-          const PopupMenuItem(
+          PopupMenuItem(
             value: 'settings',
             child: Row(
               children: [
-                Icon(Icons.settings_outlined),
-                SizedBox(width: 8),
-                Text('系统设置'),
+                const Icon(Icons.settings_outlined),
+                const SizedBox(width: 8),
+                Text(S.current.settings),
               ],
             ),
           ),
           const PopupMenuDivider(),
-          const PopupMenuItem(
+          PopupMenuItem(
             value: 'logout',
             child: Row(
               children: [
-                Icon(Icons.logout, color: Colors.red),
-                SizedBox(width: 8),
-                Text('退出登录', style: TextStyle(color: Colors.red)),
+                const Icon(Icons.logout, color: Colors.red),
+                const SizedBox(width: 8),
+                Text(S.current.logout, style: const TextStyle(color: Colors.red)),
               ],
             ),
           ),

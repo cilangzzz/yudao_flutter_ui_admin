@@ -26,7 +26,8 @@ class AppTheme {
       seedColor: primaryColor,
       brightness: Brightness.light,
     ),
-    fontFamily: 'Roboto',
+    // 使用系统默认字体以支持中文显示
+    // fontFamily: 'Roboto',
     appBarTheme: const AppBarTheme(
       centerTitle: false,
       elevation: 0,
@@ -71,7 +72,8 @@ class AppTheme {
       seedColor: primaryColor,
       brightness: Brightness.dark,
     ),
-    fontFamily: 'Roboto',
+    // 使用系统默认字体以支持中文显示
+    // fontFamily: 'Roboto',
     appBarTheme: const AppBarTheme(
       centerTitle: false,
       elevation: 0,

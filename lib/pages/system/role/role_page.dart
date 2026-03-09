@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../i18n/i18n.dart';
 
 /// 角色管理页面
 class RolePage extends StatefulWidget {
@@ -27,7 +28,7 @@ class _RolePageState extends State<RolePage> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showRoleDialog(context),
         icon: const Icon(Icons.add),
-        label: const Text('添加角色'),
+        label: Text(S.current.addRole),
       ),
     );
   }
@@ -38,14 +39,14 @@ class _RolePageState extends State<RolePage> {
       child: Row(
         children: [
           Text(
-            '角色管理',
+            S.current.roleManagement,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const Spacer(),
           ElevatedButton.icon(
             onPressed: () {},
             icon: const Icon(Icons.refresh),
-            label: const Text('刷新'),
+            label: Text(S.current.refresh),
           ),
         ],
       ),
@@ -62,15 +63,15 @@ class _RolePageState extends State<RolePage> {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: PaginatedDataTable(
-        header: const Text('角色列表'),
+        header: Text(S.current.roleList),
         rowsPerPage: 10,
-        columns: const [
+        columns: [
           DataColumn(label: Text('ID')),
-          DataColumn(label: Text('角色名称')),
-          DataColumn(label: Text('角色标识')),
-          DataColumn(label: Text('状态')),
-          DataColumn(label: Text('排序')),
-          DataColumn(label: Text('操作')),
+          DataColumn(label: Text(S.current.roleName)),
+          DataColumn(label: Text(S.current.roleCode)),
+          DataColumn(label: Text(S.current.status)),
+          DataColumn(label: Text(S.current.sort)),
+          DataColumn(label: Text(S.current.operation)),
         ],
         source: _RoleDataSource(roles, context),
       ),
@@ -81,29 +82,29 @@ class _RolePageState extends State<RolePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('添加角色'),
-        content: const SizedBox(
+        title: Text(S.current.addRole),
+        content: SizedBox(
           width: 400,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 decoration: InputDecoration(
-                  labelText: '角色名称',
+                  labelText: S.current.roleName,
                   border: OutlineInputBorder(),
                 ),
               ),
               SizedBox(height: 16),
               TextField(
                 decoration: InputDecoration(
-                  labelText: '角色标识',
+                  labelText: S.current.roleCode,
                   border: OutlineInputBorder(),
                 ),
               ),
               SizedBox(height: 16),
               TextField(
                 decoration: InputDecoration(
-                  labelText: '排序',
+                  labelText: S.current.sort,
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.number,
@@ -114,11 +115,11 @@ class _RolePageState extends State<RolePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(S.current.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('确定'),
+            child: Text(S.current.confirm),
           ),
         ],
       ),
@@ -169,7 +170,7 @@ class _RoleDataSource extends DataTableSource {
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
-              role.status == 0 ? '启用' : '禁用',
+              role.status == 0 ? S.current.enabled : S.current.disabled,
               style: TextStyle(
                 color: role.status == 0 ? Colors.green : Colors.red,
                 fontSize: 12,
@@ -183,15 +184,15 @@ class _RoleDataSource extends DataTableSource {
             children: [
               TextButton(
                 onPressed: () {},
-                child: const Text('编辑'),
+                child: Text(S.current.edit),
               ),
               TextButton(
                 onPressed: () {},
-                child: const Text('权限'),
+                child: Text(S.current.permission),
               ),
               TextButton(
                 onPressed: () {},
-                child: const Text('删除', style: TextStyle(color: Colors.red)),
+                child: Text(S.current.delete, style: TextStyle(color: Colors.red)),
               ),
             ],
           ),

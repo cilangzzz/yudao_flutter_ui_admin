@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../api/system/notice_api.dart';
 import '../../../models/system/notice.dart';
 import '../../../models/common/api_response.dart';
+import '../../../i18n/i18n.dart';
 
 /// 公告管理页面
 class NoticePage extends ConsumerStatefulWidget {
@@ -60,7 +61,7 @@ class _NoticePageState extends ConsumerState<NoticePage> {
         });
       } else {
         setState(() {
-          _error = response.msg ?? '加载失败';
+          _error = response.msg ?? S.current.strings.loadFailed;
           _isLoading = false;
         });
       }
@@ -106,7 +107,7 @@ class _NoticePageState extends ConsumerState<NoticePage> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showNoticeDialog(context),
         icon: const Icon(Icons.add),
-        label: const Text('添加公告'),
+        label: Text(S.current.strings.addNotice),
       ),
     );
   }
@@ -122,7 +123,7 @@ class _NoticePageState extends ConsumerState<NoticePage> {
             child: TextField(
               controller: _searchController,
               decoration: const InputDecoration(
-                hintText: '公告标题',
+                hintText: S.current.strings.noticeName,
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
                 isDense: true,
@@ -138,14 +139,14 @@ class _NoticePageState extends ConsumerState<NoticePage> {
             child: DropdownButtonFormField<int?>(
               value: _selectedStatus,
               decoration: const InputDecoration(
-                labelText: '状态',
+                labelText: S.current.strings.status,
                 border: OutlineInputBorder(),
                 isDense: true,
               ),
-              items: const [
-                DropdownMenuItem(value: null, child: Text('全部')),
-                DropdownMenuItem(value: 0, child: Text('启用')),
-                DropdownMenuItem(value: 1, child: Text('禁用')),
+              items: [
+                DropdownMenuItem(value: null, child: Text(S.current.strings.all)),
+                DropdownMenuItem(value: 0, child: Text(S.current.strings.enabled)),
+                DropdownMenuItem(value: 1, child: Text(S.current.strings.disabled)),
               ],
               onChanged: (value) {
                 setState(() {
@@ -160,7 +161,7 @@ class _NoticePageState extends ConsumerState<NoticePage> {
           ElevatedButton.icon(
             onPressed: _search,
             icon: const Icon(Icons.search),
-            label: const Text('搜索'),
+            label: Text(S.current.strings.search),
           ),
           const SizedBox(width: 8),
 
@@ -168,7 +169,7 @@ class _NoticePageState extends ConsumerState<NoticePage> {
           OutlinedButton.icon(
             onPressed: _reset,
             icon: const Icon(Icons.refresh),
-            label: const Text('重置'),
+            label: Text(S.current.strings.reset),
           ),
         ],
       ),
@@ -185,11 +186,11 @@ class _NoticePageState extends ConsumerState<NoticePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('加载失败: $_error', style: const TextStyle(color: Colors.red)),
+            Text('${S.current.strings.loadFailed}: $_error', style: const TextStyle(color: Colors.red)),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadNoticeList,
-              child: const Text('重试'),
+              child: Text(S.current.strings.retry),
             ),
           ],
         ),
@@ -197,13 +198,13 @@ class _NoticePageState extends ConsumerState<NoticePage> {
     }
 
     if (_noticeList.isEmpty) {
-      return const Center(child: Text('暂无数据'));
+      return Center(child: Text(S.current.strings.noData));
     }
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: PaginatedDataTable(
-        header: const Text('公告列表'),
+        header: Text(S.current.strings.noticeList),
         rowsPerPage: _pageSize,
         availableRowsPerPage: const [10, 20, 50, 100],
         onPageChanged: (page) {
@@ -221,14 +222,14 @@ class _NoticePageState extends ConsumerState<NoticePage> {
             _loadNoticeList();
           }
         },
-        columns: const [
-          DataColumn(label: Text('公告编号')),
-          DataColumn(label: Text('公告标题')),
-          DataColumn(label: Text('公告类型')),
-          DataColumn(label: Text('状态')),
-          DataColumn(label: Text('创建者')),
-          DataColumn(label: Text('创建时间')),
-          DataColumn(label: Text('操作')),
+        columns: [
+          DataColumn(label: Text(S.current.strings.noticeId)),
+          DataColumn(label: Text(S.current.strings.noticeName)),
+          DataColumn(label: Text(S.current.strings.noticeType)),
+          DataColumn(label: Text(S.current.strings.status)),
+          DataColumn(label: Text(S.current.strings.noticeCreator)),
+          DataColumn(label: Text(S.current.strings.createTime)),
+          DataColumn(label: Text(S.current.strings.operation)),
         ],
         source: _NoticeDataSource(
           _noticeList,
@@ -252,7 +253,7 @@ class _NoticePageState extends ConsumerState<NoticePage> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: Text(notice == null ? '添加公告' : '编辑公告'),
+          title: Text(notice == null ? S.current.strings.addNotice : S.current.strings.editNotice),
           content: SizedBox(
             width: 500,
             child: SingleChildScrollView(
@@ -262,13 +263,13 @@ class _NoticePageState extends ConsumerState<NoticePage> {
                 children: [
                   TextField(
                     controller: titleController,
-                    decoration: const InputDecoration(
-                      labelText: '公告标题 *',
+                    decoration: InputDecoration(
+                      labelText: '${S.current.strings.noticeName} *',
                       border: OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text('公告类型:'),
+                  Text('${S.current.strings.noticeType}:'),
                   Row(
                     children: [
                       Radio<int>(
@@ -280,7 +281,7 @@ class _NoticePageState extends ConsumerState<NoticePage> {
                           });
                         },
                       ),
-                      const Text('通知'),
+                      Text(S.current.strings.typeNotify),
                       Radio<int>(
                         value: 2,
                         groupValue: type,
@@ -290,11 +291,11 @@ class _NoticePageState extends ConsumerState<NoticePage> {
                           });
                         },
                       ),
-                      const Text('公告'),
+                      Text(S.current.strings.typeAnnouncement),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  const Text('公告内容: *'),
+                  Text('${S.current.strings.noticeContent}: *'),
                   const SizedBox(height: 8),
                   Container(
                     decoration: BoxDecoration(
@@ -311,7 +312,7 @@ class _NoticePageState extends ConsumerState<NoticePage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text('状态:'),
+                  Text('${S.current.strings.status}:'),
                   Row(
                     children: [
                       Radio<int>(
@@ -323,7 +324,7 @@ class _NoticePageState extends ConsumerState<NoticePage> {
                           });
                         },
                       ),
-                      const Text('启用'),
+                      Text(S.current.strings.enabled),
                       Radio<int>(
                         value: 1,
                         groupValue: status,
@@ -333,7 +334,7 @@ class _NoticePageState extends ConsumerState<NoticePage> {
                           });
                         },
                       ),
-                      const Text('禁用'),
+                      Text(S.current.strings.disabled),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -352,13 +353,13 @@ class _NoticePageState extends ConsumerState<NoticePage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('取消'),
+              child: Text(S.current.strings.cancel),
             ),
             ElevatedButton(
               onPressed: () async {
                 if (titleController.text.isEmpty || contentController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('请填写必填项')),
+                    SnackBar(content: Text(S.current.strings.pleaseFillRequired)),
                   );
                   return;
                 }
@@ -386,26 +387,26 @@ class _NoticePageState extends ConsumerState<NoticePage> {
                     if (context.mounted) {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(notice == null ? '添加成功' : '修改成功')),
+                        SnackBar(content: Text(notice == null ? S.current.strings.addSuccess : S.current.strings.editSuccess)),
                       );
                       _loadNoticeList();
                     }
                   } else {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(response.msg ?? '操作失败')),
+                        SnackBar(content: Text(response.msg ?? S.current.strings.operationFailed)),
                       );
                     }
                   }
                 } catch (e) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('操作失败: $e')),
+                      SnackBar(content: Text('${S.current.strings.operationFailed}: $e')),
                     );
                   }
                 }
               },
-              child: const Text('确定'),
+              child: Text(S.current.strings.confirm),
             ),
           ],
         ),
@@ -421,19 +422,19 @@ class _NoticePageState extends ConsumerState<NoticePage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('确认删除'),
-        content: Text('确定要删除公告 "${notice.title}" 吗？'),
+        title: Text(S.current.strings.confirmDelete),
+        content: Text('${S.current.strings.confirmDeleteNotice} "${notice.title}" ?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(S.current.strings.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
             ),
-            child: const Text('删除'),
+            child: Text(S.current.strings.delete),
           ),
         ],
       ),
@@ -447,21 +448,21 @@ class _NoticePageState extends ConsumerState<NoticePage> {
         if (response.isSuccess) {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('删除成功')),
+              SnackBar(content: Text(S.current.strings.deleteSuccess)),
             );
             _loadNoticeList();
           }
         } else {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(response.msg ?? '删除失败')),
+              SnackBar(content: Text(response.msg ?? S.current.strings.deleteFailed)),
             );
           }
         }
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('删除失败: $e')),
+            SnackBar(content: Text('${S.current.strings.deleteFailed}: $e')),
           );
         }
       }
@@ -472,16 +473,16 @@ class _NoticePageState extends ConsumerState<NoticePage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('确认推送'),
-        content: Text('确定要推送公告 "${notice.title}" 吗？'),
+        title: Text(S.current.strings.confirmPush),
+        content: Text('${S.current.strings.confirmPushNotice} "${notice.title}" ?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(S.current.strings.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('推送'),
+            child: Text(S.current.strings.push),
           ),
         ],
       ),
@@ -495,20 +496,20 @@ class _NoticePageState extends ConsumerState<NoticePage> {
         if (response.isSuccess) {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('推送成功')),
+              SnackBar(content: Text(S.current.strings.pushSuccess)),
             );
           }
         } else {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(response.msg ?? '推送失败')),
+              SnackBar(content: Text(response.msg ?? S.current.strings.pushFailed)),
             );
           }
         }
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('推送失败: $e')),
+            SnackBar(content: Text('${S.current.strings.pushFailed}: $e')),
           );
         }
       }
@@ -535,11 +536,11 @@ class _NoticeDataSource extends DataTableSource {
   String _getTypeName(int type) {
     switch (type) {
       case 1:
-        return '通知';
+        return S.current.strings.typeNotify;
       case 2:
-        return '公告';
+        return S.current.strings.typeAnnouncement;
       default:
-        return '未知';
+        return S.current.strings.typeUnknown;
     }
   }
 
@@ -590,7 +591,7 @@ class _NoticeDataSource extends DataTableSource {
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
-              notice.status == 0 ? '启用' : '禁用',
+              notice.status == 0 ? S.current.strings.enabled : S.current.strings.disabled,
               style: TextStyle(
                 color: notice.status == 0 ? Colors.green : Colors.red,
                 fontSize: 12,
@@ -605,15 +606,15 @@ class _NoticeDataSource extends DataTableSource {
             children: [
               TextButton(
                 onPressed: () => onEdit(notice),
-                child: const Text('编辑'),
+                child: Text(S.current.strings.edit),
               ),
               TextButton(
                 onPressed: () => onPush(notice),
-                child: const Text('推送'),
+                child: Text(S.current.strings.push),
               ),
               TextButton(
                 onPressed: () => onDelete(notice),
-                child: const Text('删除', style: TextStyle(color: Colors.red)),
+                child: Text(S.current.strings.delete, style: TextStyle(color: Colors.red)),
               ),
             ],
           ),

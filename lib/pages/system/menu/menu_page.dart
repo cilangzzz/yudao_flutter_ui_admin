@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../i18n/i18n.dart';
 
 /// 菜单管理页面
 class MenuPage extends StatefulWidget {
@@ -27,7 +28,7 @@ class _MenuPageState extends State<MenuPage> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showMenuDialog(context),
         icon: const Icon(Icons.add),
-        label: const Text('添加菜单'),
+        label: Text(S.current.addMenu),
       ),
     );
   }
@@ -38,14 +39,14 @@ class _MenuPageState extends State<MenuPage> {
       child: Row(
         children: [
           Text(
-            '菜单管理',
+            S.current.menuManagement,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const Spacer(),
           ElevatedButton.icon(
             onPressed: () {},
             icon: const Icon(Icons.refresh),
-            label: const Text('刷新'),
+            label: Text(S.current.refresh),
           ),
         ],
       ),
@@ -69,12 +70,12 @@ class _MenuPageState extends State<MenuPage> {
       padding: const EdgeInsets.all(16),
       child: Card(
         child: DataTable(
-          columns: const [
-            DataColumn(label: Text('菜单名称')),
-            DataColumn(label: Text('图标')),
-            DataColumn(label: Text('排序')),
-            DataColumn(label: Text('状态')),
-            DataColumn(label: Text('操作')),
+          columns: [
+            DataColumn(label: Text(S.current.menuName)),
+            DataColumn(label: Text(S.current.icon)),
+            DataColumn(label: Text(S.current.sort)),
+            DataColumn(label: Text(S.current.status)),
+            DataColumn(label: Text(S.current.operation)),
           ],
           rows: _buildMenuRows(menus, 0),
         ),
@@ -113,7 +114,7 @@ class _MenuPageState extends State<MenuPage> {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                menu.status == 0 ? '启用' : '禁用',
+                menu.status == 0 ? S.current.enabled : S.current.disabled,
                 style: TextStyle(
                   color: menu.status == 0 ? Colors.green : Colors.red,
                   fontSize: 12,
@@ -126,11 +127,11 @@ class _MenuPageState extends State<MenuPage> {
               children: [
                 TextButton(
                   onPressed: () {},
-                  child: const Text('编辑'),
+                  child: Text(S.current.edit),
                 ),
                 TextButton(
                   onPressed: () {},
-                  child: const Text('删除', style: TextStyle(color: Colors.red)),
+                  child: Text(S.current.delete, style: TextStyle(color: Colors.red)),
                 ),
               ],
             ),
@@ -169,36 +170,36 @@ class _MenuPageState extends State<MenuPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('添加菜单'),
-        content: const SizedBox(
+        title: Text(S.current.addMenu),
+        content: SizedBox(
           width: 400,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 decoration: InputDecoration(
-                  labelText: '菜单名称',
+                  labelText: S.current.menuName,
                   border: OutlineInputBorder(),
                 ),
               ),
               SizedBox(height: 16),
               TextField(
                 decoration: InputDecoration(
-                  labelText: '路由路径',
+                  labelText: S.current.routePath,
                   border: OutlineInputBorder(),
                 ),
               ),
               SizedBox(height: 16),
               TextField(
                 decoration: InputDecoration(
-                  labelText: '图标',
+                  labelText: S.current.icon,
                   border: OutlineInputBorder(),
                 ),
               ),
               SizedBox(height: 16),
               TextField(
                 decoration: InputDecoration(
-                  labelText: '排序',
+                  labelText: S.current.sort,
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.number,
@@ -209,11 +210,11 @@ class _MenuPageState extends State<MenuPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(S.current.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('确定'),
+            child: Text(S.current.confirm),
           ),
         ],
       ),

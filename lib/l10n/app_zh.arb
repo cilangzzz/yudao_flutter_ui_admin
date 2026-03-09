@@ -1,0 +1,549 @@
+{
+  "@@locale": "zh",
+  "@@last_modified": "2024-01-01T00:00:00.000Z",
+
+  "confirm_delete": "确认删除",
+  "@confirm_delete": {
+    "description": "确认删除对话框标题"
+  },
+
+  "cancel": "取消",
+  "@cancel": {
+    "description": "取消按钮"
+  },
+
+  "delete": "删除",
+  "@delete": {
+    "description": "删除按钮"
+  },
+
+  "edit": "编辑",
+  "@edit": {
+    "description": "编辑按钮"
+  },
+
+  "confirm": "确定",
+  "@confirm": {
+    "description": "确定按钮"
+  },
+
+  "search": "搜索",
+  "@search": {
+    "description": "搜索按钮"
+  },
+
+  "status": "状态",
+  "@status": {
+    "description": "状态标签"
+  },
+
+  "status_enabled": "开启",
+  "@status_enabled": {
+    "description": "状态-开启"
+  },
+
+  "status_disabled": "禁用",
+  "@status_disabled": {
+    "description": "状态-禁用"
+  },
+
+  "status_all": "全部",
+  "@status_all": {
+    "description": "状态筛选-全部"
+  },
+
+  "create_time": "创建时间",
+  "@create_time": {
+    "description": "创建时间"
+  },
+
+  "operation": "操作",
+  "@operation": {
+    "description": "操作列标题"
+  },
+
+  "delete_success": "删除成功",
+  "@delete_success": {
+    "description": "删除成功提示"
+  },
+
+  "delete_failed": "删除失败: {msg}",
+  "@delete_failed": {
+    "description": "删除失败提示",
+    "placeholders": {
+      "msg": {
+        "type": "String"
+      }
+    }
+  },
+
+  "update_success": "更新成功",
+  "@update_success": {
+    "description": "更新成功提示"
+  },
+
+  "create_success": "创建成功",
+  "@create_success": {
+    "description": "创建成功提示"
+  },
+
+  "operation_failed": "操作失败: {msg}",
+  "@operation_failed": {
+    "description": "操作失败提示",
+    "placeholders": {
+      "msg": {
+        "type": "String"
+      }
+    }
+  },
+
+  "please_fill_required": "请填写必填项",
+  "@please_fill_required": {
+    "description": "请填写必填项提示"
+  },
+
+  "remark": "备注",
+  "@remark": {
+    "description": "备注字段"
+  },
+
+  "tenant_name": "租户名称",
+  "@tenant_name": {
+    "description": "租户名称"
+  },
+
+  "tenant_package": "租户套餐",
+  "@tenant_package": {
+    "description": "租户套餐"
+  },
+
+  "contact_name": "联系人",
+  "@contact_name": {
+    "description": "联系人"
+  },
+
+  "contact_mobile": "联系电话",
+  "@contact_mobile": {
+    "description": "联系电话"
+  },
+
+  "account_limit": "账号限额",
+  "@account_limit": {
+    "description": "账号限额"
+  },
+
+  "expire_time": "过期时间",
+  "@expire_time": {
+    "description": "过期时间"
+  },
+
+  "tenant_list": "租户列表",
+  "@tenant_list": {
+    "description": "租户列表标题"
+  },
+
+  "add_tenant": "新增租户",
+  "@add_tenant": {
+    "description": "新增租户按钮"
+  },
+
+  "edit_tenant": "编辑租户",
+  "@edit_tenant": {
+    "description": "编辑租户标题"
+  },
+
+  "search_tenant_name": "搜索租户名称",
+  "@search_tenant_name": {
+    "description": "搜索租户名称提示"
+  },
+
+  "tenant_name_required": "租户名称 *",
+  "@tenant_name_required": {
+    "description": "租户名称（必填）"
+  },
+
+  "tenant_package_required": "租户套餐 *",
+  "@tenant_package_required": {
+    "description": "租户套餐（必填）"
+  },
+
+  "expire_time_format": "格式: 2024-12-31",
+  "@expire_time_format": {
+    "description": "过期时间格式提示"
+  },
+
+  "bind_domain": "绑定域名（每行一个）",
+  "@bind_domain": {
+    "description": "绑定域名提示"
+  },
+
+  "confirm_delete_tenant": "确定要删除租户 \"{name}\" 吗？",
+  "@confirm_delete_tenant": {
+    "description": "确认删除租户提示",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+
+  "package_name": "套餐名称",
+  "@package_name": {
+    "description": "套餐名称"
+  },
+
+  "package_name_required": "套餐名称 *",
+  "@package_name_required": {
+    "description": "套餐名称（必填）"
+  },
+
+  "tenant_package_list": "租户套餐列表",
+  "@tenant_package_list": {
+    "description": "租户套餐列表标题"
+  },
+
+  "add_package": "新增套餐",
+  "@add_package": {
+    "description": "新增套餐按钮"
+  },
+
+  "edit_package": "编辑租户套餐",
+  "@edit_package": {
+    "description": "编辑租户套餐标题"
+  },
+
+  "add_tenant_package": "新增租户套餐",
+  "@add_tenant_package": {
+    "description": "新增租户套餐标题"
+  },
+
+  "search_package_name": "搜索套餐名称",
+  "@search_package_name": {
+    "description": "搜索套餐名称提示"
+  },
+
+  "please_fill_package_name": "请填写套餐名称",
+  "@please_fill_package_name": {
+    "description": "请填写套餐名称提示"
+  },
+
+  "related_menu_ids": "关联菜单ID（逗号分隔）",
+  "@related_menu_ids": {
+    "description": "关联菜单ID提示"
+  },
+
+  "menu_ids_example": "例如: 1, 2, 3, 100, 101",
+  "@menu_ids_example": {
+    "description": "菜单ID示例"
+  },
+
+  "confirm_delete_package": "确定要删除租户套餐 \"{name}\" 吗？",
+  "@confirm_delete_package": {
+    "description": "确认删除租户套餐提示",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+
+  "oauth2_client_list": "OAuth2 客户端列表",
+  "@oauth2_client_list": {
+    "description": "OAuth2 客户端列表标题"
+  },
+
+  "add_oauth2_client": "新增 OAuth2 客户端",
+  "@add_oauth2_client": {
+    "description": "新增 OAuth2 客户端标题"
+  },
+
+  "edit_oauth2_client": "编辑 OAuth2 客户端",
+  "@edit_oauth2_client": {
+    "description": "编辑 OAuth2 客户端标题"
+  },
+
+  "add_client": "新增客户端",
+  "@add_client": {
+    "description": "新增客户端按钮"
+  },
+
+  "search_client_name": "搜索客户端名称",
+  "@search_client_name": {
+    "description": "搜索客户端名称提示"
+  },
+
+  "client_id": "客户端ID",
+  "@client_id": {
+    "description": "客户端ID"
+  },
+
+  "client_id_required": "客户端ID *",
+  "@client_id_required": {
+    "description": "客户端ID（必填）"
+  },
+
+  "client_secret": "客户端密钥",
+  "@client_secret": {
+    "description": "客户端密钥"
+  },
+
+  "app_name": "应用名称",
+  "@app_name": {
+    "description": "应用名称"
+  },
+
+  "app_name_required": "应用名称 *",
+  "@app_name_required": {
+    "description": "应用名称（必填）"
+  },
+
+  "app_icon": "应用图标",
+  "@app_icon": {
+    "description": "应用图标"
+  },
+
+  "app_description": "应用描述",
+  "@app_description": {
+    "description": "应用描述"
+  },
+
+  "access_token_validity": "访问令牌有效期（秒）",
+  "@access_token_validity": {
+    "description": "访问令牌有效期"
+  },
+
+  "refresh_token_validity": "刷新令牌有效期（秒）",
+  "@refresh_token_validity": {
+    "description": "刷新令牌有效期"
+  },
+
+  "seconds": "{count} 秒",
+  "@seconds": {
+    "description": "秒数",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "confirm_delete_oauth2_client": "确定要删除客户端 \"{name}\" 吗？",
+  "@confirm_delete_oauth2_client": {
+    "description": "确认删除OAuth2客户端提示",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+
+  "oauth2_token_list": "OAuth2 令牌列表",
+  "@oauth2_token_list": {
+    "description": "OAuth2 令牌列表标题"
+  },
+
+  "access_token": "访问令牌",
+  "@access_token": {
+    "description": "访问令牌"
+  },
+
+  "refresh_token": "刷新令牌",
+  "@refresh_token": {
+    "description": "刷新令牌"
+  },
+
+  "user_id": "用户ID",
+  "@user_id": {
+    "description": "用户ID"
+  },
+
+  "user_type": "用户类型",
+  "@user_type": {
+    "description": "用户类型"
+  },
+
+  "expires_time": "过期时间",
+  "@expires_time": {
+    "description": "过期时间"
+  },
+
+  "search_client_id": "搜索客户端ID",
+  "@search_client_id": {
+    "description": "搜索客户端ID提示"
+  },
+
+  "confirm_delete_token": "确定要删除该令牌吗？删除后用户将需要重新登录。",
+  "@confirm_delete_token": {
+    "description": "确认删除令牌提示"
+  },
+
+  "admin": "管理员",
+  "@admin": {
+    "description": "管理员"
+  },
+
+  "member": "会员",
+  "@member": {
+    "description": "会员"
+  },
+
+  "unknown": "未知",
+  "@unknown": {
+    "description": "未知"
+  },
+
+  "social_client_list": "社交客户端列表",
+  "@social_client_list": {
+    "description": "社交客户端列表标题"
+  },
+
+  "add_social_client": "新增社交客户端",
+  "@add_social_client": {
+    "description": "新增社交客户端标题"
+  },
+
+  "edit_social_client": "编辑社交客户端",
+  "@edit_social_client": {
+    "description": "编辑社交客户端标题"
+  },
+
+  "search_social_client_name": "搜索客户端名称",
+  "@search_social_client_name": {
+    "description": "搜索客户端名称提示"
+  },
+
+  "social_platform": "社交平台",
+  "@social_platform": {
+    "description": "社交平台"
+  },
+
+  "social_platform_required": "社交平台 *",
+  "@social_platform_required": {
+    "description": "社交平台（必填）"
+  },
+
+  "user_type_required": "用户类型 *",
+  "@user_type_required": {
+    "description": "用户类型（必填）"
+  },
+
+  "agent_id": "代理ID (AgentId)",
+  "@agent_id": {
+    "description": "代理ID"
+  },
+
+  "public_key": "公钥",
+  "@public_key": {
+    "description": "公钥"
+  },
+
+  "confirm_delete_social_client": "确定要删除社交客户端 \"{name}\" 吗？",
+  "@confirm_delete_social_client": {
+    "description": "确认删除社交客户端提示",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+
+  "dingtalk": "钉钉",
+  "@dingtalk": {
+    "description": "钉钉"
+  },
+
+  "wecom": "企业微信",
+  "@wecom": {
+    "description": "企业微信"
+  },
+
+  "wechat": "微信",
+  "@wechat": {
+    "description": "微信"
+  },
+
+  "qq": "QQ",
+  "@qq": {
+    "description": "QQ"
+  },
+
+  "weibo": "微博",
+  "@weibo": {
+    "description": "微博"
+  },
+
+  "wechat_mini": "微信小程序",
+  "@wechat_mini": {
+    "description": "微信小程序"
+  },
+
+  "wechat_open": "微信开放平台",
+  "@wechat_open": {
+    "description": "微信开放平台"
+  },
+
+  "qq_mini": "QQ小程序",
+  "@qq_mini": {
+    "description": "QQ小程序"
+  },
+
+  "alipay_mini": "支付宝小程序",
+  "@alipay_mini": {
+    "description": "支付宝小程序"
+  },
+
+  "social_user_list": "社交用户列表",
+  "@social_user_list": {
+    "description": "社交用户列表标题"
+  },
+
+  "social_user_detail": "社交用户详情",
+  "@social_user_detail": {
+    "description": "社交用户详情标题"
+  },
+
+  "search_nickname": "搜索昵称",
+  "@search_nickname": {
+    "description": "搜索昵称提示"
+  },
+
+  "openid": "OpenID",
+  "@openid": {
+    "description": "OpenID"
+  },
+
+  "nickname": "昵称",
+  "@nickname": {
+    "description": "昵称"
+  },
+
+  "avatar": "头像",
+  "@avatar": {
+    "description": "头像"
+  },
+
+  "update_time": "更新时间",
+  "@update_time": {
+    "description": "更新时间"
+  },
+
+  "raw_user_info": "原始用户信息",
+  "@raw_user_info": {
+    "description": "原始用户信息"
+  },
+
+  "detail": "详情",
+  "@detail": {
+    "description": "详情按钮"
+  },
+
+  "close": "关闭",
+  "@close": {
+    "description": "关闭按钮"
+  },
+
+  "none": "无",
+  "@none": {
+    "description": "无"
+  }
+}

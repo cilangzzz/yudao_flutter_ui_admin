@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../api/system/dict_data_api.dart';
 import '../../../models/system/dict_data.dart';
 import '../../../models/common/page_param.dart';
+import '../../../i18n/i18n.dart';
 
 /// 字典数据管理页面
 class DictDataPage extends ConsumerStatefulWidget {
@@ -71,10 +72,10 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
           _total = response.data!.total;
         });
       } else {
-        _showError(response.msg ?? '加载失败');
+        _showError(response.msg ?? S.current.loadFailed);
       }
     } catch (e) {
-      _showError('加载异常: $e');
+      _showError('${S.current.loadFailed}: $e');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -100,17 +101,17 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('确认删除'),
-        content: Text('确定要删除字典数据 "${dictData.label}" 吗？'),
+        title: Text(S.current.confirmDelete),
+        content: Text('${S.current.confirmDeleteDictData} "${dictData.label}" ?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(S.current.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('删除'),
+            child: Text(S.current.delete),
           ),
         ],
       ),
@@ -121,13 +122,13 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
         final api = ref.read(dictDataApiProvider);
         final response = await api.deleteDictData(dictData.id!);
         if (response.isSuccess) {
-          _showSuccess('删除成功');
+          _showSuccess(S.current.deleteSuccess);
           _loadData();
         } else {
-          _showError(response.msg ?? '删除失败');
+          _showError(response.msg ?? S.current.deleteFailed);
         }
       } catch (e) {
-        _showError('删除异常: $e');
+        _showError('${S.current.deleteFailed}: $e');
       }
     }
   }
@@ -141,18 +142,18 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
     int status = dictData?.status ?? 0;
 
     final colorOptions = [
-      {'value': 'default', 'label': '默认', 'color': Colors.grey},
-      {'value': 'primary', 'label': '主要', 'color': Colors.blue},
-      {'value': 'success', 'label': '成功', 'color': Colors.green},
-      {'value': 'warning', 'label': '警告', 'color': Colors.orange},
-      {'value': 'danger', 'label': '危险', 'color': Colors.red},
-      {'value': 'info', 'label': '信息', 'color': Colors.cyan},
+      {'value': 'default', 'label': S.current.colorDefault, 'color': Colors.grey},
+      {'value': 'primary', 'label': S.current.colorPrimary, 'color': Colors.blue},
+      {'value': 'success', 'label': S.current.colorSuccess, 'color': Colors.green},
+      {'value': 'warning', 'label': S.current.colorWarning, 'color': Colors.orange},
+      {'value': 'danger', 'label': S.current.colorDanger, 'color': Colors.red},
+      {'value': 'info', 'label': S.current.colorInfo, 'color': Colors.cyan},
     ];
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(dictData == null ? '添加字典数据' : '编辑字典数据'),
+        title: Text(dictData == null ? S.current.addDictData : S.current.editDictData),
         content: SizedBox(
           width: 400,
           child: SingleChildScrollView(
@@ -161,24 +162,24 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
               children: [
                 TextField(
                   controller: labelController,
-                  decoration: const InputDecoration(
-                    labelText: '数据标签',
+                  decoration: InputDecoration(
+                    labelText: S.current.dataLabel,
                     border: OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: valueController,
-                  decoration: const InputDecoration(
-                    labelText: '数据键值',
+                  decoration: InputDecoration(
+                    labelText: S.current.dataValue,
                     border: OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: sortController,
-                  decoration: const InputDecoration(
-                    labelText: '排序',
+                  decoration: InputDecoration(
+                    labelText: S.current.sort,
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.number,
@@ -186,8 +187,8 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   value: colorType,
-                  decoration: const InputDecoration(
-                    labelText: '颜色类型',
+                  decoration: InputDecoration(
+                    labelText: S.current.colorType,
                     border: OutlineInputBorder(),
                   ),
                   items: colorOptions.map((opt) {
@@ -214,21 +215,21 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
                 const SizedBox(height: 16),
                 DropdownButtonFormField<int>(
                   value: status,
-                  decoration: const InputDecoration(
-                    labelText: '状态',
+                  decoration: InputDecoration(
+                    labelText: S.current.status,
                     border: OutlineInputBorder(),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 0, child: Text('正常')),
-                    DropdownMenuItem(value: 1, child: Text('停用')),
+                  items: [
+                    DropdownMenuItem(value: 0, child: Text(S.current.normal)),
+                    DropdownMenuItem(value: 1, child: Text(S.current.stopped)),
                   ],
                   onChanged: (value) => status = value ?? 0,
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: remarkController,
-                  decoration: const InputDecoration(
-                    labelText: '备注',
+                  decoration: InputDecoration(
+                    labelText: S.current.remark,
                     border: OutlineInputBorder(),
                   ),
                   maxLines: 2,
@@ -240,7 +241,7 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(S.current.cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -263,16 +264,16 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
 
                 if (response.isSuccess) {
                   Navigator.pop(context);
-                  _showSuccess(dictData == null ? '添加成功' : '更新成功');
+                  _showSuccess(dictData == null ? S.current.addSuccess : S.current.updateSuccess);
                   _loadData();
                 } else {
-                  _showError(response.msg ?? '操作失败');
+                  _showError(response.msg ?? S.current.operationFailed);
                 }
               } catch (e) {
-                _showError('操作异常: $e');
+                _showError('${S.current.operationFailed}: $e');
               }
             },
-            child: const Text('确定'),
+            child: Text(S.current.confirm),
           ),
         ],
       ),
@@ -292,7 +293,7 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: widget.dictType == null ? null : () => _showDictDataDialog(),
         icon: const Icon(Icons.add),
-        label: const Text('添加数据'),
+        label: Text(S.current.addData),
       ),
     );
   }
@@ -305,8 +306,8 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
           Expanded(
             child: Text(
               widget.dictType != null
-                  ? '当前字典类型: ${widget.dictType}'
-                  : '请先选择字典类型',
+                  ? '${S.current.currentDictType}: ${widget.dictType}'
+                  : S.current.pleaseSelectDictType,
               style: Theme.of(context).textTheme.titleMedium,
             ),
           ),
@@ -316,14 +317,14 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
             child: DropdownButtonFormField<String>(
               value: _selectedStatus,
               decoration: const InputDecoration(
-                labelText: '状态',
+                labelText: S.current.status,
                 border: OutlineInputBorder(),
                 isDense: true,
               ),
-              items: const [
-                DropdownMenuItem(value: null, child: Text('全部')),
-                DropdownMenuItem(value: '0', child: Text('正常')),
-                DropdownMenuItem(value: '1', child: Text('停用')),
+              items: [
+                DropdownMenuItem(value: null, child: Text(S.current.all)),
+                DropdownMenuItem(value: '0', child: Text(S.current.normal)),
+                DropdownMenuItem(value: '1', child: Text(S.current.stopped)),
               ],
               onChanged: (value) {
                 setState(() => _selectedStatus = value);
@@ -335,7 +336,7 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
           ElevatedButton.icon(
             onPressed: widget.dictType == null ? null : _loadData,
             icon: const Icon(Icons.refresh),
-            label: const Text('刷新'),
+            label: Text(S.current.refresh),
           ),
         ],
       ),
@@ -344,8 +345,8 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
 
   Widget _buildDataTable(BuildContext context) {
     if (widget.dictType == null) {
-      return const Center(
-        child: Text('请在左侧选择字典类型'),
+      return Center(
+        child: Text(S.current.pleaseSelectDictTypeLeft),
       );
     }
 
@@ -354,15 +355,15 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
     }
 
     if (_dictDataList.isEmpty) {
-      return const Center(
-        child: Text('暂无数据'),
+      return Center(
+        child: Text(S.current.noData),
       );
     }
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: PaginatedDataTable(
-        header: const Text('字典数据列表'),
+        header: Text(S.current.dictDataList),
         rowsPerPage: _pageSize,
         availableRowsPerPage: const [10, 20, 50],
         onPageChanged: (page) {
@@ -370,16 +371,16 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
           _loadData();
         },
         // total: _total,
-        columns: const [
-          DataColumn(label: Text('ID')),
-          DataColumn(label: Text('数据标签')),
-          DataColumn(label: Text('数据键值')),
-          DataColumn(label: Text('排序')),
-          DataColumn(label: Text('状态')),
-          DataColumn(label: Text('颜色')),
-          DataColumn(label: Text('备注')),
-          DataColumn(label: Text('创建时间')),
-          DataColumn(label: Text('操作')),
+        columns: [
+          DataColumn(label: Text(S.current.id)),
+          DataColumn(label: Text(S.current.dataLabel)),
+          DataColumn(label: Text(S.current.dataValue)),
+          DataColumn(label: Text(S.current.sort)),
+          DataColumn(label: Text(S.current.status)),
+          DataColumn(label: Text(S.current.color)),
+          DataColumn(label: Text(S.current.remark)),
+          DataColumn(label: Text(S.current.createTime)),
+          DataColumn(label: Text(S.current.operation)),
         ],
         source: _DictDataDataSource(
           _dictDataList,
@@ -447,7 +448,7 @@ class _DictDataDataSource extends DataTableSource {
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
-              dictData.status == 0 ? '正常' : '停用',
+              dictData.status == 0 ? S.current.normal : S.current.stopped,
               style: TextStyle(
                 color: dictData.status == 0 ? Colors.green : Colors.red,
                 fontSize: 12,
@@ -474,11 +475,11 @@ class _DictDataDataSource extends DataTableSource {
             children: [
               TextButton(
                 onPressed: () => onEdit?.call(dictData),
-                child: const Text('编辑'),
+                child: Text(S.current.edit),
               ),
               TextButton(
                 onPressed: () => onDelete?.call(dictData),
-                child: const Text('删除', style: TextStyle(color: Colors.red)),
+                child: Text(S.current.delete, style: TextStyle(color: Colors.red)),
               ),
             ],
           ),

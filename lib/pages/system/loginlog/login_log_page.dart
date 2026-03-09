@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../api/system/login_log_api.dart';
 import '../../../models/system/login_log.dart';
 import '../../../models/common/page_result.dart';
+import '../../../i18n/i18n.dart';
 
 /// 登录日志管理页面
 class LoginLogPage extends ConsumerStatefulWidget {
@@ -67,14 +68,14 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(response.msg ?? '加载失败')),
+            SnackBar(content: Text(response.msg ?? S.current.loginLog_loadFailed)),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('加载失败: $e')),
+          SnackBar(content: Text('${S.current.loginLog_loadFailed}: $e')),
         );
       }
     } finally {
@@ -103,27 +104,27 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('登录日志详情'),
+        title: Text(S.current.loginLog_detailTitle),
         content: SizedBox(
           width: 500,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDetailItem('日志编号', log.id?.toString() ?? '-'),
-              _buildDetailItem('登录类型', _getLogTypeText(log.logType)),
-              _buildDetailItem('用户名称', log.username ?? '-'),
-              _buildDetailItem('登录地址', log.userIp ?? '-'),
-              _buildDetailItem('浏览器', log.userAgent ?? '-'),
-              _buildDetailItem('登录结果', _getResultText(log.result)),
-              _buildDetailItem('登录日期', log.createTime ?? '-'),
+              _buildDetailItem(S.current.loginLog_logId, log.id?.toString() ?? '-'),
+              _buildDetailItem(S.current.loginLog_logType, _getLogTypeText(log.logType)),
+              _buildDetailItem(S.current.loginLog_username, log.username ?? '-'),
+              _buildDetailItem(S.current.loginLog_loginAddress, log.userIp ?? '-'),
+              _buildDetailItem(S.current.loginLog_browser, log.userAgent ?? '-'),
+              _buildDetailItem(S.current.loginLog_loginResult, _getResultText(log.result)),
+              _buildDetailItem(S.current.loginLog_loginDate, log.createTime ?? '-'),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('关闭'),
+            child: Text(S.current.common_close),
           ),
         ],
       ),
@@ -154,9 +155,9 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
   String _getLogTypeText(int? logType) {
     switch (logType) {
       case 1:
-        return '账号密码登录';
+        return S.current.loginLog_typePassword;
       case 2:
-        return '社交登录';
+        return S.current.loginLog_typeSocial;
       default:
         return '-';
     }
@@ -165,9 +166,9 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
   String _getResultText(int? result) {
     switch (result) {
       case 0:
-        return '成功';
+        return S.current.common_success;
       case 1:
-        return '失败';
+        return S.current.common_failed;
       default:
         return '-';
     }
@@ -201,10 +202,10 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
             width: 200,
             child: TextField(
               controller: _usernameController,
-              decoration: const InputDecoration(
-                hintText: '用户名称',
-                prefixIcon: Icon(Icons.person),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: S.current.loginLog_username,
+                prefixIcon: const Icon(Icons.person),
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
               onSubmitted: (_) => _search(),
@@ -217,10 +218,10 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
             width: 200,
             child: TextField(
               controller: _userIpController,
-              decoration: const InputDecoration(
-                hintText: '登录地址',
-                prefixIcon: Icon(Icons.location_on),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: S.current.loginLog_loginAddress,
+                prefixIcon: const Icon(Icons.location_on),
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
               onSubmitted: (_) => _search(),
@@ -246,16 +247,16 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
                 }
               },
               child: InputDecorator(
-                decoration: const InputDecoration(
-                  hintText: '登录时间',
-                  prefixIcon: Icon(Icons.date_range),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  hintText: S.current.loginLog_loginTime,
+                  prefixIcon: const Icon(Icons.date_range),
+                  border: const OutlineInputBorder(),
                   isDense: true,
                 ),
                 child: Text(
                   _dateRange != null
                       ? '${_dateRange!.start.toString().substring(0, 10)} ~ ${_dateRange!.end.toString().substring(0, 10)}'
-                      : '选择时间范围',
+                      : S.current.common_selectTimeRange,
                   style: TextStyle(
                     color: _dateRange != null ? null : Colors.grey,
                   ),
@@ -269,7 +270,7 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
           ElevatedButton.icon(
             onPressed: _search,
             icon: const Icon(Icons.search),
-            label: const Text('搜索'),
+            label: Text(S.current.common_search),
           ),
           const SizedBox(width: 8),
 
@@ -277,7 +278,7 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
           OutlinedButton.icon(
             onPressed: _reset,
             icon: const Icon(Icons.refresh),
-            label: const Text('重置'),
+            label: Text(S.current.common_reset),
           ),
         ],
       ),
@@ -292,7 +293,7 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: PaginatedDataTable(
-        header: Text('登录日志列表 (共 $_totalCount 条)'),
+        header: Text('${S.current.loginLog_list} (${S.current.common_totalCount(_totalCount)})'),
         rowsPerPage: _pageSize,
         availableRowsPerPage: const [10, 20, 50, 100],
         onPageChanged: (page) {
@@ -307,15 +308,15 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
             _loadData();
           }
         },
-        columns: const [
-          DataColumn(label: Text('日志编号')),
-          DataColumn(label: Text('登录类型')),
-          DataColumn(label: Text('用户名称')),
-          DataColumn(label: Text('登录地址')),
-          DataColumn(label: Text('浏览器')),
-          DataColumn(label: Text('登录结果')),
-          DataColumn(label: Text('登录日期')),
-          DataColumn(label: Text('操作')),
+        columns: [
+          DataColumn(label: Text(S.current.loginLog_logId)),
+          DataColumn(label: Text(S.current.loginLog_logType)),
+          DataColumn(label: Text(S.current.loginLog_username)),
+          DataColumn(label: Text(S.current.loginLog_loginAddress)),
+          DataColumn(label: Text(S.current.loginLog_browser)),
+          DataColumn(label: Text(S.current.loginLog_loginResult)),
+          DataColumn(label: Text(S.current.loginLog_loginDate)),
+          DataColumn(label: Text(S.current.common_operation)),
         ],
         source: _LoginLogDataSource(_logs, context, _showDetail),
       ),
@@ -361,7 +362,7 @@ class _LoginLogDataSource extends DataTableSource {
           TextButton.icon(
             onPressed: () => onShowDetail(log),
             icon: const Icon(Icons.visibility, size: 18),
-            label: const Text('详情'),
+            label: Text(S.current.common_detail),
           ),
         ),
       ],
@@ -374,11 +375,11 @@ class _LoginLogDataSource extends DataTableSource {
 
     switch (logType) {
       case 1:
-        text = '账号密码登录';
+        text = S.current.loginLog_typePassword;
         color = Colors.blue;
         break;
       case 2:
-        text = '社交登录';
+        text = S.current.loginLog_typeSocial;
         color = Colors.purple;
         break;
       default:
@@ -405,11 +406,11 @@ class _LoginLogDataSource extends DataTableSource {
 
     switch (result) {
       case 0:
-        text = '成功';
+        text = S.current.common_success;
         color = Colors.green;
         break;
       case 1:
-        text = '失败';
+        text = S.current.common_failed;
         color = Colors.red;
         break;
       default:

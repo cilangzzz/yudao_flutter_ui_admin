@@ -39,7 +39,7 @@
       display: none !important;
     }
 
-    /* 加载容器 - 浅色主题 */
+    /* 加载容器 */
     #flutter-loading {
       position: fixed;
       top: 0;
@@ -47,24 +47,26 @@
       width: 100%;
       height: 100%;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       z-index: 9999;
-      transition: opacity 0.6s ease-out, visibility 0.6s ease-out;
+      transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
     }
 
     /* 浅色主题背景 */
     #flutter-loading {
-      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+      background: linear-gradient(135deg, #f0f5ff 0%, #e6f4ff 50%, #f0f5ff 100%);
     }
 
     /* 深色主题 */
     @media (prefers-color-scheme: dark) {
       #flutter-loading {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1117 100%);
       }
-      .effect { color: #fff; }
-      .rect { border-color: #40a9ff; }
+      .loading-text { color: #e6f4ff; }
+      .loading-hint { color: #8b949e; }
+      .loading-bar-track { background: rgba(24, 144, 255, 0.2); }
     }
 
     #flutter-loading.fade-out {
@@ -72,183 +74,255 @@
       visibility: hidden;
     }
 
-    /* 3D 文字动画效果 */
-    .effect {
+    /* Logo 容器 */
+    .logo-container {
       position: relative;
-      font-size: 6vw;
-      perspective: 5em;
-      display: flex;
-      transform-style: preserve-3d;
-      color: #333;
+      width: 120px;
+      height: 120px;
+      margin-bottom: 32px;
     }
 
-    .letter {
-      width: 1.2em;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      font-size: 1em;
-      font-weight: bold;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      animation: letter_rotate infinite 6s linear;
-    }
-
-    .rect {
+    /* Logo 背景光晕 */
+    .logo-glow {
       position: absolute;
-      left: 0;
-      width: 1.2em;
-      height: 1.2em;
-      box-sizing: border-box;
-      border: solid 0.12em #1890FF;
-      border-radius: 0.15em;
-      transform: translateX(0em) rotateY(0deg);
+      top: 50%;
+      left: 50%;
+      width: 100px;
+      height: 100px;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle, rgba(24, 144, 255, 0.3) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: pulse_glow 2s ease-in-out infinite;
     }
 
-    .rect:nth-child(6n+1) {
-      filter: hue-rotate(0deg);
-      animation: rect1_animation infinite 6s linear;
-      animation-delay: -1.0s;
+    @keyframes pulse_glow {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+      50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.3; }
     }
-    .rect:nth-child(6n+2) {
-      filter: hue-rotate(15deg);
-      animation: rect2_animation infinite 6s linear;
-      animation-delay: -0.8s;
+
+    /* Logo 文字 */
+    .logo-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 42px;
+      font-weight: 700;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      color: #1890FF;
+      letter-spacing: -1px;
     }
-    .rect:nth-child(6n+3) {
-      filter: hue-rotate(30deg);
-      animation: rect3_animation infinite 6s linear;
-      animation-delay: -0.6s;
+
+    @media (prefers-color-scheme: dark) {
+      .logo-text {
+        color: #40a9ff;
+      }
     }
-    .rect:nth-child(6n+4) {
-      filter: hue-rotate(15deg);
-      animation: rect4_animation infinite 6s linear;
-      animation-delay: -0.4s;
+
+    /* 环形进度指示器 */
+    .spinner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90px;
+      height: 90px;
     }
-    .rect:nth-child(6n+5) {
-      filter: hue-rotate(0deg);
-      animation: rect5_animation infinite 6s linear;
-      animation-delay: -0.2s;
+
+    .spinner-ring {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      animation: spin 1.5s linear infinite;
     }
-    .rect:nth-child(6n+6) {
-      filter: hue-rotate(-15deg);
-      animation: rect6_animation infinite 6s linear;
+
+    .spinner-ring:nth-child(1) {
+      border-top-color: #1890FF;
       animation-delay: 0s;
     }
 
-    .letter:nth-child(6n+1) { animation-delay: -1.0s; }
-    .letter:nth-child(6n+2) { animation-delay: -0.8s; }
-    .letter:nth-child(6n+3) { animation-delay: -0.6s; }
-    .letter:nth-child(6n+4) { animation-delay: -0.4s; }
-    .letter:nth-child(6n+5) { animation-delay: -0.2s; }
-    .letter:nth-child(6n+6) { animation-delay: 0s; }
-
-    @keyframes letter_rotate {
-      0%    { opacity: 0; transform: rotateY(90deg); }
-      16.6% { opacity: 0; transform: rotateY(90deg); }
-      16.7% { opacity: 1; transform: rotateY(90deg); }
-      33.3% { opacity: 1; transform: rotateY(720deg); }
-      100%  { opacity: 1; transform: rotateY(720deg); }
+    .spinner-ring:nth-child(2) {
+      width: 75%;
+      height: 75%;
+      top: 12.5%;
+      left: 12.5%;
+      border-right-color: #52C41A;
+      animation-delay: -0.3s;
+      animation-direction: reverse;
     }
 
-    @keyframes rect1_animation {
-      0%    { opacity: 0; transform: rotateY(0deg); }
-      16.6% { opacity: 0; transform: rotateY(0deg); }
-      16.7% { opacity: 1; transform: translate(0em) rotateY(0deg); }
-      19.4% { opacity: 1; transform: translate(0em) rotateY(-90deg); }
-      22.2% { opacity: 1; transform: translate(1.2em) rotateY(90deg); }
-      25.0% { opacity: 1; transform: translate(2.4em) rotateY(-90deg); }
-      27.8% { opacity: 1; transform: translate(3.6em) rotateY(90deg); }
-      30.6% { opacity: 1; transform: translate(4.8em) rotateY(-90deg); }
-      33.3% { opacity: 1; transform: translate(6.0em) rotateY(0deg); }
-      100%  { opacity: 1; transform: translate(6.0em) rotateY(0deg); }
+    .spinner-ring:nth-child(3) {
+      width: 50%;
+      height: 50%;
+      top: 25%;
+      left: 25%;
+      border-bottom-color: #FAAD14;
+      animation-delay: -0.6s;
     }
 
-    @keyframes rect2_animation {
-      0%    { opacity: 0; transform: rotateY(0deg); }
-      16.6% { opacity: 0; transform: rotateY(0deg); }
-      16.7% { opacity: 1; transform: translate(0em) rotateY(0deg); }
-      19.4% { opacity: 1; transform: translate(0em) rotateY(-90deg); }
-      22.2% { opacity: 1; transform: translate(1.2em) rotateY(90deg); }
-      25.0% { opacity: 1; transform: translate(2.4em) rotateY(-90deg); }
-      27.8% { opacity: 1; transform: translate(3.6em) rotateY(90deg); }
-      30.6% { opacity: 1; transform: translate(4.8em) rotateY(-90deg); }
-      100%  { opacity: 1; transform: translate(4.8em) rotateY(-90deg); }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
-    @keyframes rect3_animation {
-      0%    { opacity: 0; transform: rotateY(0deg); }
-      16.6% { opacity: 0; transform: rotateY(0deg); }
-      16.7% { opacity: 1; transform: translate(0em) rotateY(0deg); }
-      19.4% { opacity: 1; transform: translate(0em) rotateY(-90deg); }
-      22.2% { opacity: 1; transform: translate(1.2em) rotateY(90deg); }
-      25.0% { opacity: 1; transform: translate(2.4em) rotateY(-90deg); }
-      27.8% { opacity: 1; transform: translate(3.6em) rotateY(90deg); }
-      100%  { opacity: 1; transform: translate(3.6em) rotateY(90deg); }
+    /* 加载文字 */
+    .loading-text {
+      font-size: 24px;
+      font-weight: 600;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      color: #1890FF;
+      margin-bottom: 24px;
+      letter-spacing: 2px;
     }
 
-    @keyframes rect4_animation {
-      0%    { opacity: 0; transform: rotateY(0deg); }
-      16.6% { opacity: 0; transform: rotateY(0deg); }
-      16.7% { opacity: 1; transform: translate(0em) rotateY(0deg); }
-      19.4% { opacity: 1; transform: translate(0em) rotateY(-90deg); }
-      22.2% { opacity: 1; transform: translate(1.2em) rotateY(90deg); }
-      25.0% { opacity: 1; transform: translate(2.4em) rotateY(-90deg); }
-      100%  { opacity: 1; transform: translate(2.4em) rotateY(-90deg); }
+    @media (prefers-color-scheme: dark) {
+      .loading-text {
+        color: #40a9ff;
+      }
     }
 
-    @keyframes rect5_animation {
-      0%    { opacity: 0; transform: rotateY(0deg); }
-      16.6% { opacity: 0; transform: rotateY(0deg); }
-      16.7% { opacity: 1; transform: translate(0em) rotateY(0deg); }
-      19.4% { opacity: 1; transform: translate(0em) rotateY(-90deg); }
-      22.2% { opacity: 1; transform: translate(1.2em) rotateY(90deg); }
-      100%  { opacity: 1; transform: translate(1.2em) rotateY(90deg); }
+    /* 加载进度条 */
+    .loading-bar {
+      width: 200px;
+      height: 4px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 2px;
+      margin-bottom: 16px;
     }
 
-    @keyframes rect6_animation {
-      0%    { opacity: 0; transform: rotateY(0deg); }
-      16.6% { opacity: 0; transform: rotateY(0deg); }
-      16.7% { opacity: 1; transform: translate(0em) rotateY(0deg); }
-      33.3% { opacity: 1; transform: translate(0em) rotateY(180deg); }
-      100%  { opacity: 1; transform: translate(0em) rotateY(180deg); }
+    .loading-bar-track {
+      width: 100%;
+      height: 100%;
+      background: rgba(24, 144, 255, 0.15);
+      border-radius: 2px;
+    }
+
+    .loading-bar-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 30%;
+      background: linear-gradient(90deg, #1890FF, #40a9ff);
+      border-radius: 2px;
+      animation: loading_bar 1.5s ease-in-out infinite;
+    }
+
+    @keyframes loading_bar {
+      0% { left: -30%; width: 30%; }
+      50% { width: 50%; }
+      100% { left: 100%; width: 30%; }
     }
 
     /* 加载提示文字 */
     .loading-hint {
-      position: absolute;
-      bottom: 30%;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-size: 14px;
-      color: #999;
-      letter-spacing: 2px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #8c8c8c;
+      letter-spacing: 1px;
       animation: hint_fade 2s ease-in-out infinite;
     }
 
     @keyframes hint_fade {
-      0%, 100% { opacity: 0.4; }
+      0%, 100% { opacity: 0.5; }
       50% { opacity: 1; }
+    }
+
+    /* 装饰粒子 */
+    .particles {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: #1890FF;
+      border-radius: 50%;
+      opacity: 0.3;
+      animation: particle_float 8s ease-in-out infinite;
+    }
+
+    .particle:nth-child(1) { left: 10%; animation-delay: 0s; animation-duration: 6s; }
+    .particle:nth-child(2) { left: 20%; animation-delay: 1s; animation-duration: 8s; }
+    .particle:nth-child(3) { left: 30%; animation-delay: 2s; animation-duration: 7s; }
+    .particle:nth-child(4) { left: 40%; animation-delay: 0.5s; animation-duration: 9s; }
+    .particle:nth-child(5) { left: 50%; animation-delay: 1.5s; animation-duration: 6s; }
+    .particle:nth-child(6) { left: 60%; animation-delay: 2.5s; animation-duration: 8s; }
+    .particle:nth-child(7) { left: 70%; animation-delay: 0.8s; animation-duration: 7s; }
+    .particle:nth-child(8) { left: 80%; animation-delay: 1.8s; animation-duration: 9s; }
+    .particle:nth-child(9) { left: 90%; animation-delay: 2.8s; animation-duration: 6s; }
+
+    @keyframes particle_float {
+      0%, 100% {
+        transform: translateY(100vh) scale(0);
+        opacity: 0;
+      }
+      10% {
+        opacity: 0.3;
+        transform: translateY(90vh) scale(1);
+      }
+      90% {
+        opacity: 0.3;
+      }
+      100% {
+        transform: translateY(-10vh) scale(0);
+        opacity: 0;
+      }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .particle {
+        background: #40a9ff;
+      }
     }
   </style>
 </head>
 <body>
   <!-- Flutter 加载界面 -->
   <div id="flutter-loading">
-    <div class="effect">
-      <i class="letter">Y</i>
-      <i class="letter">U</i>
-      <i class="letter">D</i>
-      <i class="letter">A</i>
-      <i class="letter">O</i>
-      <i class="letter">.</i>
-      <div class="rect"></div>
-      <div class="rect"></div>
-      <div class="rect"></div>
-      <div class="rect"></div>
-      <div class="rect"></div>
-      <div class="rect"></div>
+    <!-- 装饰粒子 -->
+    <div class="particles">
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
     </div>
-    <div class="loading-hint">正在加载中...</div>
+
+    <!-- Logo 区域 -->
+    <div class="logo-container">
+      <div class="logo-glow"></div>
+      <div class="spinner">
+        <div class="spinner-ring"></div>
+        <div class="spinner-ring"></div>
+        <div class="spinner-ring"></div>
+      </div>
+      <div class="logo-text">Y</div>
+    </div>
+
+    <!-- 加载文字 -->
+    <div class="loading-text">YUDAO ADMIN</div>
+
+    <!-- 进度条 -->
+    <div class="loading-bar">
+      <div class="loading-bar-track"></div>
+      <div class="loading-bar-fill"></div>
+    </div>
+
+    <!-- 提示文字 -->
+    <div class="loading-hint">正在初始化应用...</div>
   </div>
 
   <script src="flutter_bootstrap.js" async></script>

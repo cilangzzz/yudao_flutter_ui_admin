@@ -4,6 +4,7 @@ import '../../../api/system/post_api.dart';
 import '../../../models/system/post.dart';
 import '../../../models/common/page_result.dart';
 import '../../../models/common/api_response.dart';
+import '../../../i18n/i18n.dart';
 
 /// 岗位管理页面
 class PostPage extends ConsumerStatefulWidget {
@@ -64,7 +65,7 @@ class _PostPageState extends ConsumerState<PostPage> {
         });
       } else {
         setState(() {
-          _error = response.msg ?? '加载失败';
+          _error = response.msg ?? S.current.loadFailed;
           _isLoading = false;
         });
       }
@@ -111,7 +112,7 @@ class _PostPageState extends ConsumerState<PostPage> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showPostDialog(context),
         icon: const Icon(Icons.add),
-        label: const Text('添加岗位'),
+        label: Text(S.current.addPost),
       ),
     );
   }
@@ -127,7 +128,7 @@ class _PostPageState extends ConsumerState<PostPage> {
             child: TextField(
               controller: _searchController,
               decoration: const InputDecoration(
-                hintText: '岗位名称',
+                hintText: S.current.postName,
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
                 isDense: true,
@@ -143,7 +144,7 @@ class _PostPageState extends ConsumerState<PostPage> {
             child: TextField(
               controller: _codeSearchController,
               decoration: const InputDecoration(
-                hintText: '岗位编码',
+                hintText: S.current.postCode,
                 prefixIcon: Icon(Icons.code),
                 border: OutlineInputBorder(),
                 isDense: true,
@@ -158,15 +159,15 @@ class _PostPageState extends ConsumerState<PostPage> {
             width: 150,
             child: DropdownButtonFormField<int?>(
               value: _selectedStatus,
-              decoration: const InputDecoration(
-                labelText: '状态',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: S.current.status,
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
-              items: const [
-                DropdownMenuItem(value: null, child: Text('全部')),
-                DropdownMenuItem(value: 0, child: Text('启用')),
-                DropdownMenuItem(value: 1, child: Text('禁用')),
+              items: [
+                DropdownMenuItem(value: null, child: Text(S.current.all)),
+                DropdownMenuItem(value: 0, child: Text(S.current.enabled)),
+                DropdownMenuItem(value: 1, child: Text(S.current.disabled)),
               ],
               onChanged: (value) {
                 setState(() {
@@ -181,7 +182,7 @@ class _PostPageState extends ConsumerState<PostPage> {
           ElevatedButton.icon(
             onPressed: _search,
             icon: const Icon(Icons.search),
-            label: const Text('搜索'),
+            label: Text(S.current.search),
           ),
           const SizedBox(width: 8),
 
@@ -189,7 +190,7 @@ class _PostPageState extends ConsumerState<PostPage> {
           OutlinedButton.icon(
             onPressed: _reset,
             icon: const Icon(Icons.refresh),
-            label: const Text('重置'),
+            label: Text(S.current.reset),
           ),
         ],
       ),
@@ -206,11 +207,11 @@ class _PostPageState extends ConsumerState<PostPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('加载失败: $_error', style: const TextStyle(color: Colors.red)),
+            Text('${S.current.loadFailed}: $_error', style: const TextStyle(color: Colors.red)),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadPostList,
-              child: const Text('重试'),
+              child: Text(S.current.retry),
             ),
           ],
         ),
@@ -218,13 +219,13 @@ class _PostPageState extends ConsumerState<PostPage> {
     }
 
     if (_postList.isEmpty) {
-      return const Center(child: Text('暂无数据'));
+      return Center(child: Text(S.current.noData));
     }
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: PaginatedDataTable(
-        header: const Text('岗位列表'),
+        header: Text(S.current.postList),
         rowsPerPage: _pageSize,
         availableRowsPerPage: const [10, 20, 50, 100],
         onPageChanged: (page) {
@@ -242,15 +243,15 @@ class _PostPageState extends ConsumerState<PostPage> {
             _loadPostList();
           }
         },
-        columns: const [
-          DataColumn(label: Text('岗位编号')),
-          DataColumn(label: Text('岗位名称')),
-          DataColumn(label: Text('岗位编码')),
-          DataColumn(label: Text('显示顺序')),
-          DataColumn(label: Text('状态')),
-          DataColumn(label: Text('备注')),
-          DataColumn(label: Text('创建时间')),
-          DataColumn(label: Text('操作')),
+        columns: [
+          DataColumn(label: Text(S.current.postId)),
+          DataColumn(label: Text(S.current.postName)),
+          DataColumn(label: Text(S.current.postCode)),
+          DataColumn(label: Text(S.current.postSort)),
+          DataColumn(label: Text(S.current.status)),
+          DataColumn(label: Text(S.current.remark)),
+          DataColumn(label: Text(S.current.createTime)),
+          DataColumn(label: Text(S.current.operation)),
         ],
         source: _PostDataSource(_postList, context, _editPost, _deletePost),
       ),
@@ -268,7 +269,7 @@ class _PostPageState extends ConsumerState<PostPage> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: Text(post == null ? '添加岗位' : '编辑岗位'),
+          title: Text(post == null ? S.current.addPost : S.current.editPost),
           content: SizedBox(
             width: 400,
             child: Column(
@@ -276,24 +277,24 @@ class _PostPageState extends ConsumerState<PostPage> {
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: '岗位名称 *',
+                  decoration: InputDecoration(
+                    labelText: '${S.current.postName} *',
                     border: OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: codeController,
-                  decoration: const InputDecoration(
-                    labelText: '岗位编码 *',
+                  decoration: InputDecoration(
+                    labelText: '${S.current.postCode} *',
                     border: OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: sortController,
-                  decoration: const InputDecoration(
-                    labelText: '显示顺序',
+                  decoration: InputDecoration(
+                    labelText: S.current.postSort,
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.number,
@@ -301,7 +302,7 @@ class _PostPageState extends ConsumerState<PostPage> {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    const Text('状态: '),
+                    Text('${S.current.status}: '),
                     Radio<int>(
                       value: 0,
                       groupValue: status,
@@ -311,7 +312,7 @@ class _PostPageState extends ConsumerState<PostPage> {
                         });
                       },
                     ),
-                    const Text('启用'),
+                    Text(S.current.enabled),
                     Radio<int>(
                       value: 1,
                       groupValue: status,
@@ -321,14 +322,14 @@ class _PostPageState extends ConsumerState<PostPage> {
                         });
                       },
                     ),
-                    const Text('禁用'),
+                    Text(S.current.disabled),
                   ],
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: remarkController,
-                  decoration: const InputDecoration(
-                    labelText: '备注',
+                  decoration: InputDecoration(
+                    labelText: S.current.remark,
                     border: OutlineInputBorder(),
                   ),
                   maxLines: 3,
@@ -339,13 +340,13 @@ class _PostPageState extends ConsumerState<PostPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('取消'),
+              child: Text(S.current.cancel),
             ),
             ElevatedButton(
               onPressed: () async {
                 if (nameController.text.isEmpty || codeController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('请填写必填项')),
+                    SnackBar(content: Text(S.current.pleaseFillRequired)),
                   );
                   return;
                 }
@@ -373,26 +374,26 @@ class _PostPageState extends ConsumerState<PostPage> {
                     if (context.mounted) {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(post == null ? '添加成功' : '修改成功')),
+                        SnackBar(content: Text(post == null ? S.current.addSuccess : S.current.editSuccess)),
                       );
                       _loadPostList();
                     }
                   } else {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(response.msg ?? '操作失败')),
+                        SnackBar(content: Text(response.msg ?? S.current.operationFailed)),
                       );
                     }
                   }
                 } catch (e) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('操作失败: $e')),
+                      SnackBar(content: Text('${S.current.operationFailed}: $e')),
                     );
                   }
                 }
               },
-              child: const Text('确定'),
+              child: Text(S.current.confirm),
             ),
           ],
         ),
@@ -408,19 +409,19 @@ class _PostPageState extends ConsumerState<PostPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('确认删除'),
-        content: Text('确定要删除岗位 "${post.name}" 吗？'),
+        title: Text(S.current.confirmDelete),
+        content: Text('${S.current.confirmDeletePost} "${post.name}" ?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(S.current.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
             ),
-            child: const Text('删除'),
+            child: Text(S.current.delete),
           ),
         ],
       ),
@@ -434,21 +435,21 @@ class _PostPageState extends ConsumerState<PostPage> {
         if (response.isSuccess) {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('删除成功')),
+              SnackBar(content: Text(S.current.deleteSuccess)),
             );
             _loadPostList();
           }
         } else {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(response.msg ?? '删除失败')),
+              SnackBar(content: Text(response.msg ?? S.current.deleteFailed)),
             );
           }
         }
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('删除失败: $e')),
+            SnackBar(content: Text('${S.current.deleteFailed}: $e')),
           );
         }
       }
@@ -487,7 +488,7 @@ class _PostDataSource extends DataTableSource {
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
-              post.status == 0 ? '启用' : '禁用',
+              post.status == 0 ? S.current.enabled : S.current.disabled,
               style: TextStyle(
                 color: post.status == 0 ? Colors.green : Colors.red,
                 fontSize: 12,
@@ -502,11 +503,11 @@ class _PostDataSource extends DataTableSource {
             children: [
               TextButton(
                 onPressed: () => onEdit(post),
-                child: const Text('编辑'),
+                child: Text(S.current.edit),
               ),
               TextButton(
                 onPressed: () => onDelete(post),
-                child: const Text('删除', style: TextStyle(color: Colors.red)),
+                child: Text(S.current.delete, style: TextStyle(color: Colors.red)),
               ),
             ],
           ),

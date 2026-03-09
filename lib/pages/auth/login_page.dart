@@ -5,6 +5,7 @@ import '../../router/router.dart';
 import '../../stores/stores.dart';
 import '../../api/core/auth_api.dart';
 import '../../models/core/auth_models.dart' hide UserInfo;
+import '../../i18n/i18n.dart';
 
 /// 登录页面
 class LoginPage extends ConsumerStatefulWidget {
@@ -85,7 +86,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('登录失败: $e')),
+          SnackBar(content: Text('${S.current.loginFailed}: $e')),
         );
       }
     } finally {
@@ -126,14 +127,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Yudao Admin',
+                  S.current.appName,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Flutter 后台管理系统',
+                  S.current.welcome,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.grey[600],
                       ),
@@ -143,14 +144,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 // 用户名输入
                 TextFormField(
                   controller: _usernameController,
-                  decoration: const InputDecoration(
-                    labelText: '用户名',
-                    prefixIcon: Icon(Icons.person_outline),
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: S.current.username,
+                    prefixIcon: const Icon(Icons.person_outline),
+                    border: const OutlineInputBorder(),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '请输入用户名';
+                      return S.current.pleaseEnterUsername;
                     }
                     return null;
                   },
@@ -163,7 +164,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
-                    labelText: '密码',
+                    labelText: S.current.password,
                     prefixIcon: const Icon(Icons.lock_outline),
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
@@ -181,7 +182,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '请输入密码';
+                      return S.current.pleaseEnterPassword;
                     }
                     return null;
                   },
@@ -204,9 +205,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               strokeWidth: 2,
                             ),
                           )
-                        : const Text(
-                            '登 录',
-                            style: TextStyle(fontSize: 16),
+                        : Text(
+                            S.current.login,
+                            style: const TextStyle(fontSize: 16),
                           ),
                   ),
                 ),
