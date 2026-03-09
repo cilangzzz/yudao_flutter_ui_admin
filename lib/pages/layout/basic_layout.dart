@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../router/router.dart';
+import '../../router/menu_provider.dart';
 import '../../stores/stores.dart';
 import '../../api/core/auth_api.dart';
 
@@ -36,47 +37,21 @@ class BasicLayout extends ConsumerStatefulWidget {
 }
 
 class _BasicLayoutState extends ConsumerState<BasicLayout> {
-  int _selectedIndex = 0;
   bool _extended = true;
 
-  final List<_NavigationItem> _navigationItems = const [
-    _NavigationItem(
-      icon: Icons.dashboard_outlined,
-      selectedIcon: Icons.dashboard,
-      label: '仪表板',
-      path: Routes.dashboard,
-    ),
-    _NavigationItem(
-      icon: Icons.people_outline,
-      selectedIcon: Icons.people,
-      label: '用户管理',
-      path: Routes.user,
-    ),
-    _NavigationItem(
-      icon: Icons.admin_panel_settings_outlined,
-      selectedIcon: Icons.admin_panel_settings,
-      label: '角色管理',
-      path: Routes.role,
-    ),
-    _NavigationItem(
-      icon: Icons.menu_outlined,
-      selectedIcon: Icons.menu,
-      label: '菜单管理',
-      path: Routes.menu,
-    ),
-    _NavigationItem(
-      icon: Icons.account_tree_outlined,
-      selectedIcon: Icons.account_tree,
-      label: '部门管理',
-      path: Routes.dept,
-    ),
-  ];
-
-  void _handleNavigation(int index) {
-    setState(() {
-      _selectedIndex = index;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 同步当前路由到菜单状态
+    final currentPath = GoRouterState.of(context).matchedLocation;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(menuProvider.notifier).expandPath(currentPath);
     });
-    context.go(_navigationItems[index].path);
+  }
+
+  void _handleNavigation(String path) {
+    ref.read(menuProvider.notifier).setSelectedPath(path);
+    context.go(path);
   }
 
   void _toggleExtended() {
@@ -88,6 +63,7 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
   @override
   Widget build(BuildContext context) {
     final userInfo = ref.watch(userStoreProvider).userInfo;
+    final menuState = ref.watch(menuProvider);
     final width = MediaQuery.of(context).size.width;
     final isMobile = Breakpoints.isMobile(width);
     final isDesktop = Breakpoints.isDesktop(width);
@@ -100,7 +76,8 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
           actions: _buildActions(userInfo),
         ),
         body: widget.child,
-        bottomNavigationBar: _buildBottomNavigation(),
+        bottomNavigationBar: _buildBottomNavigation(menuState.menuItems),
+        drawer: _buildDrawer(menuState.menuItems),
       );
     }
 
@@ -109,7 +86,11 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
       body: Row(
         children: [
           // 侧边栏
-          _buildNavigationRail(extended: _extended && isDesktop),
+          _buildNavigationRail(
+            menuItems: menuState.menuItems,
+            expandedIds: menuState.expandedIds,
+            extended: _extended && isDesktop,
+          ),
           // 主内容区
           Expanded(
             child: Column(
@@ -125,11 +106,27 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
     );
   }
 
-  Widget _buildNavigationRail({required bool extended}) {
+  /// 构建侧边栏导航
+  Widget _buildNavigationRail({
+    required List<NavigationItem> menuItems,
+    required Set<String> expandedIds,
+    required bool extended,
+  }) {
+    // 如果菜单为空，显示加载或空状态
+    if (menuItems.isEmpty) {
+      return _buildEmptyNavigationRail(extended: extended);
+    }
+
+    // 构建菜单项列表（支持多级菜单）
+    final destinations = _buildMenuDestinations(
+      menuItems: menuItems,
+      expandedIds: expandedIds,
+      extended: extended,
+    );
+
     return NavigationRail(
       extended: extended,
-      selectedIndex: _selectedIndex,
-      onDestinationSelected: _handleNavigation,
+      selectedIndex: null, // 使用自定义选中逻辑
       leading: Column(
         children: [
           const SizedBox(height: 8),
@@ -149,13 +146,218 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
           ),
         ],
       ),
-      destinations: _navigationItems
-          .map((item) => NavigationRailDestination(
-                icon: Icon(item.icon),
-                selectedIcon: Icon(item.selectedIcon),
-                label: Text(item.label),
-              ))
-          .toList(),
+      destinations: destinations,
+    );
+  }
+
+  /// 构建空的导航栏（用于菜单加载时）
+  Widget _buildEmptyNavigationRail({required bool extended}) {
+    return NavigationRail(
+      extended: extended,
+      selectedIndex: null,
+      leading: Column(
+        children: [
+          const SizedBox(height: 8),
+          if (extended)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Text(
+                'Yudao Admin',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+            ),
+          IconButton(
+            icon: Icon(extended ? Icons.menu_open : Icons.menu),
+            onPressed: _toggleExtended,
+          ),
+        ],
+      ),
+      destinations: const [
+        NavigationRailDestination(
+          icon: Icon(Icons.dashboard_outlined),
+          selectedIcon: Icon(Icons.dashboard),
+          label: Text('仪表板'),
+        ),
+      ],
+    );
+  }
+
+  /// 构建菜单目标列表
+  List<NavigationRailDestination> _buildMenuDestinations({
+    required List<NavigationItem> menuItems,
+    required Set<String> expandedIds,
+    required bool extended,
+  }) {
+    final menuState = ref.read(menuProvider);
+    final currentPath = GoRouterState.of(context).matchedLocation;
+
+    return menuItems.map((item) {
+      final isSelected = item.path == currentPath ||
+          (item.path != '/' && currentPath.startsWith(item.path));
+
+      return NavigationRailDestination(
+        icon: _buildMenuIcon(item, isSelected: isSelected, showExpandIcon: false),
+        selectedIcon: _buildMenuIcon(item, isSelected: true, showExpandIcon: false),
+        label: Text(item.label),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      );
+    }).toList();
+  }
+
+  /// 构建菜单图标
+  Widget _buildMenuIcon(
+    NavigationItem item, {
+    required bool isSelected,
+    required bool showExpandIcon,
+  }) {
+    final icon = isSelected
+        ? (item.selectedIcon ?? item.icon ?? Icons.folder_outlined)
+        : (item.icon ?? Icons.folder_outlined);
+
+    if (showExpandIcon && item.hasChildren) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon),
+          const SizedBox(width: 4),
+          Icon(
+            item.isExpanded ? Icons.expand_less : Icons.expand_more,
+            size: 16,
+          ),
+        ],
+      );
+    }
+    return Icon(icon);
+  }
+
+  /// 构建移动端抽屉菜单
+  Widget _buildDrawer(List<NavigationItem> menuItems) {
+    return Drawer(
+      child: Column(
+        children: [
+          DrawerHeader(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer,
+            ),
+            child: const Center(
+              child: Text(
+                'Yudao Admin',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+          Expanded(
+            child: _buildDrawerMenuItems(menuItems),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 构建抽屉菜单项
+  Widget _buildDrawerMenuItems(List<NavigationItem> menuItems) {
+    final menuState = ref.watch(menuProvider);
+    final currentPath = GoRouterState.of(context).matchedLocation;
+
+    return ListView.builder(
+      itemCount: menuItems.length,
+      itemBuilder: (context, index) {
+        final item = menuItems[index];
+        final isSelected = item.path == currentPath ||
+            (item.path != '/' && currentPath.startsWith(item.path));
+        final isExpanded = menuState.expandedIds.contains(item.id);
+
+        return _buildDrawerItem(
+          item: item,
+          isSelected: isSelected,
+          isExpanded: isExpanded,
+        );
+      },
+    );
+  }
+
+  /// 构建抽屉单个菜单项
+  Widget _buildDrawerItem({
+    required NavigationItem item,
+    required bool isSelected,
+    required bool isExpanded,
+    int level = 0,
+  }) {
+    final menuState = ref.read(menuProvider);
+    final currentPath = GoRouterState.of(context).matchedLocation;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 主菜单项
+        InkWell(
+          onTap: () {
+            if (item.hasChildren) {
+              // 有子菜单时切换展开状态
+              ref.read(menuProvider.notifier).toggleExpanded(item.id);
+            } else {
+              // 没有子菜单时导航
+              _handleNavigation(item.path);
+              Navigator.of(context).pop(); // 关闭抽屉
+            }
+          },
+          child: Container(
+            padding: EdgeInsets.only(
+              left: 16.0 + (level * 16.0),
+              right: 16.0,
+              top: 12.0,
+              bottom: 12.0,
+            ),
+            color: isSelected
+                ? Theme.of(context).colorScheme.primaryContainer
+                : null,
+            child: Row(
+              children: [
+                Icon(
+                  isSelected
+                      ? (item.selectedIcon ?? item.icon ?? Icons.folder_outlined)
+                      : (item.icon ?? Icons.folder_outlined),
+                  size: 20,
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : null,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    item.label,
+                    style: TextStyle(
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected
+                          ? Theme.of(context).colorScheme.primary
+                          : null,
+                    ),
+                  ),
+                ),
+                if (item.hasChildren)
+                  Icon(
+                    isExpanded ? Icons.expand_less : Icons.expand_more,
+                    size: 20,
+                  ),
+              ],
+            ),
+          ),
+        ),
+        // 子菜单项
+        if (item.hasChildren && isExpanded)
+          ...item.children.map((child) {
+            final childSelected = child.path == currentPath ||
+                (child.path != '/' && currentPath.startsWith(child.path));
+            return _buildDrawerItem(
+              item: child,
+              isSelected: childSelected,
+              isExpanded: menuState.expandedIds.contains(child.id),
+              level: level + 1,
+            );
+          }),
+      ],
     );
   }
 
@@ -259,32 +461,37 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
     ];
   }
 
-  Widget _buildBottomNavigation() {
+  /// 构建底部导航栏
+  Widget _buildBottomNavigation(List<NavigationItem> menuItems) {
+    final currentPath = GoRouterState.of(context).matchedLocation;
+
+    // 只显示前5个菜单项
+    final displayItems = menuItems.take(5).toList();
+
+    // 找到当前选中的索引
+    int selectedIndex = -1;
+    for (int i = 0; i < displayItems.length; i++) {
+      if (displayItems[i].path == currentPath ||
+          (displayItems[i].path != '/' && currentPath.startsWith(displayItems[i].path))) {
+        selectedIndex = i;
+        break;
+      }
+    }
+
     return NavigationBar(
-      selectedIndex: _selectedIndex,
-      onDestinationSelected: _handleNavigation,
-      destinations: _navigationItems
+      selectedIndex: selectedIndex >= 0 ? selectedIndex : 0,
+      onDestinationSelected: (index) {
+        if (index < displayItems.length) {
+          _handleNavigation(displayItems[index].path);
+        }
+      },
+      destinations: displayItems
           .map((item) => NavigationDestination(
-                icon: Icon(item.icon),
-                selectedIcon: Icon(item.selectedIcon),
+                icon: Icon(item.icon ?? Icons.folder_outlined),
+                selectedIcon: Icon(item.selectedIcon ?? item.icon ?? Icons.folder),
                 label: item.label,
               ))
           .toList(),
     );
   }
-}
-
-/// 导航项数据
-class _NavigationItem {
-  final IconData icon;
-  final IconData selectedIcon;
-  final String label;
-  final String path;
-
-  const _NavigationItem({
-    required this.icon,
-    required this.selectedIcon,
-    required this.label,
-    required this.path,
-  });
 }

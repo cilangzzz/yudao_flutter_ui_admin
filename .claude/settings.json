@@ -1,5 +1,4 @@
 {
-  "agentMode": "bypassPermissions",
   "permissions": {
     "allow": [
       "Bash(git ls-remote https://github.com/cilangzzz/yudao_flutter_ui_admin.git)",
@@ -18,11 +17,15 @@
       "Bash(git -C \"h:/Documents/yudao_flutter_ui_admin\" diff lib/stores/user_store.dart)",
       "Bash(git -C \"h:/Documents/yudao_flutter_ui_admin\" log --oneline -5)",
       "Bash(flutter analyze lib/pages/auth/login_page.dart lib/stores/user_store.dart)",
-      "Bash(flutter analyze lib/pages/auth/login_page.dart)"
+      "Bash(flutter analyze lib/pages/auth/login_page.dart)",
+      "Bash(flutter analyze lib/router/app_router.dart)",
+      "Bash(flutter analyze lib/router/ lib/pages/layout/basic_layout.dart)"
     ],
     "additionalDirectories": [
       "h:\\Documents\\toly_ui\\.claude\\skills",
-      "h:\\Documents\\yudao_flutter_ui_admin\\lib\\providers"
+      "h:\\Documents\\yudao_flutter_ui_admin\\lib\\providers",
+      "h:\\Documents\\yudao_flutter_ui_admin\\.claude\\teams"
     ]
-  }
+  },
+  "agentMode": "bypassPermissions"
 }
