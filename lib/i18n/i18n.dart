@@ -1317,301 +1317,169 @@ class _AppLocalizations extends S {
   @override
   String get all => _get('all', 'All');
 
+  // 租户管理
   @override
-  // TODO: implement accessToken
-  String get accessToken => throw UnimplementedError();
-
+  String get tenantName => _get('tenantName', 'Tenant Name');
   @override
-  // TODO: implement accessTokenValidity
-  String get accessTokenValidity => throw UnimplementedError();
-
+  String get tenantPackage => _get('tenantPackage', 'Tenant Package');
   @override
-  // TODO: implement accountLimit
-  String get accountLimit => throw UnimplementedError();
-
+  String get contactName => _get('contactName', 'Contact Name');
   @override
-  // TODO: implement addClient
-  String get addClient => throw UnimplementedError();
-
+  String get contactMobile => _get('contactMobile', 'Contact Mobile');
   @override
-  // TODO: implement addOAuth2ClientTitle
-  String get addOAuth2ClientTitle => throw UnimplementedError();
-
+  String get accountLimit => _get('accountLimit', 'Account Limit');
   @override
-  // TODO: implement addSocialClient
-  String get addSocialClient => throw UnimplementedError();
-
+  String get tenantList => _get('tenantList', 'Tenant List');
   @override
-  // TODO: implement addTenant
-  String get addTenant => throw UnimplementedError();
-
+  String get addTenant => _get('addTenant', 'Add Tenant');
   @override
-  // TODO: implement addTenantPackage
-  String get addTenantPackage => throw UnimplementedError();
-
+  String get editTenant => _get('editTenant', 'Edit Tenant');
   @override
-  // TODO: implement addTenantPackageBtn
-  String get addTenantPackageBtn => throw UnimplementedError();
-
+  String get searchTenantName => _get('searchTenantName', 'Search Tenant Name');
   @override
-  // TODO: implement agentId
-  String get agentId => throw UnimplementedError();
-
+  String get tenantNameRequired => _get('tenantNameRequired', 'Tenant Name *');
   @override
-  // TODO: implement alipayMini
-  String get alipayMini => throw UnimplementedError();
-
+  String get tenantPackageRequired => _get('tenantPackageRequired', 'Tenant Package *');
   @override
-  // TODO: implement appDescription
-  String get appDescription => throw UnimplementedError();
-
+  String get expireTimeFormat => _get('expireTimeFormat', 'Format: 2024-12-31');
   @override
-  // TODO: implement appIcon
-  String get appIcon => throw UnimplementedError();
-
+  String get bindDomain => _get('bindDomain', 'Bind Domain');
   @override
-  // TODO: implement appNameRequired
-  String get appNameRequired => throw UnimplementedError();
+  String get confirmDeleteTenant => _get('confirmDeleteTenant', 'Confirm Delete Tenant');
 
+  // 租户套餐管理
   @override
-  // TODO: implement avatar
-  String get avatar => throw UnimplementedError();
-
+  String get packageName => _get('packageName', 'Package Name');
   @override
-  // TODO: implement bindDomain
-  String get bindDomain => throw UnimplementedError();
-
+  String get packageNameRequired => _get('packageNameRequired', 'Package Name *');
   @override
-  // TODO: implement clientId
-  String get clientId => throw UnimplementedError();
-
+  String get tenantPackageList => _get('tenantPackageList', 'Tenant Package List');
   @override
-  // TODO: implement clientIdRequired
-  String get clientIdRequired => throw UnimplementedError();
-
+  String get addTenantPackageBtn => _get('addTenantPackageBtn', 'Add Package');
   @override
-  // TODO: implement clientSecret
-  String get clientSecret => throw UnimplementedError();
-
+  String get editTenantPackage => _get('editTenantPackage', 'Edit Tenant Package');
   @override
-  // TODO: implement confirmDeleteOAuth2Client
-  String get confirmDeleteOAuth2Client => throw UnimplementedError();
-
+  String get addTenantPackage => _get('addTenantPackage', 'Add Tenant Package');
   @override
-  // TODO: implement confirmDeletePackage
-  String get confirmDeletePackage => throw UnimplementedError();
-
+  String get searchPackageName => _get('searchPackageName', 'Search Package Name');
   @override
-  // TODO: implement confirmDeleteSocialClient
-  String get confirmDeleteSocialClient => throw UnimplementedError();
-
+  String get pleaseFillPackageName => _get('pleaseFillPackageName', 'Please fill package name');
   @override
-  // TODO: implement confirmDeleteTenant
-  String get confirmDeleteTenant => throw UnimplementedError();
-
+  String get relatedMenuIds => _get('relatedMenuIds', 'Related Menu IDs');
   @override
-  // TODO: implement confirmDeleteToken
-  String get confirmDeleteToken => throw UnimplementedError();
-
+  String get menuIdsExample => _get('menuIdsExample', 'Example: 1, 2, 3, 100, 101');
   @override
-  // TODO: implement contactMobile
-  String get contactMobile => throw UnimplementedError();
+  String get confirmDeletePackage => _get('confirmDeletePackage', 'Confirm Delete Package');
 
+  // OAuth2 客户端管理
   @override
-  // TODO: implement contactName
-  String get contactName => throw UnimplementedError();
-
+  String get oauth2ClientList => _get('oauth2ClientList', 'OAuth2 Client List');
   @override
-  // TODO: implement createSuccess
-  String get createSuccess => throw UnimplementedError();
-
+  String get addOAuth2ClientTitle => _get('addOAuth2ClientTitle', 'Add OAuth2 Client');
   @override
-  // TODO: implement dingtalk
-  String get dingtalk => throw UnimplementedError();
-
+  String get editOAuth2Client => _get('editOAuth2Client', 'Edit OAuth2 Client');
   @override
-  // TODO: implement editOAuth2Client
-  String get editOAuth2Client => throw UnimplementedError();
-
+  String get addClient => _get('addClient', 'Add Client');
   @override
-  // TODO: implement editSocialClient
-  String get editSocialClient => throw UnimplementedError();
-
+  String get searchClientName => _get('searchClientName', 'Search Client Name');
   @override
-  // TODO: implement editTenant
-  String get editTenant => throw UnimplementedError();
-
+  String get clientId => _get('clientId', 'Client ID');
   @override
-  // TODO: implement editTenantPackage
-  String get editTenantPackage => throw UnimplementedError();
-
+  String get clientIdRequired => _get('clientIdRequired', 'Client ID *');
   @override
-  // TODO: implement expireTimeFormat
-  String get expireTimeFormat => throw UnimplementedError();
-
+  String get clientSecret => _get('clientSecret', 'Client Secret');
   @override
-  // TODO: implement expiresTime
-  String get expiresTime => throw UnimplementedError();
-
+  String get appNameRequired => _get('appNameRequired', 'App Name *');
   @override
-  // TODO: implement menuIdsExample
-  String get menuIdsExample => throw UnimplementedError();
-
+  String get appIcon => _get('appIcon', 'App Icon');
   @override
-  // TODO: implement none
-  String get none => throw UnimplementedError();
-
+  String get appDescription => _get('appDescription', 'App Description');
   @override
-  // TODO: implement oauth2ClientList
-  String get oauth2ClientList => throw UnimplementedError();
-
+  String get accessTokenValidity => _get('accessTokenValidity', 'Access Token Validity (seconds)');
   @override
-  // TODO: implement oauth2TokenList
-  String get oauth2TokenList => throw UnimplementedError();
-
+  String get refreshTokenValidity => _get('refreshTokenValidity', 'Refresh Token Validity (seconds)');
   @override
-  // TODO: implement openid
-  String get openid => throw UnimplementedError();
-
+  String get seconds => _get('seconds', 'seconds');
   @override
-  // TODO: implement packageName
-  String get packageName => throw UnimplementedError();
+  String get confirmDeleteOAuth2Client => _get('confirmDeleteOAuth2Client', 'Confirm Delete Client');
 
+  // OAuth2 令牌管理
   @override
-  // TODO: implement packageNameRequired
-  String get packageNameRequired => throw UnimplementedError();
-
+  String get oauth2TokenList => _get('oauth2TokenList', 'OAuth2 Token List');
   @override
-  // TODO: implement pleaseFillPackageName
-  String get pleaseFillPackageName => throw UnimplementedError();
-
+  String get accessToken => _get('accessToken', 'Access Token');
   @override
-  // TODO: implement publicKey
-  String get publicKey => throw UnimplementedError();
-
+  String get refreshToken => _get('refreshToken', 'Refresh Token');
   @override
-  // TODO: implement qq
-  String get qq => throw UnimplementedError();
-
+  String get expiresTime => _get('expiresTime', 'Expires Time');
   @override
-  // TODO: implement qqMini
-  String get qqMini => throw UnimplementedError();
-
+  String get searchClientId => _get('searchClientId', 'Search Client ID');
   @override
-  // TODO: implement rawUserInfo
-  String get rawUserInfo => throw UnimplementedError();
+  String get confirmDeleteToken => _get('confirmDeleteToken', 'Confirm Delete Token');
 
+  // 社交客户端管理
   @override
-  // TODO: implement refreshToken
-  String get refreshToken => throw UnimplementedError();
-
+  String get socialClientList => _get('socialClientList', 'Social Client List');
   @override
-  // TODO: implement refreshTokenValidity
-  String get refreshTokenValidity => throw UnimplementedError();
-
+  String get addSocialClient => _get('addSocialClient', 'Add Social Client');
   @override
-  // TODO: implement relatedMenuIds
-  String get relatedMenuIds => throw UnimplementedError();
-
+  String get editSocialClient => _get('editSocialClient', 'Edit Social Client');
   @override
-  // TODO: implement searchClientId
-  String get searchClientId => throw UnimplementedError();
-
+  String get searchSocialClientName => _get('searchSocialClientName', 'Search Social Client Name');
   @override
-  // TODO: implement searchClientName
-  String get searchClientName => throw UnimplementedError();
-
+  String get socialPlatform => _get('socialPlatform', 'Social Platform');
   @override
-  // TODO: implement searchNickname
-  String get searchNickname => throw UnimplementedError();
-
+  String get socialPlatformRequired => _get('socialPlatformRequired', 'Social Platform *');
   @override
-  // TODO: implement searchPackageName
-  String get searchPackageName => throw UnimplementedError();
-
+  String get userTypeRequired => _get('userTypeRequired', 'User Type *');
   @override
-  // TODO: implement searchSocialClientName
-  String get searchSocialClientName => throw UnimplementedError();
-
+  String get agentId => _get('agentId', 'Agent ID');
   @override
-  // TODO: implement searchTenantName
-  String get searchTenantName => throw UnimplementedError();
-
+  String get publicKey => _get('publicKey', 'Public Key');
   @override
-  // TODO: implement seconds
-  String get seconds => throw UnimplementedError();
+  String get confirmDeleteSocialClient => _get('confirmDeleteSocialClient', 'Confirm Delete Social Client');
 
+  // 社交平台类型
   @override
-  // TODO: implement socialClientList
-  String get socialClientList => throw UnimplementedError();
-
+  String get dingtalk => _get('dingtalk', 'DingTalk');
   @override
-  // TODO: implement socialPlatform
-  String get socialPlatform => throw UnimplementedError();
-
+  String get wecom => _get('wecom', 'WeCom');
   @override
-  // TODO: implement socialPlatformRequired
-  String get socialPlatformRequired => throw UnimplementedError();
-
+  String get wechat => _get('wechat', 'WeChat');
   @override
-  // TODO: implement socialUserDetail
-  String get socialUserDetail => throw UnimplementedError();
-
+  String get qq => _get('qq', 'QQ');
   @override
-  // TODO: implement socialUserList
-  String get socialUserList => throw UnimplementedError();
-
+  String get weibo => _get('weibo', 'Weibo');
   @override
-  // TODO: implement tenantList
-  String get tenantList => throw UnimplementedError();
-
+  String get wechatMini => _get('wechatMini', 'WeChat Mini');
   @override
-  // TODO: implement tenantName
-  String get tenantName => throw UnimplementedError();
-
+  String get wechatOpen => _get('wechatOpen', 'WeChat Open');
   @override
-  // TODO: implement tenantNameRequired
-  String get tenantNameRequired => throw UnimplementedError();
-
+  String get qqMini => _get('qqMini', 'QQ Mini');
   @override
-  // TODO: implement tenantPackage
-  String get tenantPackage => throw UnimplementedError();
+  String get alipayMini => _get('alipayMini', 'Alipay Mini');
 
+  // 社交用户管理
   @override
-  // TODO: implement tenantPackageList
-  String get tenantPackageList => throw UnimplementedError();
-
+  String get socialUserList => _get('socialUserList', 'Social User List');
   @override
-  // TODO: implement tenantPackageRequired
-  String get tenantPackageRequired => throw UnimplementedError();
-
+  String get socialUserDetail => _get('socialUserDetail', 'Social User Detail');
   @override
-  // TODO: implement updateSuccess
-  String get updateSuccess => throw UnimplementedError();
-
+  String get searchNickname => _get('searchNickname', 'Search Nickname');
   @override
-  // TODO: implement userTypeRequired
-  String get userTypeRequired => throw UnimplementedError();
-
+  String get openid => _get('openid', 'OpenID');
   @override
-  // TODO: implement wechat
-  String get wechat => throw UnimplementedError();
-
+  String get avatar => _get('avatar', 'Avatar');
   @override
-  // TODO: implement wechatMini
-  String get wechatMini => throw UnimplementedError();
-
+  String get rawUserInfo => _get('rawUserInfo', 'Raw User Info');
   @override
-  // TODO: implement wechatOpen
-  String get wechatOpen => throw UnimplementedError();
+  String get none => _get('none', 'None');
 
+  // 提示信息
   @override
-  // TODO: implement wecom
-  String get wecom => throw UnimplementedError();
-
+  String get updateSuccess => _get('updateSuccess', 'Update Success');
   @override
-  // TODO: implement weibo
-  String get weibo => throw UnimplementedError();
+  String get createSuccess => _get('createSuccess', 'Create Success');
 }
 
 /// 全局访问点
