@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../router/router.dart';
-import '../../router/menu_provider.dart';
 import '../../stores/stores.dart';
 import '../../api/core/auth_api.dart';
 
@@ -190,7 +189,6 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
     required Set<String> expandedIds,
     required bool extended,
   }) {
-    final menuState = ref.read(menuProvider);
     final currentPath = GoRouterState.of(context).matchedLocation;
 
     return menuItems.map((item) {

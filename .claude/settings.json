@@ -19,7 +19,8 @@
       "Bash(flutter analyze lib/pages/auth/login_page.dart lib/stores/user_store.dart)",
       "Bash(flutter analyze lib/pages/auth/login_page.dart)",
       "Bash(flutter analyze lib/router/app_router.dart)",
-      "Bash(flutter analyze lib/router/ lib/pages/layout/basic_layout.dart)"
+      "Bash(flutter analyze lib/router/ lib/pages/layout/basic_layout.dart)",
+      "WebFetch(domain:codepen.io)"
     ],
     "additionalDirectories": [
       "h:\\Documents\\toly_ui\\.claude\\skills",
