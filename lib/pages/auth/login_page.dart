@@ -72,13 +72,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                 );
           }
-
           // 保存菜单到 accessStore
           if (permissionInfo.menus != null && permissionInfo.menus!.isNotEmpty) {
             final menuItems = permissionInfo.menus!
                 .map((menu) => _convertMenuInfoToMenuItem(menu))
                 .toList();
-            ref.read(accessStoreProvider.notifier).setMenus(menuItems);
+            await ref.read(accessStoreProvider.notifier).setMenus(menuItems);
           }
 
           // 保存权限到 accessStore

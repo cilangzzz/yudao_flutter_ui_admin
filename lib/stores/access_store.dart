@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/constants/app_constants.dart';
 
 /// 认证状态
@@ -66,29 +68,51 @@ class MenuItem {
           .toList(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'path': path,
+        'icon': icon,
+        'children': children.map((e) => e.toJson()).toList(),
+      };
 }
 
 /// 认证状态管理器
 class AccessStore extends Notifier<AccessState> {
   late final FlutterSecureStorage _storage;
+  SharedPreferences? _prefs;
 
   @override
   AccessState build() {
     _storage = const FlutterSecureStorage();
-    _loadStoredTokens();
+    _loadStoredData();
     return const AccessState();
   }
 
-  /// 加载存储的 Token
-  Future<void> _loadStoredTokens() async {
+  /// 加载存储的数据（Token 和菜单）
+  Future<void> _loadStoredData() async {
     try {
+      // 加载 Token
       final accessToken = await _storage.read(key: AppConstants.tokenKey);
       final refreshToken = await _storage.read(key: AppConstants.refreshTokenKey);
+
+      // 加载菜单
+      _prefs ??= await SharedPreferences.getInstance();
+      final menuJson = _prefs!.getString(AppConstants.menuInfoKey);
+      List<MenuItem> menus = const [];
+      if (menuJson != null && menuJson.isNotEmpty) {
+        final menuList = jsonDecode(menuJson) as List<dynamic>;
+        menus = menuList
+            .map((e) => MenuItem.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
 
       if (accessToken != null && accessToken.isNotEmpty) {
         state = state.copyWith(
           accessToken: accessToken,
           refreshToken: refreshToken,
+          menus: menus,
           isAuthenticated: true,
         );
       }
@@ -120,7 +144,12 @@ class AccessStore extends Notifier<AccessState> {
   }
 
   /// 设置菜单
-  void setMenus(List<MenuItem> menus) {
+  Future<void> setMenus(List<MenuItem> menus) async {
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setString(
+      AppConstants.menuInfoKey,
+      jsonEncode(menus.map((e) => e.toJson()).toList()),
+    );
     state = state.copyWith(menus: menus);
   }
 
@@ -128,6 +157,9 @@ class AccessStore extends Notifier<AccessState> {
   Future<void> clearAccess() async {
     await _storage.delete(key: AppConstants.tokenKey);
     await _storage.delete(key: AppConstants.refreshTokenKey);
+
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.remove(AppConstants.menuInfoKey);
 
     state = const AccessState();
   }

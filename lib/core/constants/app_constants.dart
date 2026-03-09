@@ -15,6 +15,9 @@ class AppConstants {
   /// 用户信息存储键
   static const String userInfoKey = 'user_info';
 
+  /// 菜单信息存储键
+  static const String menuInfoKey = 'menu_info';
+
   /// 默认超时时间（毫秒）
   static const int connectTimeout = 15000;
   static const int receiveTimeout = 15000;
