@@ -316,9 +316,9 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
             width: 150,
             child: DropdownButtonFormField<String>(
               value: _selectedStatus,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: S.current.status,
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
               items: [

@@ -235,10 +235,10 @@ class _DictTypePageState extends ConsumerState<DictTypePage> {
             flex: 2,
             child: TextField(
               controller: _searchController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: S.current.searchDictNameOrType,
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.search),
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
               onSubmitted: (_) => _loadData(),
@@ -249,9 +249,9 @@ class _DictTypePageState extends ConsumerState<DictTypePage> {
             width: 150,
             child: DropdownButtonFormField<String>(
               value: _selectedStatus,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: S.current.status,
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
               items: [

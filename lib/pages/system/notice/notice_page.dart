@@ -122,10 +122,10 @@ class _NoticePageState extends ConsumerState<NoticePage> {
             width: 200,
             child: TextField(
               controller: _searchController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: S.current.strings.noticeName,
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.search),
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
               onSubmitted: (_) => _search(),
@@ -138,9 +138,9 @@ class _NoticePageState extends ConsumerState<NoticePage> {
             width: 150,
             child: DropdownButtonFormField<int?>(
               value: _selectedStatus,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: S.current.strings.status,
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
               items: [

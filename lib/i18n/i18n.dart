@@ -522,6 +522,170 @@ abstract class S {
   // 提示信息
   String get updateSuccess;
   String get createSuccess;
+  String get addSuccess;
+  String get editSuccess;
+
+  // 岗位管理
+  String get postId;
+  String get postName;
+  String get postCode;
+  String get postSort;
+  String get postList;
+  String get addPost;
+  String get editPost;
+  String get confirmDeletePost;
+
+  // 字典管理
+  String get dictName;
+  String get addDictType;
+  String get editDictType;
+  String get addType;
+  String get confirmDeleteDictType;
+  String get searchDictNameOrType;
+  String get dictTypeList;
+  String get dataLabel;
+  String get dataValue;
+  String get colorType;
+  String get colorDefault;
+  String get colorPrimary;
+  String get colorSuccess;
+  String get colorWarning;
+  String get colorDanger;
+  String get colorInfo;
+  String get addDictData;
+  String get editDictData;
+  String get addData;
+  String get confirmDeleteDictData;
+  String get currentDictType;
+  String get pleaseSelectDictType;
+  String get pleaseSelectDictTypeLeft;
+  String get dictDataList;
+  String get color;
+  String get remark;
+
+  // 登录日志
+  String get loginLog_loadFailed;
+  String get loginLog_detailTitle;
+  String get loginLog_logId;
+  String get loginLog_logType;
+  String get loginLog_username;
+  String get loginLog_loginAddress;
+  String get loginLog_browser;
+  String get loginLog_loginResult;
+  String get loginLog_loginDate;
+  String get loginLog_typePassword;
+  String get loginLog_typeSocial;
+  String get loginLog_list;
+  String get loginLog_loginTime;
+
+  // 操作日志
+  String get operateLog_loadFailed;
+  String get operateLog_detailTitle;
+  String get operateLog_logId;
+  String get operateLog_traceId;
+  String get operateLog_userId;
+  String get operateLog_userType;
+  String get operateLog_userName;
+  String get operateLog_userIp;
+  String get operateLog_userAgent;
+  String get operateLog_module;
+  String get operateLog_actionName;
+  String get operateLog_actionContent;
+  String get operateLog_extra;
+  String get operateLog_requestUrl;
+  String get operateLog_operateTime;
+  String get operateLog_bizId;
+  String get operateLog_userTypeAdmin;
+  String get operateLog_userTypeMember;
+  String get operateLog_list;
+
+  // 公告管理
+  String get noticeId;
+  String get noticeName;
+  String get noticeType;
+  String get noticeContent;
+  String get noticeCreator;
+  String get noticeList;
+  String get addNotice;
+  String get editNotice;
+  String get confirmDeleteNotice;
+  String get confirmPush;
+  String get confirmPushNotice;
+  String get push;
+  String get pushSuccess;
+  String get pushFailed;
+  String get typeNotify;
+  String get typeAnnouncement;
+  String get typeUnknown;
+
+  // 通用扩展
+  String get common_close;
+  String get common_success;
+  String get common_failed;
+  String get common_totalCount;
+  String get common_selectTimeRange;
+  String get common_search;
+  String get common_reset;
+  String get common_detail;
+  String get common_operation;
+
+  cacl_common_totalCount(int totalCount) {}
+
+  // 带参数的方法
+  // String common_totalCount(int count);
+}
+
+/// Strings 扩展，用于兼容旧的翻译访问方式
+extension StringsExtension on S {
+  _Strings get strings => _Strings(this);
+}
+
+/// Strings 辅助类
+class _Strings {
+  final S _s;
+  _Strings(this._s);
+
+  String get loadFailed => _s.loadFailed;
+  String get status => _s.status;
+  String get all => _s.all;
+  String get enabled => _s.enabled;
+  String get disabled => _s.disabled;
+  String get search => _s.search;
+  String get reset => _s.reset;
+  String get noticeName => _s.noticeName;
+  String get noticeList => _s.noticeList;
+  String get addNotice => _s.addNotice;
+  String get editNotice => _s.editNotice;
+  String get noticeId => _s.noticeId;
+  String get noticeType => _s.noticeType;
+  String get noticeCreator => _s.noticeCreator;
+  String get createTime => _s.createTime;
+  String get operation => _s.operation;
+  String get noticeContent => _s.noticeContent;
+  String get typeNotify => _s.typeNotify;
+  String get typeAnnouncement => _s.typeAnnouncement;
+  String get typeUnknown => _s.typeUnknown;
+  String get retry => _s.retry;
+  String get noData => _s.noData;
+  String get confirmDelete => _s.confirmDelete;
+  String get confirmDeleteNotice => _s.confirmDeleteNotice;
+  String get delete => _s.delete;
+  String get cancel => _s.cancel;
+  String get deleteSuccess => _s.deleteSuccess;
+  String get deleteFailed => _s.deleteFailed;
+  String get confirmPush => _s.confirmPush;
+  String get confirmPushNotice => _s.confirmPushNotice;
+  String get push => _s.push;
+  String get pushSuccess => _s.pushSuccess;
+  String get pushFailed => _s.pushFailed;
+  String get edit => _s.edit;
+  String get pleaseFillRequired => _s.pleaseFillRequired;
+  String get addSuccess => _s.addSuccess;
+  String get editSuccess => _s.editSuccess;
+  String get operationFailed => _s.operationFailed;
+  String get confirm => _s.confirm;
+
+  
 }
 
 /// 本地化代理
@@ -1480,7 +1644,217 @@ class _AppLocalizations extends S {
   String get updateSuccess => _get('updateSuccess', 'Update Success');
   @override
   String get createSuccess => _get('createSuccess', 'Create Success');
+  @override
+  String get addSuccess => _get('addSuccess', 'Add Success');
+  @override
+  String get editSuccess => _get('editSuccess', 'Edit Success');
+
+  // 岗位管理
+  @override
+  String get postId => _get('postId', 'Post ID');
+  @override
+  String get postName => _get('postName', 'Post Name');
+  @override
+  String get postCode => _get('postCode', 'Post Code');
+  @override
+  String get postSort => _get('postSort', 'Post Sort');
+  @override
+  String get postList => _get('postList', 'Post List');
+  @override
+  String get addPost => _get('addPost', 'Add Post');
+  @override
+  String get editPost => _get('editPost', 'Edit Post');
+  @override
+  String get confirmDeletePost => _get('confirmDeletePost', 'Are you sure to delete this post?');
+
+  // 字典管理
+  @override
+  String get dictName => _get('dictName', 'Dict Name');
+  @override
+  String get addDictType => _get('addDictType', 'Add Dict Type');
+  @override
+  String get editDictType => _get('editDictType', 'Edit Dict Type');
+  @override
+  String get addType => _get('addType', 'Add Type');
+  @override
+  String get confirmDeleteDictType => _get('confirmDeleteDictType', 'Are you sure to delete this dict type?');
+  @override
+  String get searchDictNameOrType => _get('searchDictNameOrType', 'Search dict name or type');
+  @override
+  String get dictTypeList => _get('dictTypeList', 'Dict Type List');
+  @override
+  String get dataLabel => _get('dataLabel', 'Data Label');
+  @override
+  String get dataValue => _get('dataValue', 'Data Value');
+  @override
+  String get colorType => _get('colorType', 'Color Type');
+  @override
+  String get colorDefault => _get('colorDefault', 'Default');
+  @override
+  String get colorPrimary => _get('colorPrimary', 'Primary');
+  @override
+  String get colorSuccess => _get('colorSuccess', 'Success');
+  @override
+  String get colorWarning => _get('colorWarning', 'Warning');
+  @override
+  String get colorDanger => _get('colorDanger', 'Danger');
+  @override
+  String get colorInfo => _get('colorInfo', 'Info');
+  @override
+  String get addDictData => _get('addDictData', 'Add Dict Data');
+  @override
+  String get editDictData => _get('editDictData', 'Edit Dict Data');
+  @override
+  String get addData => _get('addData', 'Add Data');
+  @override
+  String get confirmDeleteDictData => _get('confirmDeleteDictData', 'Are you sure to delete this dict data?');
+  @override
+  String get currentDictType => _get('currentDictType', 'Current Dict Type');
+  @override
+  String get pleaseSelectDictType => _get('pleaseSelectDictType', 'Please select dict type');
+  @override
+  String get pleaseSelectDictTypeLeft => _get('pleaseSelectDictTypeLeft', 'Please select dict type from left');
+  @override
+  String get dictDataList => _get('dictDataList', 'Dict Data List');
+  @override
+  String get color => _get('color', 'Color');
+
+  // 登录日志
+  @override
+  String get loginLog_loadFailed => _get('loginLog_loadFailed', 'Load Failed');
+  @override
+  String get loginLog_detailTitle => _get('loginLog_detailTitle', 'Login Log Detail');
+  @override
+  String get loginLog_logId => _get('loginLog_logId', 'Log ID');
+  @override
+  String get loginLog_logType => _get('loginLog_logType', 'Log Type');
+  @override
+  String get loginLog_username => _get('loginLog_username', 'Username');
+  @override
+  String get loginLog_loginAddress => _get('loginLog_loginAddress', 'Login Address');
+  @override
+  String get loginLog_browser => _get('loginLog_browser', 'Browser');
+  @override
+  String get loginLog_loginResult => _get('loginLog_loginResult', 'Login Result');
+  @override
+  String get loginLog_loginDate => _get('loginLog_loginDate', 'Login Date');
+  @override
+  String get loginLog_typePassword => _get('loginLog_typePassword', 'Password Login');
+  @override
+  String get loginLog_typeSocial => _get('loginLog_typeSocial', 'Social Login');
+  @override
+  String get loginLog_list => _get('loginLog_list', 'Login Log List');
+  @override
+  String get loginLog_loginTime => _get('loginLog_loginTime', 'Login Time');
+
+  // 操作日志
+  @override
+  String get operateLog_loadFailed => _get('operateLog_loadFailed', 'Load Failed');
+  @override
+  String get operateLog_detailTitle => _get('operateLog_detailTitle', 'Operate Log Detail');
+  @override
+  String get operateLog_logId => _get('operateLog_logId', 'Log ID');
+  @override
+  String get operateLog_traceId => _get('operateLog_traceId', 'Trace ID');
+  @override
+  String get operateLog_userId => _get('operateLog_userId', 'User ID');
+  @override
+  String get operateLog_userType => _get('operateLog_userType', 'User Type');
+  @override
+  String get operateLog_userName => _get('operateLog_userName', 'Username');
+  @override
+  String get operateLog_userIp => _get('operateLog_userIp', 'User IP');
+  @override
+  String get operateLog_userAgent => _get('operateLog_userAgent', 'User Agent');
+  @override
+  String get operateLog_module => _get('operateLog_module', 'Module');
+  @override
+  String get operateLog_actionName => _get('operateLog_actionName', 'Action Name');
+  @override
+  String get operateLog_actionContent => _get('operateLog_actionContent', 'Action Content');
+  @override
+  String get operateLog_extra => _get('operateLog_extra', 'Extra');
+  @override
+  String get operateLog_requestUrl => _get('operateLog_requestUrl', 'Request URL');
+  @override
+  String get operateLog_operateTime => _get('operateLog_operateTime', 'Operate Time');
+  @override
+  String get operateLog_bizId => _get('operateLog_bizId', 'Biz ID');
+  @override
+  String get operateLog_userTypeAdmin => _get('operateLog_userTypeAdmin', 'Admin');
+  @override
+  String get operateLog_userTypeMember => _get('operateLog_userTypeMember', 'Member');
+  @override
+  String get operateLog_list => _get('operateLog_list', 'Operate Log List');
+
+  // 公告管理
+  @override
+  String get noticeId => _get('noticeId', 'Notice ID');
+  @override
+  String get noticeName => _get('noticeName', 'Notice Name');
+  @override
+  String get noticeType => _get('noticeType', 'Notice Type');
+  @override
+  String get noticeContent => _get('noticeContent', 'Notice Content');
+  @override
+  String get noticeCreator => _get('noticeCreator', 'Notice Creator');
+  @override
+  String get noticeList => _get('noticeList', 'Notice List');
+  @override
+  String get addNotice => _get('addNotice', 'Add Notice');
+  @override
+  String get editNotice => _get('editNotice', 'Edit Notice');
+  @override
+  String get confirmDeleteNotice => _get('confirmDeleteNotice', 'Are you sure to delete this notice?');
+  @override
+  String get confirmPush => _get('confirmPush', 'Confirm Push');
+  @override
+  String get confirmPushNotice => _get('confirmPushNotice', 'Are you sure to push this notice?');
+  @override
+  String get push => _get('push', 'Push');
+  @override
+  String get pushSuccess => _get('pushSuccess', 'Push Success');
+  @override
+  String get pushFailed => _get('pushFailed', 'Push Failed');
+  @override
+  String get typeNotify => _get('typeNotify', 'Notify');
+  @override
+  String get typeAnnouncement => _get('typeAnnouncement', 'Announcement');
+  @override
+  String get typeUnknown => _get('typeUnknown', 'Unknown');
+
+  // 通用扩展
+  @override
+  String get common_close => _get('common_close', 'Close');
+  @override
+  String get common_success => _get('common_success', 'Success');
+  @override
+  String get common_failed => _get('common_failed', 'Failed');
+  @override
+  String get common_totalCount => _get('common_totalCount', 'Total: %s');
+  @override
+  String get common_selectTimeRange => _get('common_selectTimeRange', 'Select Time Range');
+  @override
+  String get common_search => _get('common_search', 'Search');
+  @override
+  String get common_reset => _get('common_reset', 'Reset');
+  @override
+  String get common_detail => _get('common_detail', 'Detail');
+  @override
+  String get common_operation => _get('common_operation', 'Operation');
+
+  @override
+  String get remark => _get('remark', 'Remark');
+
+  // 带参数的方法
+  @override
+  String cacl_common_totalCount(int count) {
+    final template = _get('common_totalCount', 'Total: %s');
+    return template.replaceAll('%s', count.toString());
+  }
 }
+
+
 
 /// 全局访问点
 S get s => S.current;

@@ -293,7 +293,7 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: PaginatedDataTable(
-        header: Text('${S.current.loginLog_list} (${S.current.common_totalCount(_totalCount)})'),
+        header: Text('${S.current.loginLog_list} (${S.current.cacl_common_totalCount(_totalCount)})'),
         rowsPerPage: _pageSize,
         availableRowsPerPage: const [10, 20, 50, 100],
         onPageChanged: (page) {

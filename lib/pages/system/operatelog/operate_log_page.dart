@@ -357,7 +357,7 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: PaginatedDataTable(
-        header: Text('${S.current.operateLog_list} (${S.current.common_totalCount(_totalCount)})'),
+        header: Text('${S.current.operateLog_list} (${S.current.common_totalCount})'),
         rowsPerPage: _pageSize,
         availableRowsPerPage: const [10, 20, 50, 100],
         onPageChanged: (page) {

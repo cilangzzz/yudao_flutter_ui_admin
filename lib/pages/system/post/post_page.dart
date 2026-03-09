@@ -127,10 +127,10 @@ class _PostPageState extends ConsumerState<PostPage> {
             width: 200,
             child: TextField(
               controller: _searchController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: S.current.postName,
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.search),
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
               onSubmitted: (_) => _search(),
@@ -143,10 +143,10 @@ class _PostPageState extends ConsumerState<PostPage> {
             width: 200,
             child: TextField(
               controller: _codeSearchController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: S.current.postCode,
-                prefixIcon: Icon(Icons.code),
-                border: OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.code),
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
               onSubmitted: (_) => _search(),
