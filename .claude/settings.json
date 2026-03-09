@@ -1,4 +1,5 @@
 {
+  "agentMode": "bypassPermissions",
   "permissions": {
     "allow": [
       "Bash(git ls-remote https://github.com/cilangzzz/yudao_flutter_ui_admin.git)",
