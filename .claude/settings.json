@@ -8,7 +8,10 @@
       "Read(//h/Documents/toly_ui/**)",
       "Bash(flutter analyze lib/api/auth_api.dart lib/models/common/api_response.dart)",
       "Bash(flutter analyze lib/core/api_client.dart)",
-      "Bash(flutter analyze)"
+      "Bash(flutter analyze)",
+      "Read(//h/Documents/**)",
+      "Read(//h/Documents/yudao_flutter_ui_admin/source-code/api/**)",
+      "Bash(done)"
     ],
     "additionalDirectories": [
       "h:\\Documents\\toly_ui\\.claude\\skills"
