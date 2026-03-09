@@ -1,35 +1,165 @@
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 
+/// 自定义日志打印器，支持显示调用位置
+class _CallerPrinter extends LogPrinter {
+  final PrettyPrinter _prettyPrinter;
+  final int methodCount;
+
+  _CallerPrinter({
+    this.methodCount = 0,
+    int errorMethodCount = 5,
+    int lineLength = 80,
+    bool colors = true,
+    bool printEmojis = true,
+  }) : _prettyPrinter = PrettyPrinter(
+          methodCount: methodCount,
+          errorMethodCount: errorMethodCount,
+          lineLength: lineLength,
+          colors: colors,
+          printEmojis: printEmojis,
+          dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
+        );
+
+  @override
+  List<String> log(LogEvent event) {
+    // 获取调用位置信息
+    final callerInfo = _getCallerInfo();
+
+    // 创建带有调用位置的消息
+    final originalMessage = event.message;
+    final newMessage = '$originalMessage\n📍 $callerInfo';
+
+    // 使用新的消息创建新的 LogEvent
+    final newEvent = LogEvent(
+      event.level,
+      newMessage,
+      time: event.time,
+      error: event.error,
+      stackTrace: event.stackTrace,
+    );
+
+    return _prettyPrinter.log(newEvent);
+  }
+
+  /// 获取调用者信息（文件名和行号）
+  String _getCallerInfo() {
+    try {
+      // 获取当前堆栈跟踪
+      final stackTrace = StackTrace.current.toString();
+      final lines = stackTrace.split('\n');
+
+      // 查找调用 AppLog 的位置
+      // 堆栈结构通常是：
+      // 0: _getCallerInfo
+      // 1: log (Printer)
+      // 2: AppLog 的某个方法
+      // 3+: 实际调用位置
+      for (var i = 0; i < lines.length; i++) {
+        final line = lines[i];
+        // 跳过 logger 内部和 AppLog 内部的调用
+        if (line.contains('app_log.dart') ||
+            line.contains('logger.dart') ||
+            line.contains('_CallerPrinter') ||
+            line.contains('log (LogEvent') ||
+            line.contains('package:logger')) {
+          continue;
+        }
+        // 找到第一个非 logger/AppLog 的调用
+        if (line.contains('.dart')) {
+          return _parseStackTraceLine(line);
+        }
+      }
+    } catch (e) {
+      // 解析失败时返回空
+    }
+    return 'unknown';
+  }
+
+  /// 解析堆栈行，提取文件名和行号
+  String _parseStackTraceLine(String line) {
+    // Dart 堆栈格式示例：
+    // #2  main (package:my_app/main.dart:5:3)
+    // 或
+    // #2  main (package:my_app/main.dart:5)
+
+    final regex = RegExp(
+      r'\((package:[^:]+\.dart):(\d+)(?::\d+)?\)',
+    );
+    final match = regex.firstMatch(line);
+
+    if (match != null) {
+      final filePath = match.group(1) ?? '';
+      final lineNumber = match.group(2) ?? '';
+
+      // 提取简洁的文件名（只保留 lib/ 后面的部分）
+      final shortPath = _shortenPath(filePath);
+      return '$shortPath:$lineNumber';
+    }
+
+    // 备用解析方式
+    final simpleRegex = RegExp(r'(\w+\.dart):(\d+)');
+    final simpleMatch = simpleRegex.firstMatch(line);
+    if (simpleMatch != null) {
+      return '${simpleMatch.group(1)}:${simpleMatch.group(2)}';
+    }
+
+    return line.trim();
+  }
+
+  /// 缩短文件路径，只保留 lib/ 之后的部分
+  String _shortenPath(String path) {
+    if (path.startsWith('package:')) {
+      // package:my_app/lib/main.dart -> lib/main.dart
+      final parts = path.split('/');
+      // 找到 lib 目录的位置
+      final libIndex = parts.indexOf('lib');
+      if (libIndex >= 0 && libIndex < parts.length - 1) {
+        return parts.sublist(libIndex).join('/');
+      }
+      // 如果没有 lib，返回 package 后的最后几部分
+      if (parts.length > 2) {
+        return parts.sublist(parts.length - 2).join('/');
+      }
+    }
+    return path;
+  }
+}
+
 /// 应用日志工具类
 ///
 /// 提供统一的日志管理，支持不同环境和日志级别的配置。
 /// 在开发环境下输出详细日志，生产环境下可选择关闭或减少日志输出。
+///
+/// 特性：
+/// - 自动显示调用位置（文件名:行号）
+/// - 支持 Debug/Release 模式自动切换
+/// - 支持多种日志级别
+/// - 支持带标签的日志输出
+/// - 支持网络请求专用格式
 class AppLog {
   AppLog._();
 
-  /// 全局 Logger 实例
+  /// 全局 Logger 实例（带调用位置和堆栈）
   static final Logger _logger = Logger(
-    printer: PrettyPrinter(
+    printer: _CallerPrinter(
       methodCount: 2,
       errorMethodCount: 8,
       lineLength: 100,
       colors: true,
       printEmojis: true,
-      dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
     ),
     level: kDebugMode ? Level.all : Level.warning,
   );
 
-  /// 简洁输出的 Logger 实例（用于不需要堆栈跟踪的场景）
+  /// 简洁输出的 Logger 实例（只显示调用位置，不显示堆栈）
   static final Logger _simpleLogger = Logger(
-    printer: PrettyPrinter(
+    printer: _CallerPrinter(
       methodCount: 0,
       errorMethodCount: 5,
       lineLength: 80,
       colors: true,
       printEmojis: true,
-      dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
     ),
     level: kDebugMode ? Level.all : Level.warning,
   );
@@ -115,7 +245,7 @@ class AppLog {
     _logger.t(message, error: error, stackTrace: stackTrace);
   }
 
-  /// 简洁的调试日志（不显示方法堆栈）
+  /// 简洁的调试日志（不显示方法堆栈，只显示调用位置）
   ///
   /// 适用于简单的日志输出场景
   static void d(dynamic message) {
@@ -123,7 +253,7 @@ class AppLog {
     _simpleLogger.d(message);
   }
 
-  /// 简洁的信息日志（不显示方法堆栈）
+  /// 简洁的信息日志（不显示方法堆栈，只显示调用位置）
   ///
   /// 适用于简单的日志输出场景
   static void i(dynamic message) {
@@ -131,7 +261,7 @@ class AppLog {
     _simpleLogger.i(message);
   }
 
-  /// 简洁的警告日志（不显示方法堆栈）
+  /// 简洁的警告日志（不显示方法堆栈，只显示调用位置）
   ///
   /// 适用于简单的日志输出场景
   static void w(dynamic message) {
@@ -139,7 +269,7 @@ class AppLog {
     _simpleLogger.w(message);
   }
 
-  /// 简洁的错误日志（不显示方法堆栈）
+  /// 简洁的错误日志（不显示方法堆栈，只显示调用位置）
   ///
   /// 适用于简单的日志输出场景
   static void e(dynamic message, {dynamic error, StackTrace? stackTrace}) {
@@ -194,9 +324,11 @@ class AppLog {
   }) {
     if (!_enabled && !isError) return;
 
+    final callerInfo = _getCallerInfoSimple();
     final buffer = StringBuffer();
     buffer.writeln('┌────────────────────────────────────────────────────────────────');
     buffer.writeln('│ ${isError ? "❌" : "🚀"} NETWORK: $method $url');
+    buffer.writeln('│ 📍 $callerInfo');
     if (headers != null && headers.isNotEmpty) {
       buffer.writeln('│ Headers: $headers');
     }
@@ -216,6 +348,67 @@ class AppLog {
     } else {
       _simpleLogger.d(buffer.toString());
     }
+  }
+
+  /// 简单获取调用者信息（用于 network 方法）
+  static String _getCallerInfoSimple() {
+    try {
+      final stackTrace = StackTrace.current.toString();
+      final lines = stackTrace.split('\n');
+
+      for (var i = 0; i < lines.length; i++) {
+        final line = lines[i];
+        if (line.contains('app_log.dart') ||
+            line.contains('_getCallerInfoSimple') ||
+            line.contains('network (')) {
+          continue;
+        }
+        if (line.contains('.dart')) {
+          return _parseStackTraceLine(line);
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+    return 'unknown';
+  }
+
+  /// 解析堆栈行，提取文件名和行号
+  static String _parseStackTraceLine(String line) {
+    final regex = RegExp(
+      r'\((package:[^:]+\.dart):(\d+)(?::\d+)?\)',
+    );
+    final match = regex.firstMatch(line);
+
+    if (match != null) {
+      final filePath = match.group(1) ?? '';
+      final lineNumber = match.group(2) ?? '';
+      final shortPath = _shortenPath(filePath);
+      return '$shortPath:$lineNumber';
+    }
+
+    final simpleRegex = RegExp(r'(\w+\.dart):(\d+)');
+    final simpleMatch = simpleRegex.firstMatch(line);
+    if (simpleMatch != null) {
+      return '${simpleMatch.group(1)}:${simpleMatch.group(2)}';
+    }
+
+    return line.trim();
+  }
+
+  /// 缩短文件路径
+  static String _shortenPath(String path) {
+    if (path.startsWith('package:')) {
+      final parts = path.split('/');
+      final libIndex = parts.indexOf('lib');
+      if (libIndex >= 0 && libIndex < parts.length - 1) {
+        return parts.sublist(libIndex).join('/');
+      }
+      if (parts.length > 2) {
+        return parts.sublist(parts.length - 2).join('/');
+      }
+    }
+    return path;
   }
 
   /// 截断过长的字符串

@@ -192,7 +192,10 @@ class MenuNotifier extends Notifier<MenuState> {
   @override
   MenuState build() {
     // 监听 accessStore 的变化，自动更新菜单
-    final accessState = ref.watch(accessStoreProvider);
+    _listenToAccessStore();
+
+    // 初始化时从 accessStore 获取菜单
+    final accessState = ref.read(accessStoreProvider);
     final menuItems = _buildNavigationItems(accessState.menus);
 
     return MenuState(
@@ -200,6 +203,17 @@ class MenuNotifier extends Notifier<MenuState> {
       expandedIds: const {},
       selectedPath: null,
     );
+  }
+
+  /// 监听 accessStore 的变化
+  void _listenToAccessStore() {
+    ref.listen<AccessState>(accessStoreProvider, (previous, next) {
+      // 当菜单变化时，更新菜单状态
+      if (previous?.menus != next.menus) {
+        final menuItems = _buildNavigationItems(next.menus);
+        state = state.copyWith(menuItems: menuItems);
+      }
+    });
   }
 
   /// 构建导航项列表
