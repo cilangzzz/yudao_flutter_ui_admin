@@ -13,6 +13,7 @@ class UserInfo {
   final String? mobile;
   final int? deptId;
   final List<String> roles;
+  final List<String> permissions;
 
   const UserInfo({
     required this.id,
@@ -23,33 +24,51 @@ class UserInfo {
     this.mobile,
     this.deptId,
     this.roles = const [],
+    this.permissions = const [],
   });
 
+  /// 从芋道后台 get-permission-info 接口响应解析
   factory UserInfo.fromJson(Map<String, dynamic> json) {
+    // 解析用户基本信息
+    final user = json['user'] as Map<String, dynamic>? ?? {};
+
+    // 解析角色列表
+    final roles = (json['roles'] as List<dynamic>?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        [];
+
+    // 解析权限列表
+    final permissions = (json['permissions'] as List<dynamic>?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        [];
+
     return UserInfo(
-      id: json['id'] as int? ?? 0,
-      username: json['username'] as String? ?? '',
-      nickname: json['nickname'] as String? ?? '',
-      avatar: json['avatar'] as String?,
-      email: json['email'] as String?,
-      mobile: json['mobile'] as String?,
-      deptId: json['deptId'] as int?,
-      roles: (json['roles'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [],
+      id: user['id'] as int? ?? 0,
+      username: user['username'] as String? ?? '',
+      nickname: user['nickname'] as String? ?? '',
+      avatar: user['avatar'] as String?,
+      email: user['email'] as String?,
+      mobile: user['mobile'] as String?,
+      deptId: user['deptId'] as int?,
+      roles: roles,
+      permissions: permissions,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'username': username,
-        'nickname': nickname,
-        'avatar': avatar,
-        'email': email,
-        'mobile': mobile,
-        'deptId': deptId,
+        'user': {
+          'id': id,
+          'username': username,
+          'nickname': nickname,
+          'avatar': avatar,
+          'email': email,
+          'mobile': mobile,
+          'deptId': deptId,
+        },
         'roles': roles,
+        'permissions': permissions,
       };
 }
 

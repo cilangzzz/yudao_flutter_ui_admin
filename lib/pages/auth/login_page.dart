@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../router/router.dart';
 import '../../stores/stores.dart';
-import '../../api/auth_api.dart';
+import '../../api/core/auth_api.dart';
+import '../../models/core/auth_models.dart' hide UserInfo;
 
 /// 登录页面
 class LoginPage extends ConsumerStatefulWidget {
@@ -18,6 +19,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _usernameController = TextEditingController(text: 'admin');
   final _passwordController = TextEditingController(text: 'admin123');
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -29,21 +31,72 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final success = await ref.read(loginProvider.notifier).login(
+    setState(() => _isLoading = true);
+
+    try {
+      final authApi = ref.read(authApiProvider);
+      final response = await authApi.login(
+        LoginParams(
           username: _usernameController.text.trim(),
           password: _passwordController.text,
-        );
+        ),
+      );
 
-    if (success && mounted) {
-      context.go(Routes.dashboard);
+      if (response.isSuccess && response.data != null) {
+        // 保存 Token
+        await ref.read(accessStoreProvider.notifier).setAccess(
+              accessToken: response.data!.accessToken,
+              refreshToken: response.data!.refreshToken,
+            );
+
+        // 获取用户权限信息
+        final permissionResponse = await authApi.getAuthPermissionInfo();
+        if (permissionResponse.isSuccess && permissionResponse.data != null) {
+          final permissionInfo = permissionResponse.data!;
+          if (permissionInfo.user != null) {
+            // 保存用户信息到 store
+            final user = permissionInfo.user!;
+            await ref.read(userStoreProvider.notifier).setUserInfo(
+                  UserInfo(
+                    id: user.id ?? 0,
+                    username: user.username ?? '',
+                    nickname: user.nickname ?? '',
+                    avatar: user.avatar,
+                    email: user.email,
+                    mobile: user.mobile,
+                    deptId: user.deptId,
+                    roles: permissionInfo.roles?.map((r) => r.code ?? '').toList() ?? [],
+                    permissions: permissionInfo.permissions ?? [],
+                  ),
+                );
+          }
+        }
+
+        if (mounted) {
+          context.go(Routes.dashboard);
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(response.msg)),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('登录失败: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final loginState = ref.watch(loginProvider);
-    final isLoading = loginState.isLoading;
-
     return Scaffold(
       body: Center(
         child: Container(
@@ -101,7 +154,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     }
                     return null;
                   },
-                  enabled: !isLoading,
+                  enabled: !_isLoading,
                 ),
                 const SizedBox(height: 16),
 
@@ -132,30 +185,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     }
                     return null;
                   },
-                  enabled: !isLoading,
+                  enabled: !_isLoading,
                   onFieldSubmitted: (_) => _handleLogin(),
                 ),
                 const SizedBox(height: 24),
-
-                // 错误信息
-                if (loginState.hasError)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: Text(
-                      loginState.error.toString(),
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  ),
 
                 // 登录按钮
                 SizedBox(
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton(
-                    onPressed: isLoading ? null : _handleLogin,
-                    child: isLoading
+                    onPressed: _isLoading ? null : _handleLogin,
+                    child: _isLoading
                         ? const SizedBox(
                             width: 24,
                             height: 24,

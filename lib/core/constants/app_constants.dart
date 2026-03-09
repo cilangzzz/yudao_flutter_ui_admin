@@ -3,7 +3,7 @@ class AppConstants {
   AppConstants._();
 
   /// API 基础地址
-  static const String baseUrl = 'https://httpbin.org/';
+  static const String baseUrl = 'http://localhost:48080/admin-api';
 
   /// 租户ID
   static const String tenantId = '1';

@@ -11,10 +11,17 @@
       "Bash(flutter analyze)",
       "Read(//h/Documents/**)",
       "Read(//h/Documents/yudao_flutter_ui_admin/source-code/api/**)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(git -C \"h:/Documents/yudao_flutter_ui_admin\" status --short)",
+      "Bash(git -C \"h:/Documents/yudao_flutter_ui_admin\" diff --stat HEAD)",
+      "Bash(git -C \"h:/Documents/yudao_flutter_ui_admin\" diff lib/stores/user_store.dart)",
+      "Bash(git -C \"h:/Documents/yudao_flutter_ui_admin\" log --oneline -5)",
+      "Bash(flutter analyze lib/pages/auth/login_page.dart lib/stores/user_store.dart)",
+      "Bash(flutter analyze lib/pages/auth/login_page.dart)"
     ],
     "additionalDirectories": [
-      "h:\\Documents\\toly_ui\\.claude\\skills"
+      "h:\\Documents\\toly_ui\\.claude\\skills",
+      "h:\\Documents\\yudao_flutter_ui_admin\\lib\\providers"
     ]
   }
 }

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../router/router.dart';
 import '../../stores/stores.dart';
-import '../../api/auth_api.dart';
+import '../../api/core/auth_api.dart';
 
 /// 响应式断点
 class Breakpoints {
@@ -192,7 +192,12 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
             case 'settings':
               break;
             case 'logout':
-              await ref.read(loginProvider.notifier).logout();
+              try {
+                await ref.read(authApiProvider).logout('');
+              } finally {
+                await ref.read(accessStoreProvider.notifier).clearAccess();
+                await ref.read(userStoreProvider.notifier).clearUser();
+              }
               if (mounted) {
                 context.go(Routes.login);
               }
