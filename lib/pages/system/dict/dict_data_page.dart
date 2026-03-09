@@ -369,7 +369,7 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
           _currentPage = page + 1;
           _loadData();
         },
-        total: _total,
+        // total: _total,
         columns: const [
           DataColumn(label: Text('ID')),
           DataColumn(label: Text('数据标签')),

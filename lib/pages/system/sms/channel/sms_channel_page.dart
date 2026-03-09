@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../api/system/sms_channel_api.dart';
-import '../../../core/api_client.dart';
-import '../../../models/system/sms_channel.dart';
+import '/../../api/system/sms_channel_api.dart';
+import '/../../core/api_client.dart';
+import '/../../models/system/sms_channel.dart';
 
 /// 短信渠道管理页面
 class SmsChannelPage extends ConsumerStatefulWidget {

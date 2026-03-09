@@ -432,7 +432,7 @@ class _NotifyTemplatePageState extends ConsumerState<NotifyTemplatePage> {
           _currentPage = page + 1;
           _loadData();
         },
-        total: _total,
+        // total: _total,
         columns: const [
           DataColumn(label: Text('ID')),
           DataColumn(label: Text('模板名称')),

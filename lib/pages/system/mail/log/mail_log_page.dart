@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../api/system/mail_log_api.dart';
-import '../../../models/system/mail_log.dart';
+import '/../../api/system/mail_log_api.dart';
+import '/../../models/system/mail_log.dart';
 
 /// 邮件日志页面
 class MailLogPage extends ConsumerStatefulWidget {

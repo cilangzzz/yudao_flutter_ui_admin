@@ -6,3 +6,4 @@ export 'dept_api.dart';
 export 'dict_data_api.dart';
 export 'dict_type_api.dart';
 export 'permission_api.dart';
+export 'sms_template_api.dart';

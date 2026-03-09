@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../api/system/sms_template_api.dart';
-import '../../../api/system/sms_channel_api.dart';
-import '../../../models/system/sms_template.dart';
-import '../../../models/system/sms_channel.dart';
+import '/../../api/system/sms_template_api.dart';
+import '/../../api/system/sms_channel_api.dart';
+import '/../../models/system/sms_template.dart';
+import '/../../models/system/sms_channel.dart';
 
-/// 短信模板管理页面
+// 短信模板管理页面
 class SmsTemplatePage extends ConsumerStatefulWidget {
   const SmsTemplatePage({super.key});
 

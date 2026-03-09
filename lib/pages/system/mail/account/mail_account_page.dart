@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../api/system/mail_account_api.dart';
-import '../../../models/system/mail_account.dart';
-import '../../../models/common/page_result.dart';
+import '/../../api/system/mail_account_api.dart';
+import '/../../models/system/mail_account.dart';
+import '/../../models/common/page_result.dart';
 
-/// 邮件账号管理页面
+// 邮件账号管理页面
 class MailAccountPage extends ConsumerStatefulWidget {
   const MailAccountPage({super.key});
 

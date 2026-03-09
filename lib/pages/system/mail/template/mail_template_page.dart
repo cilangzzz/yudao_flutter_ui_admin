@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../api/system/mail_account_api.dart';
-import '../../../api/system/mail_template_api.dart';
-import '../../../models/system/mail_account.dart';
-import '../../../models/system/mail_template.dart';
+import '/../../api/system/mail_account_api.dart';
+import '/../../api/system/mail_template_api.dart';
+import '/../../models/system/mail_account.dart';
+import '/../../models/system/mail_template.dart';
 
 /// 邮件模板管理页面
 class MailTemplatePage extends ConsumerStatefulWidget {

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../api/system/sms_log_api.dart';
-import '../../../api/system/sms_channel_api.dart';
-import '../../../models/system/sms_log.dart';
-import '../../../models/system/sms_channel.dart';
+import '/../../api/system/sms_log_api.dart';
+import '/../../api/system/sms_channel_api.dart';
+import '/../../models/system/sms_log.dart';
+import '/../../models/system/sms_channel.dart';
 
 /// 短信日志管理页面
 class SmsLogPage extends ConsumerStatefulWidget {
