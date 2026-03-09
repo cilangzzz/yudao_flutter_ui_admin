@@ -4,7 +4,7 @@ import 'dart:convert';
 import '../core/constants/app_constants.dart';
 
 /// 用户信息模型
-class UserInfo {
+class UserInfoStore {
   final int id;
   final String username;
   final String nickname;
@@ -15,7 +15,7 @@ class UserInfo {
   final List<String> roles;
   final List<String> permissions;
 
-  const UserInfo({
+  const UserInfoStore({
     required this.id,
     required this.username,
     required this.nickname,
@@ -28,7 +28,7 @@ class UserInfo {
   });
 
   /// 从芋道后台 get-permission-info 接口响应解析
-  factory UserInfo.fromJson(Map<String, dynamic> json) {
+  factory UserInfoStore.fromJson(Map<String, dynamic> json) {
     // 解析用户基本信息
     final user = json['user'] as Map<String, dynamic>? ?? {};
 
@@ -44,7 +44,7 @@ class UserInfo {
             .toList() ??
         [];
 
-    return UserInfo(
+    return UserInfoStore(
       id: user['id'] as int? ?? 0,
       username: user['username'] as String? ?? '',
       nickname: user['nickname'] as String? ?? '',
@@ -74,7 +74,7 @@ class UserInfo {
 
 /// 用户状态
 class UserState {
-  final UserInfo? userInfo;
+  final UserInfoStore? userInfo;
   final bool isLoading;
 
   const UserState({
@@ -85,7 +85,7 @@ class UserState {
   bool get isLoggedIn => userInfo != null;
 
   UserState copyWith({
-    UserInfo? userInfo,
+    UserInfoStore? userInfo,
     bool? isLoading,
     bool clearUser = false,
   }) {
@@ -113,7 +113,7 @@ class UserStore extends Notifier<UserState> {
       final userJson = _prefs!.getString(AppConstants.userInfoKey);
       if (userJson != null && userJson.isNotEmpty) {
         final json = jsonDecode(userJson) as Map<String, dynamic>;
-        state = state.copyWith(userInfo: UserInfo.fromJson(json));
+        state = state.copyWith(userInfo: UserInfoStore.fromJson(json));
       }
     } catch (e) {
       // 忽略读取错误
@@ -121,7 +121,7 @@ class UserStore extends Notifier<UserState> {
   }
 
   /// 设置用户信息
-  Future<void> setUserInfo(UserInfo userInfo) async {
+  Future<void> setUserInfo(UserInfoStore userInfo) async {
     _prefs ??= await SharedPreferences.getInstance();
     await _prefs!.setString(AppConstants.userInfoKey, jsonEncode(userInfo.toJson()));
     state = state.copyWith(userInfo: userInfo);

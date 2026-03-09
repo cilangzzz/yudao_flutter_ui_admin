@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../router/router.dart';
 import '../../stores/stores.dart';
 import '../../api/core/auth_api.dart';
-import '../../models/core/auth_models.dart' hide UserInfo;
+import '../../models/core/auth_models.dart';
 import '../../i18n/i18n.dart';
 
 /// 登录页面
@@ -54,11 +54,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         final permissionResponse = await authApi.getAuthPermissionInfo();
         if (permissionResponse.isSuccess && permissionResponse.data != null) {
           final permissionInfo = permissionResponse.data!;
+
+          // 保存用户信息到 userStore
           if (permissionInfo.user != null) {
-            // 保存用户信息到 store
             final user = permissionInfo.user!;
             await ref.read(userStoreProvider.notifier).setUserInfo(
-                  UserInfo(
+                  UserInfoStore(
                     id: user.id ?? 0,
                     username: user.username ?? '',
                     nickname: user.nickname ?? '',
@@ -69,6 +70,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     roles: permissionInfo.roles?.map((r) => r.code ?? '').toList() ?? [],
                     permissions: permissionInfo.permissions ?? [],
                   ),
+                );
+          }
+
+          // 保存菜单到 accessStore
+          if (permissionInfo.menus != null && permissionInfo.menus!.isNotEmpty) {
+            final menuItems = permissionInfo.menus!
+                .map((menu) => _convertMenuInfoToMenuItem(menu))
+                .toList();
+            ref.read(accessStoreProvider.notifier).setMenus(menuItems);
+          }
+
+          // 保存权限到 accessStore
+          if (permissionInfo.permissions != null) {
+            ref.read(accessStoreProvider.notifier).setPermissions(
+                  permissionInfo.permissions!.toSet(),
                 );
           }
         }
@@ -216,6 +232,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           ),
         ),
       ),
+    );
+  }
+
+  /// 将 MenuInfo 转换为 MenuItem
+  MenuItem _convertMenuInfoToMenuItem(MenuInfo menuInfo) {
+    return MenuItem(
+      id: menuInfo.id?.toString() ?? '',
+      name: menuInfo.name ?? '',
+      path: menuInfo.path ?? '',
+      icon: menuInfo.icon,
+      children: menuInfo.children
+              ?.map((child) => _convertMenuInfoToMenuItem(child))
+              .toList() ??
+          const [],
     );
   }
 }

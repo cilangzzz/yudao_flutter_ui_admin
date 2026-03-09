@@ -360,14 +360,14 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
     );
   }
 
-  PreferredSizeWidget _buildTopAppBar(UserInfo? userInfo, bool isMobile) {
+  PreferredSizeWidget _buildTopAppBar(UserInfoStore? userInfo, bool isMobile) {
     return AppBar(
       title: isMobile ? Text(S.current.appName) : null,
       actions: _buildActions(userInfo),
     );
   }
 
-  List<Widget> _buildActions(UserInfo? userInfo) {
+  List<Widget> _buildActions(UserInfoStore? userInfo) {
     return [
       // 通知
       IconButton(
