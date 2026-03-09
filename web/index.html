@@ -39,19 +39,32 @@
       display: none !important;
     }
 
-    /* 加载容器 */
+    /* 加载容器 - 浅色主题 */
     #flutter-loading {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       display: flex;
       justify-content: center;
       align-items: center;
       z-index: 9999;
-      transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+      transition: opacity 0.6s ease-out, visibility 0.6s ease-out;
+    }
+
+    /* 浅色主题背景 */
+    #flutter-loading {
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+    }
+
+    /* 深色主题 */
+    @media (prefers-color-scheme: dark) {
+      #flutter-loading {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      }
+      .effect { color: #fff; }
+      .rect { border-color: #40a9ff; }
     }
 
     #flutter-loading.fade-out {
@@ -59,39 +72,183 @@
       visibility: hidden;
     }
 
-    /* Logo 动画 */
-    .loading-logo {
-      width: 100px;
-      height: 100px;
-      animation: pulse 1.5s ease-in-out infinite;
+    /* 3D 文字动画效果 */
+    .effect {
+      position: relative;
+      font-size: 6vw;
+      perspective: 5em;
+      display: flex;
+      transform-style: preserve-3d;
+      color: #333;
     }
 
-    .loading-logo svg {
-      width: 100%;
-      height: 100%;
-      fill: white;
+    .letter {
+      width: 1.2em;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      font-size: 1em;
+      font-weight: bold;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      animation: letter_rotate infinite 6s linear;
     }
 
-    @keyframes pulse {
-      0%, 100% {
-        transform: scale(1);
-        opacity: 1;
-      }
-      50% {
-        transform: scale(1.08);
-        opacity: 0.85;
-      }
+    .rect {
+      position: absolute;
+      left: 0;
+      width: 1.2em;
+      height: 1.2em;
+      box-sizing: border-box;
+      border: solid 0.12em #1890FF;
+      border-radius: 0.15em;
+      transform: translateX(0em) rotateY(0deg);
+    }
+
+    .rect:nth-child(6n+1) {
+      filter: hue-rotate(0deg);
+      animation: rect1_animation infinite 6s linear;
+      animation-delay: -1.0s;
+    }
+    .rect:nth-child(6n+2) {
+      filter: hue-rotate(15deg);
+      animation: rect2_animation infinite 6s linear;
+      animation-delay: -0.8s;
+    }
+    .rect:nth-child(6n+3) {
+      filter: hue-rotate(30deg);
+      animation: rect3_animation infinite 6s linear;
+      animation-delay: -0.6s;
+    }
+    .rect:nth-child(6n+4) {
+      filter: hue-rotate(15deg);
+      animation: rect4_animation infinite 6s linear;
+      animation-delay: -0.4s;
+    }
+    .rect:nth-child(6n+5) {
+      filter: hue-rotate(0deg);
+      animation: rect5_animation infinite 6s linear;
+      animation-delay: -0.2s;
+    }
+    .rect:nth-child(6n+6) {
+      filter: hue-rotate(-15deg);
+      animation: rect6_animation infinite 6s linear;
+      animation-delay: 0s;
+    }
+
+    .letter:nth-child(6n+1) { animation-delay: -1.0s; }
+    .letter:nth-child(6n+2) { animation-delay: -0.8s; }
+    .letter:nth-child(6n+3) { animation-delay: -0.6s; }
+    .letter:nth-child(6n+4) { animation-delay: -0.4s; }
+    .letter:nth-child(6n+5) { animation-delay: -0.2s; }
+    .letter:nth-child(6n+6) { animation-delay: 0s; }
+
+    @keyframes letter_rotate {
+      0%    { opacity: 0; transform: rotateY(90deg); }
+      16.6% { opacity: 0; transform: rotateY(90deg); }
+      16.7% { opacity: 1; transform: rotateY(90deg); }
+      33.3% { opacity: 1; transform: rotateY(720deg); }
+      100%  { opacity: 1; transform: rotateY(720deg); }
+    }
+
+    @keyframes rect1_animation {
+      0%    { opacity: 0; transform: rotateY(0deg); }
+      16.6% { opacity: 0; transform: rotateY(0deg); }
+      16.7% { opacity: 1; transform: translate(0em) rotateY(0deg); }
+      19.4% { opacity: 1; transform: translate(0em) rotateY(-90deg); }
+      22.2% { opacity: 1; transform: translate(1.2em) rotateY(90deg); }
+      25.0% { opacity: 1; transform: translate(2.4em) rotateY(-90deg); }
+      27.8% { opacity: 1; transform: translate(3.6em) rotateY(90deg); }
+      30.6% { opacity: 1; transform: translate(4.8em) rotateY(-90deg); }
+      33.3% { opacity: 1; transform: translate(6.0em) rotateY(0deg); }
+      100%  { opacity: 1; transform: translate(6.0em) rotateY(0deg); }
+    }
+
+    @keyframes rect2_animation {
+      0%    { opacity: 0; transform: rotateY(0deg); }
+      16.6% { opacity: 0; transform: rotateY(0deg); }
+      16.7% { opacity: 1; transform: translate(0em) rotateY(0deg); }
+      19.4% { opacity: 1; transform: translate(0em) rotateY(-90deg); }
+      22.2% { opacity: 1; transform: translate(1.2em) rotateY(90deg); }
+      25.0% { opacity: 1; transform: translate(2.4em) rotateY(-90deg); }
+      27.8% { opacity: 1; transform: translate(3.6em) rotateY(90deg); }
+      30.6% { opacity: 1; transform: translate(4.8em) rotateY(-90deg); }
+      100%  { opacity: 1; transform: translate(4.8em) rotateY(-90deg); }
+    }
+
+    @keyframes rect3_animation {
+      0%    { opacity: 0; transform: rotateY(0deg); }
+      16.6% { opacity: 0; transform: rotateY(0deg); }
+      16.7% { opacity: 1; transform: translate(0em) rotateY(0deg); }
+      19.4% { opacity: 1; transform: translate(0em) rotateY(-90deg); }
+      22.2% { opacity: 1; transform: translate(1.2em) rotateY(90deg); }
+      25.0% { opacity: 1; transform: translate(2.4em) rotateY(-90deg); }
+      27.8% { opacity: 1; transform: translate(3.6em) rotateY(90deg); }
+      100%  { opacity: 1; transform: translate(3.6em) rotateY(90deg); }
+    }
+
+    @keyframes rect4_animation {
+      0%    { opacity: 0; transform: rotateY(0deg); }
+      16.6% { opacity: 0; transform: rotateY(0deg); }
+      16.7% { opacity: 1; transform: translate(0em) rotateY(0deg); }
+      19.4% { opacity: 1; transform: translate(0em) rotateY(-90deg); }
+      22.2% { opacity: 1; transform: translate(1.2em) rotateY(90deg); }
+      25.0% { opacity: 1; transform: translate(2.4em) rotateY(-90deg); }
+      100%  { opacity: 1; transform: translate(2.4em) rotateY(-90deg); }
+    }
+
+    @keyframes rect5_animation {
+      0%    { opacity: 0; transform: rotateY(0deg); }
+      16.6% { opacity: 0; transform: rotateY(0deg); }
+      16.7% { opacity: 1; transform: translate(0em) rotateY(0deg); }
+      19.4% { opacity: 1; transform: translate(0em) rotateY(-90deg); }
+      22.2% { opacity: 1; transform: translate(1.2em) rotateY(90deg); }
+      100%  { opacity: 1; transform: translate(1.2em) rotateY(90deg); }
+    }
+
+    @keyframes rect6_animation {
+      0%    { opacity: 0; transform: rotateY(0deg); }
+      16.6% { opacity: 0; transform: rotateY(0deg); }
+      16.7% { opacity: 1; transform: translate(0em) rotateY(0deg); }
+      33.3% { opacity: 1; transform: translate(0em) rotateY(180deg); }
+      100%  { opacity: 1; transform: translate(0em) rotateY(180deg); }
+    }
+
+    /* 加载提示文字 */
+    .loading-hint {
+      position: absolute;
+      bottom: 30%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      color: #999;
+      letter-spacing: 2px;
+      animation: hint_fade 2s ease-in-out infinite;
+    }
+
+    @keyframes hint_fade {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
     }
   </style>
 </head>
 <body>
   <!-- Flutter 加载界面 -->
   <div id="flutter-loading">
-    <div class="loading-logo">
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-      </svg>
+    <div class="effect">
+      <i class="letter">Y</i>
+      <i class="letter">U</i>
+      <i class="letter">D</i>
+      <i class="letter">A</i>
+      <i class="letter">O</i>
+      <i class="letter">.</i>
+      <div class="rect"></div>
+      <div class="rect"></div>
+      <div class="rect"></div>
+      <div class="rect"></div>
+      <div class="rect"></div>
+      <div class="rect"></div>
     </div>
+    <div class="loading-hint">正在加载中...</div>
   </div>
 
   <script src="flutter_bootstrap.js" async></script>
