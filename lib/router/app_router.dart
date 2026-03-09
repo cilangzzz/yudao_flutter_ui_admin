@@ -9,6 +9,15 @@ import '../pages/system/user/user_page.dart';
 import '../pages/system/role/role_page.dart';
 import '../pages/system/menu/menu_page.dart';
 import '../pages/system/dept/dept_page.dart';
+import '../pages/system/dict/dict_page.dart';
+import '../pages/system/notify_message/notify_message_page.dart';
+import '../pages/system/notify_template/notify_template_page.dart';
+import '../pages/system/mail/account/mail_account_page.dart';
+import '../pages/system/mail/log/mail_log_page.dart';
+import '../pages/system/mail/template/mail_template_page.dart';
+import '../pages/system/sms/channel/sms_channel_page.dart';
+import '../pages/system/sms/log/sms_log_page.dart';
+import '../pages/system/sms/template/sms_template_page.dart';
 
 /// 路由路径常量
 class Routes {
@@ -21,6 +30,15 @@ class Routes {
   static const String role = '/system/role';
   static const String menu = '/system/menu';
   static const String dept = '/system/dept';
+  static const String dict = '/system/dict';
+  static const String notifyMessage = '/system/notify-message';
+  static const String notifyTemplate = '/system/notify-template';
+  static const String mailAccount = '/system/mail-account';
+  static const String mailTemplate = '/system/mail-template';
+  static const String mailLog = '/system/mail-log';
+  static const String smsChannel = '/system/sms-channel';
+  static const String smsLog = '/system/sms-log';
+  static const String smsTemplate = '/system/sms-template';
 }
 
 /// 路由配置提供者
@@ -90,6 +108,69 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: Routes.dept,
             name: 'dept',
             builder: (context, state) => const DeptPage(),
+          ),
+
+          // 系统管理 - 字典管理
+          GoRoute(
+            path: Routes.dict,
+            name: 'dict',
+            builder: (context, state) => const DictPage(),
+          ),
+
+          // 系统管理 - 通知消息
+          GoRoute(
+            path: Routes.notifyMessage,
+            name: 'notifyMessage',
+            builder: (context, state) => const NotifyMessagePage(),
+          ),
+
+          // 系统管理 - 通知模板
+          GoRoute(
+            path: Routes.notifyTemplate,
+            name: 'notifyTemplate',
+            builder: (context, state) => const NotifyTemplatePage(),
+          ),
+
+          // 系统管理 - 邮件账号管理
+          GoRoute(
+            path: Routes.mailAccount,
+            name: 'mailAccount',
+            builder: (context, state) => const MailAccountPage(),
+          ),
+
+          // 系统管理 - 邮件模板管理
+          GoRoute(
+            path: Routes.mailTemplate,
+            name: 'mailTemplate',
+            builder: (context, state) => const MailTemplatePage(),
+          ),
+
+          // 系统管理 - 邮件日志
+          GoRoute(
+            path: Routes.mailLog,
+            name: 'mailLog',
+            builder: (context, state) => const MailLogPage(),
+          ),
+
+          // 系统管理 - 短信渠道管理
+          GoRoute(
+            path: Routes.smsChannel,
+            name: 'smsChannel',
+            builder: (context, state) => const SmsChannelPage(),
+          ),
+
+          // 系统管理 - 短信日志
+          GoRoute(
+            path: Routes.smsLog,
+            name: 'smsLog',
+            builder: (context, state) => const SmsLogPage(),
+          ),
+
+          // 系统管理 - 短信模板管理
+          GoRoute(
+            path: Routes.smsTemplate,
+            name: 'smsTemplate',
+            builder: (context, state) => const SmsTemplatePage(),
           ),
         ],
       ),
