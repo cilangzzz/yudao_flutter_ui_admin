@@ -67,7 +67,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     email: user.email,
                     mobile: user.mobile,
                     deptId: user.deptId,
-                    roles: permissionInfo.roles?.map((r) => r.code ?? '').toList() ?? [],
+                    roles: permissionInfo.roles?.map((r) => r ?? '').toList() ?? [],
                     permissions: permissionInfo.permissions ?? [],
                   ),
                 );

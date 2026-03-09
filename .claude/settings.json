@@ -23,7 +23,15 @@
       "WebFetch(domain:codepen.io)",
       "Bash(flutter analyze lib/app/app.dart lib/app/theme/app_theme.dart lib/pages/system/dept/dept_page.dart)",
       "Bash(flutter analyze lib/i18n/i18n.dart lib/pages/layout/basic_layout.dart lib/pages/auth/login_page.dart)",
-      "Bash(flutter run -d chrome)"
+      "Bash(flutter run -d chrome)",
+      "Read(//h/Documents/yudao_flutter_ui_admin/**)",
+      "Bash(powershell -Command \"Get-ChildItem -Path $env:APPDATA -Filter ''*flutter*'' -Directory -ErrorAction SilentlyContinue | Select-Object FullName\")",
+      "Bash(powershell -Command \"Get-ChildItem -Path $env:APPDATA -Directory | Select-Object Name\")",
+      "Bash(powershell -Command \"Get-ChildItem -Path \"\"$env:LOCALAPPDATA\"\" -Directory -Recurse -Depth 2 -Filter ''*flutter_secure*'' -ErrorAction SilentlyContinue | Select-Object FullName\")",
+      "Bash(powershell -Command \"$env:LOCALAPPDATA\")",
+      "Bash(powershell -Command \"Get-ChildItem -Path ''C:\\\\Users\\\\sysadmin\\\\AppData\\\\Local'' -Recurse -Filter ''*flutter_secure*'' -ErrorAction SilentlyContinue | Select-Object FullName\")",
+      "Bash(powershell -Command \"Get-ChildItem -Path ''C:\\\\Users\\\\sysadmin\\\\AppData\\\\Roaming'' -Recurse -Filter ''*flutter_secure*'' -ErrorAction SilentlyContinue | Select-Object FullName\")",
+      "Read(//c/Users/sysadmin/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_secure_storage_windows-3.1.2/lib/**)"
     ],
     "additionalDirectories": [
       "h:\\Documents\\toly_ui\\.claude\\skills",

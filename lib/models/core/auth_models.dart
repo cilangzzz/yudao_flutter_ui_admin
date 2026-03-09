@@ -173,7 +173,7 @@ class SocialLoginParams {
 /// 权限信息
 class AuthPermissionInfo {
   final UserInfo? user;
-  final List<RoleInfo>? roles;
+  final List<String>? roles; // API 返回角色代码字符串列表
   final List<String>? permissions;
   final List<MenuInfo>? menus;
 
@@ -190,7 +190,7 @@ class AuthPermissionInfo {
           ? UserInfo.fromJson(json['user'] as Map<String, dynamic>)
           : null,
       roles: (json['roles'] as List<dynamic>?)
-          ?.map((e) => RoleInfo.fromJson(e as Map<String, dynamic>))
+          ?.map((e) => e as String)
           .toList(),
       permissions: (json['permissions'] as List<dynamic>?)
           ?.map((e) => e as String)
@@ -250,25 +250,25 @@ class UserInfo {
 }
 
 /// 角色信息
-class RoleInfo {
-  final int? id;
-  final String? name;
-  final String? code;
-
-  const RoleInfo({
-    this.id,
-    this.name,
-    this.code,
-  });
-
-  factory RoleInfo.fromJson(Map<String, dynamic> json) {
-    return RoleInfo(
-      id: json['id'] as int?,
-      name: json['name'] as String?,
-      code: json['code'] as String?,
-    );
-  }
-}
+// class RoleInfo {
+//   final int? id;
+//   final String? name;
+//   final String? code;
+//
+//   const RoleInfo({
+//     this.id,
+//     this.name,
+//     this.code,
+//   });
+//
+//   factory RoleInfo.fromJson(Map<String, dynamic> json) {
+//     return RoleInfo(
+//       id: json['id'] as int?,
+//       name: json['name'] as String?,
+//       code: json['code'] as String?,
+//     );
+//   }
+// }
 
 /// 菜单信息
 class MenuInfo {
