@@ -467,6 +467,24 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
     // 只显示前5个菜单项
     final displayItems = menuItems.take(5).toList();
 
+    // NavigationBar 要求至少 2 个 destinations
+    // 如果菜单项不足 2 个，添加占位符
+    final destinations = <NavigationDestination>[];
+    for (final item in displayItems) {
+      destinations.add(NavigationDestination(
+        icon: Icon(item.icon ?? Icons.folder_outlined),
+        selectedIcon: Icon(item.selectedIcon ?? item.icon ?? Icons.folder),
+        label: item.label,
+      ));
+    }
+    // 如果 destinations 少于 2 个，添加占位符
+    while (destinations.length < 2) {
+      destinations.add(NavigationDestination(
+        icon: const Icon(Icons.more_horiz),
+        label: '',
+      ));
+    }
+
     // 找到当前选中的索引
     int selectedIndex = -1;
     for (int i = 0; i < displayItems.length; i++) {
@@ -484,13 +502,7 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
           _handleNavigation(displayItems[index].path);
         }
       },
-      destinations: displayItems
-          .map((item) => NavigationDestination(
-                icon: Icon(item.icon ?? Icons.folder_outlined),
-                selectedIcon: Icon(item.selectedIcon ?? item.icon ?? Icons.folder),
-                label: item.label,
-              ))
-          .toList(),
+      destinations: destinations,
     );
   }
 }
