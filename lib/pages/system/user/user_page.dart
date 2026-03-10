@@ -15,6 +15,7 @@ import '../../../models/system/post.dart';
 import '../../../models/system/permission.dart';
 import '../../../models/common/api_response.dart';
 import '../../../i18n/i18n.dart';
+import '../../../router/route_registry.dart';
 
 /// 用户管理页面
 class UserPage extends ConsumerStatefulWidget {
@@ -1554,3 +1555,15 @@ class _ActionButtons extends StatelessWidget {
     );
   }
 }
+
+// ==================== 路由定义 ====================
+
+/// 用户管理页面路由定义
+final userPageRoute = PageRouteMeta(
+  path: '/system/user',
+  name: 'user',
+  title: '用户管理',
+  icon: 'ant-design:user-outlined',
+  permission: 'system:user:list',
+  builder: (context) => const UserPage(),
+);

@@ -58,7 +58,7 @@ class Routes {
   static const String socialLogin = '/auth/social-login';
   static const String ssoLogin = '/auth/sso-login';
 
-  // ==================== 系统管理路由 ====================
+  // ==================== 系统管理 - 二级路由 ====================
   static const String system = '/system';
   static const String user = '/system/user';
   static const String role = '/system/role';
@@ -68,28 +68,48 @@ class Routes {
   static const String dictType = '/system/dict-type';
   static const String dictData = '/system/dict-data';
   static const String area = '/system/area';
-  static const String loginLog = '/system/login-log';
-  static const String oauth2Client = '/system/oauth2-client';
-  static const String oauth2Token = '/system/oauth2-token';
-  static const String operateLog = '/system/operate-log';
-  static const String socialClient = '/system/social-client';
-  static const String socialUser = '/system/social-user';
-  static const String notice = '/system/notice';
   static const String post = '/system/post';
+
+  // ==================== 租户管理（三级） ====================
   static const String tenant = '/system/tenant';
-  static const String tenantPackage = '/system/tenant-package';
-  static const String notifyMessage = '/system/notify-message';
-  static const String notifyTemplate = '/system/notify-template';
+  static const String tenantList = '/system/tenant/list';
+  static const String tenantPackage = '/system/tenant/package';
 
-  // ==================== 邮件管理路由 ====================
-  static const String mailAccount = '/system/mail-account';
-  static const String mailTemplate = '/system/mail-template';
-  static const String mailLog = '/system/mail-log';
+  // ==================== 社交管理（三级） ====================
+  static const String social = '/system/social';
+  static const String socialClient = '/system/social/client';
+  static const String socialUser = '/system/social/user';
 
-  // ==================== 短信管理路由 ====================
-  static const String smsChannel = '/system/sms-channel';
-  static const String smsLog = '/system/sms-log';
-  static const String smsTemplate = '/system/sms-template';
+  // ==================== 日志管理（三级） ====================
+  static const String log = '/system/log';
+  static const String loginLog = '/system/log/login-log';
+  static const String operateLog = '/system/log/operate-log';
+
+  // ==================== OAuth2管理（三级/四级） ====================
+  static const String oauth2 = '/system/oauth2';
+  static const String oauth2Token = '/system/oauth2/token';
+  static const String oauth2Application = '/system/oauth2/oauth2/application';
+
+  // ==================== 消息管理（三级/四级） ====================
+  static const String messages = '/system/messages';
+  static const String notice = '/system/messages/notice';
+
+  // 通知管理（四级）
+  static const String notify = '/system/messages/notify';
+  static const String notifyTemplate = '/system/messages/notify/notify-template';
+  static const String notifyMessage = '/system/messages/notify/notify-message';
+
+  // 邮件管理（四级）
+  static const String mail = '/system/messages/mail';
+  static const String mailAccount = '/system/messages/mail/mail-account';
+  static const String mailTemplate = '/system/messages/mail/mail-template';
+  static const String mailLog = '/system/messages/mail/mail-log';
+
+  // 短信管理（四级）
+  static const String sms = '/system/messages/sms';
+  static const String smsChannel = '/system/messages/sms/sms-channel';
+  static const String smsTemplate = '/system/messages/sms/sms-template';
+  static const String smsLog = '/system/messages/sms/sms-log';
 
   // ==================== BPM流程路由 ====================
   static const String bpmMobileFormPreview = '/bpm/mobile/form-preview';
@@ -107,7 +127,6 @@ class Routes {
 // ==================== 核心路由配置 ====================
 
 /// 核心路由名称列表（不需要权限验证的路由）
-/// 参考 TypeScript 版本的 coreRouteNames
 const coreRouteNames = [
   Routes.loginName,
   Routes.forbiddenName,
@@ -121,7 +140,6 @@ const coreRouteNames = [
 ];
 
 /// 核心路由路径列表（不需要权限验证的路由）
-/// 参考 TypeScript 版本的 coreRoutes
 const coreRoutePaths = [
   Routes.login,
   Routes.forbidden,
@@ -139,7 +157,6 @@ const coreRoutePaths = [
 // ==================== 路由元数据 ====================
 
 /// 路由元数据
-/// 参考 TypeScript 版本的 RouteMeta
 class RouteMeta {
   final String title;
   final String? icon;
@@ -164,6 +181,7 @@ class RouteMeta {
 
 /// 路由元数据映射
 final Map<String, RouteMeta> routeMetaMap = {
+  // 核心路由
   Routes.login: const RouteMeta(title: '登录', hideInMenu: true, ignoreAccess: true),
   Routes.forbidden: const RouteMeta(title: '无权访问', hideInMenu: true, ignoreAccess: true),
   Routes.notFound: const RouteMeta(title: '页面未找到', hideInMenu: true, ignoreAccess: true),
@@ -173,16 +191,10 @@ final Map<String, RouteMeta> routeMetaMap = {
     order: -1,
   ),
   Routes.workspace: const RouteMeta(title: '工作台', icon: 'carbon:workspace'),
-  Routes.analytics: const RouteMeta(
-    title: '分析页',
-    icon: 'lucide:area-chart',
-    affixTab: true,
-  ),
-  Routes.profile: const RouteMeta(
-    title: '个人中心',
-    icon: 'ant-design:profile-outlined',
-    hideInMenu: true,
-  ),
+  Routes.analytics: const RouteMeta(title: '分析页', icon: 'lucide:area-chart', affixTab: true),
+  Routes.profile: const RouteMeta(title: '个人中心', icon: 'ant-design:profile-outlined', hideInMenu: true),
+
+  // 系统管理 - 二级路由
   Routes.user: const RouteMeta(title: '用户管理', icon: 'ant-design:user-outlined'),
   Routes.role: const RouteMeta(title: '角色管理', icon: 'ant-design:team-outlined'),
   Routes.menu: const RouteMeta(title: '菜单管理', icon: 'ant-design:menu-outlined'),
@@ -191,37 +203,50 @@ final Map<String, RouteMeta> routeMetaMap = {
   Routes.dictType: const RouteMeta(title: '字典类型', icon: 'ant-design:book-outlined'),
   Routes.dictData: const RouteMeta(title: '字典数据', icon: 'ant-design:database-outlined'),
   Routes.area: const RouteMeta(title: '地区管理', icon: 'ant-design:global-outlined'),
-  Routes.loginLog: const RouteMeta(title: '登录日志', icon: 'ant-design:login-outlined'),
-  Routes.oauth2Client: const RouteMeta(title: 'OAuth2客户端', icon: 'ant-design:api-outlined'),
-  Routes.oauth2Token: const RouteMeta(title: 'OAuth2令牌', icon: 'ant-design:key-outlined'),
-  Routes.operateLog: const RouteMeta(title: '操作日志', icon: 'ant-design:file-text-outlined'),
+  Routes.post: const RouteMeta(title: '岗位管理', icon: 'ant-design:solution-outlined'),
+
+  // 租户管理（三级）
+  Routes.tenant: const RouteMeta(title: '租户管理', icon: 'ant-design:home-outlined', hideInMenu: true),
+  Routes.tenantList: const RouteMeta(title: '租户列表', icon: 'ant-design:home-outlined'),
+  Routes.tenantPackage: const RouteMeta(title: '租户套餐', icon: 'ant-design:gift-outlined'),
+
+  // 社交管理（三级）
+  Routes.social: const RouteMeta(title: '社交管理', icon: 'ant-design:link-outlined', hideInMenu: true),
   Routes.socialClient: const RouteMeta(title: '社交客户端', icon: 'ant-design:link-outlined'),
   Routes.socialUser: const RouteMeta(title: '社交用户', icon: 'ant-design:usergroup-outlined'),
+
+  // 日志管理（三级）
+  Routes.log: const RouteMeta(title: '日志管理', icon: 'ant-design:file-text-outlined', hideInMenu: true),
+  Routes.loginLog: const RouteMeta(title: '登录日志', icon: 'ant-design:login-outlined'),
+  Routes.operateLog: const RouteMeta(title: '操作日志', icon: 'ant-design:file-text-outlined'),
+
+  // OAuth2管理（三级/四级）
+  Routes.oauth2: const RouteMeta(title: 'OAuth2管理', icon: 'ant-design:api-outlined', hideInMenu: true),
+  Routes.oauth2Application: const RouteMeta(title: 'OAuth2应用', icon: 'ant-design:api-outlined'),
+  Routes.oauth2Token: const RouteMeta(title: 'OAuth2令牌', icon: 'ant-design:key-outlined'),
+
+  // 消息管理
+  Routes.messages: const RouteMeta(title: '消息管理', icon: 'ant-design:message-outlined', hideInMenu: true),
   Routes.notice: const RouteMeta(title: '通知公告', icon: 'ant-design:notification-outlined'),
-  Routes.post: const RouteMeta(title: '岗位管理', icon: 'ant-design:solution-outlined'),
-  Routes.tenant: const RouteMeta(title: '租户管理', icon: 'ant-design:home-outlined'),
-  Routes.tenantPackage: const RouteMeta(title: '租户套餐', icon: 'ant-design:gift-outlined'),
-  Routes.notifyMessage: const RouteMeta(
-    title: '我的站内信',
-    icon: 'ant-design:message-filled',
-    hideInMenu: true,
-  ),
-  Routes.notifyTemplate: const RouteMeta(
-    title: '通知模板',
-    icon: 'ant-design:notification-outlined',
-  ),
+
+  // 通知管理（四级）
+  Routes.notify: const RouteMeta(title: '站内信', icon: 'ant-design:message-outlined', hideInMenu: true),
+  Routes.notifyTemplate: const RouteMeta(title: '通知模板', icon: 'ant-design:notification-outlined'),
+  Routes.notifyMessage: const RouteMeta(title: '我的站内信', icon: 'ant-design:message-filled', hideInMenu: true),
+
+  // 邮件管理（四级）
+  Routes.mail: const RouteMeta(title: '邮件管理', icon: 'ant-design:mail-outlined', hideInMenu: true),
   Routes.mailAccount: const RouteMeta(title: '邮箱账号', icon: 'ant-design:mail-outlined'),
-  Routes.mailTemplate: const RouteMeta(
-    title: '邮件模板',
-    icon: 'ant-design:file-markdown-outlined',
-  ),
+  Routes.mailTemplate: const RouteMeta(title: '邮件模板', icon: 'ant-design:file-markdown-outlined'),
   Routes.mailLog: const RouteMeta(title: '邮件日志', icon: 'ant-design:history-outlined'),
+
+  // 短信管理（四级）
+  Routes.sms: const RouteMeta(title: '短信管理', icon: 'ant-design:message-outlined', hideInMenu: true),
   Routes.smsChannel: const RouteMeta(title: '短信渠道', icon: 'ant-design:message-outlined'),
+  Routes.smsTemplate: const RouteMeta(title: '短信模板', icon: 'ant-design:file-text-outlined'),
   Routes.smsLog: const RouteMeta(title: '短信日志', icon: 'ant-design:file-search-outlined'),
-  Routes.smsTemplate: const RouteMeta(
-    title: '短信模板',
-    icon: 'ant-design:file-text-outlined',
-  ),
+
+  // BPM
   Routes.bpmMobileFormPreview: const RouteMeta(
     title: '移动端流程表单展示',
     hideInMenu: true,
@@ -234,8 +259,8 @@ final Map<String, RouteMeta> routeMetaMap = {
 // ==================== 权限映射 ====================
 
 /// 路由权限映射
-/// 根据路径映射所需权限
 final Map<String, String> routePermissionMap = {
+  // 系统管理 - 二级路由
   Routes.user: 'system:user:list',
   Routes.role: 'system:role:list',
   Routes.menu: 'system:menu:list',
@@ -244,30 +269,43 @@ final Map<String, String> routePermissionMap = {
   Routes.dictType: 'system:dict-type:list',
   Routes.dictData: 'system:dict-data:list',
   Routes.area: 'system:area:list',
-  Routes.loginLog: 'system:login-log:list',
-  Routes.oauth2Client: 'system:oauth2-client:list',
-  Routes.oauth2Token: 'system:oauth2-token:list',
-  Routes.operateLog: 'system:operate-log:list',
+  Routes.post: 'system:post:list',
+
+  // 租户管理
+  Routes.tenantList: 'system:tenant:list',
+  Routes.tenantPackage: 'system:tenant-package:list',
+
+  // 社交管理
   Routes.socialClient: 'system:social-client:list',
   Routes.socialUser: 'system:social-user:list',
+
+  // 日志管理
+  Routes.loginLog: 'system:login-log:list',
+  Routes.operateLog: 'system:operate-log:list',
+
+  // OAuth2管理
+  Routes.oauth2Application: 'system:oauth2-client:list',
+  Routes.oauth2Token: 'system:oauth2-token:list',
+
+  // 消息管理
   Routes.notice: 'system:notice:list',
-  Routes.post: 'system:post:list',
-  Routes.tenant: 'system:tenant:list',
-  Routes.tenantPackage: 'system:tenant-package:list',
-  Routes.notifyMessage: 'system:notify-message:list',
   Routes.notifyTemplate: 'system:notify-template:list',
+  Routes.notifyMessage: 'system:notify-message:list',
+
+  // 邮件管理
   Routes.mailAccount: 'system:mail-account:list',
   Routes.mailTemplate: 'system:mail-template:list',
   Routes.mailLog: 'system:mail-log:list',
+
+  // 短信管理
   Routes.smsChannel: 'system:sms-channel:list',
-  Routes.smsLog: 'system:sms-log:list',
   Routes.smsTemplate: 'system:sms-template:list',
+  Routes.smsLog: 'system:sms-log:list',
 };
 
 // ==================== GoRouter 刷新流 ====================
 
 /// 用于 go_router 的刷新流
-/// 监听认证状态变化，触发路由刷新
 class GoRouterRefreshStream extends ChangeNotifier {
   final Ref ref;
 
@@ -283,7 +321,6 @@ class GoRouterRefreshStream extends ChangeNotifier {
 // ==================== 路由配置提供者 ====================
 
 /// 路由配置提供者
-/// 参考 TypeScript 版本的 router/index.ts 和 guard.ts 实现
 final routerProvider = Provider<GoRouter>((ref) {
   final accessState = ref.watch(accessStoreProvider);
 
@@ -295,7 +332,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       return _handleRedirect(context, state, accessState);
     },
     routes: [
-      // ==================== 登录页（不需要BasicLayout） ====================
+      // ==================== 登录页 ====================
       GoRoute(
         path: Routes.login,
         name: Routes.loginName,
@@ -310,14 +347,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       // ==================== 主布局路由（需要登录） ====================
-      // ShellRoute 类似于 Vue 的 BasicLayout 嵌套
-      // 所有子路由都会被包裹在 BasicLayout 中
       ShellRoute(
-        builder: (context, state, child) {
-          // 可以在这里添加全局布局逻辑
-          // 例如：检查权限、加载菜单等
-          return BasicLayout(child: child);
-        },
+        builder: (context, state, child) => BasicLayout(child: child),
         routes: [
           // ==================== 仪表板 ====================
           GoRoute(
@@ -325,84 +356,40 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: Routes.dashboardName,
             builder: (context, state) => const DashboardPage(),
           ),
-
-          // ==================== 工作台 ====================
           GoRoute(
             path: Routes.workspace,
             name: Routes.workspaceName,
             builder: (context, state) => const DashboardPage(),
           ),
-
-          // ==================== 分析页 ====================
           GoRoute(
             path: Routes.analytics,
             name: Routes.analyticsName,
             builder: (context, state) => const DashboardPage(),
           ),
-
-          // ==================== 个人中心 ====================
           GoRoute(
             path: Routes.profile,
             name: Routes.profileName,
             builder: (context, state) => const DashboardPage(),
           ),
 
-          // ==================== 系统管理（嵌套路由） ====================
+          // ==================== 系统管理（二级） ====================
           GoRoute(
             path: Routes.system,
             name: 'system',
             redirect: (context, state) {
-              // 使用 state.uri.path 获取实际请求的完整路径
-              // 只在访问精确的 /system 路径时重定向到用户管理
               if (state.uri.path == Routes.system) {
                 return Routes.user;
               }
               return null;
             },
             routes: [
-              // ==================== 系统管理 - 用户管理 ====================
-              GoRoute(
-                path: 'user',
-                name: 'user',
-                builder: (context, state) => const UserPage(),
-              ),
-
-              // ==================== 系统管理 - 角色管理 ====================
-              GoRoute(
-                path: 'role',
-                name: 'role',
-                builder: (context, state) => const RolePage(),
-              ),
-
-              // ==================== 系统管理 - 菜单管理 ====================
-              GoRoute(
-                path: 'menu',
-                name: 'menu',
-                builder: (context, state) => const MenuPage(),
-              ),
-
-              // ==================== 系统管理 - 部门管理 ====================
-              GoRoute(
-                path: 'dept',
-                name: 'dept',
-                builder: (context, state) => const DeptPage(),
-              ),
-
-              // ==================== 系统管理 - 字典管理 ====================
-              GoRoute(
-                path: 'dict',
-                name: 'dict',
-                builder: (context, state) => const DictPage(),
-              ),
-
-              // ==================== 系统管理 - 字典类型 ====================
-              GoRoute(
-                path: 'dict-type',
-                name: 'dictType',
-                builder: (context, state) => const DictTypePage(),
-              ),
-
-              // ==================== 系统管理 - 字典数据 ====================
+              // ==================== 二级路由页面 ====================
+              GoRoute(path: 'user', name: 'user', builder: (context, state) => const UserPage()),
+              GoRoute(path: 'role', name: 'role', builder: (context, state) => const RolePage()),
+              GoRoute(path: 'menu', name: 'menu', builder: (context, state) => const MenuPage()),
+              GoRoute(path: 'dept', name: 'dept', builder: (context, state) => const DeptPage()),
+              GoRoute(path: 'dict', name: 'dict', builder: (context, state) => const DictPage()),
+              GoRoute(path: 'dict-type', name: 'dictType', builder: (context, state) => const DictTypePage()),
               GoRoute(
                 path: 'dict-data',
                 name: 'dictData',
@@ -411,154 +398,164 @@ final routerProvider = Provider<GoRouter>((ref) {
                   return DictDataPage(dictType: dictType);
                 },
               ),
+              GoRoute(path: 'area', name: 'area', builder: (context, state) => const AreaPage()),
+              GoRoute(path: 'post', name: 'post', builder: (context, state) => const PostPage()),
 
-              // ==================== 系统管理 - 地区管理 ====================
-              GoRoute(
-                path: 'area',
-                name: 'area',
-                builder: (context, state) => const AreaPage(),
-              ),
-
-              // ==================== 系统管理 - 登录日志 ====================
-              GoRoute(
-                path: 'login-log',
-                name: 'loginLog',
-                builder: (context, state) => const LoginLogPage(),
-              ),
-
-              // ==================== 系统管理 - OAuth2客户端 ====================
-              GoRoute(
-                path: 'oauth2-client',
-                name: 'oauth2Client',
-                builder: (context, state) => const OAuth2ClientPage(),
-              ),
-
-              // ==================== 系统管理 - OAuth2令牌 ====================
-              GoRoute(
-                path: 'oauth2-token',
-                name: 'oauth2Token',
-                builder: (context, state) => const OAuth2TokenPage(),
-              ),
-
-              // ==================== 系统管理 - 操作日志 ====================
-              GoRoute(
-                path: 'operate-log',
-                name: 'operateLog',
-                builder: (context, state) => const OperateLogPage(),
-              ),
-
-              // ==================== 系统管理 - 社交客户端 ====================
-              GoRoute(
-                path: 'social-client',
-                name: 'socialClient',
-                builder: (context, state) => const SocialClientPage(),
-              ),
-
-              // ==================== 系统管理 - 社交用户 ====================
-              GoRoute(
-                path: 'social-user',
-                name: 'socialUser',
-                builder: (context, state) => const SocialUserPage(),
-              ),
-
-              // ==================== 系统管理 - 通知公告 ====================
-              GoRoute(
-                path: 'notice',
-                name: 'notice',
-                builder: (context, state) => const NoticePage(),
-              ),
-
-              // ==================== 系统管理 - 岗位管理 ====================
-              GoRoute(
-                path: 'post',
-                name: 'post',
-                builder: (context, state) => const PostPage(),
-              ),
-
-              // ==================== 系统管理 - 租户管理 ====================
+              // ==================== 租户管理（三级） ====================
               GoRoute(
                 path: 'tenant',
                 name: 'tenant',
-                builder: (context, state) => const TenantPage(),
+                redirect: (context, state) {
+                  if (state.uri.path == Routes.tenant) {
+                    return Routes.tenantList;
+                  }
+                  return null;
+                },
+                routes: [
+                  GoRoute(path: 'list', name: 'tenantList', builder: (context, state) => const TenantPage()),
+                  GoRoute(path: 'package', name: 'tenantPackage', builder: (context, state) => const TenantPackagePage()),
+                ],
               ),
 
-              // ==================== 系统管理 - 租户套餐 ====================
+              // ==================== 社交管理（三级） ====================
               GoRoute(
-                path: 'tenant-package',
-                name: 'tenantPackage',
-                builder: (context, state) => const TenantPackagePage(),
+                path: 'social',
+                name: 'social',
+                redirect: (context, state) {
+                  if (state.uri.path == Routes.social) {
+                    return Routes.socialClient;
+                  }
+                  return null;
+                },
+                routes: [
+                  GoRoute(path: 'client', name: 'socialClient', builder: (context, state) => const SocialClientPage()),
+                  GoRoute(path: 'user', name: 'socialUser', builder: (context, state) => const SocialUserPage()),
+                ],
               ),
 
-              // ==================== 系统管理 - 通知消息 ====================
+              // ==================== 日志管理（三级） ====================
               GoRoute(
-                path: 'notify-message',
-                name: 'notifyMessage',
-                builder: (context, state) => const NotifyMessagePage(),
+                path: 'log',
+                name: 'log',
+                redirect: (context, state) {
+                  if (state.uri.path == Routes.log) {
+                    return Routes.loginLog;
+                  }
+                  return null;
+                },
+                routes: [
+                  GoRoute(path: 'login-log', name: 'loginLog', builder: (context, state) => const LoginLogPage()),
+                  GoRoute(path: 'operate-log', name: 'operateLog', builder: (context, state) => const OperateLogPage()),
+                ],
               ),
 
-              // ==================== 系统管理 - 通知模板 ====================
+              // ==================== OAuth2管理（三级/四级） ====================
               GoRoute(
-                path: 'notify-template',
-                name: 'notifyTemplate',
-                builder: (context, state) => const NotifyTemplatePage(),
+                path: 'oauth2',
+                name: 'oauth2',
+                redirect: (context, state) {
+                  if (state.uri.path == Routes.oauth2) {
+                    return Routes.oauth2Application;
+                  }
+                  return null;
+                },
+                routes: [
+                  // OAuth2令牌（三级）
+                  GoRoute(path: 'token', name: 'oauth2Token', builder: (context, state) => const OAuth2TokenPage()),
+                  // OAuth2应用（四级）
+                  GoRoute(
+                    path: 'oauth2',
+                    name: 'oauth2Sub',
+                    redirect: (context, state) {
+                      if (state.uri.path == '/system/oauth2/oauth2') {
+                        return Routes.oauth2Application;
+                      }
+                      return null;
+                    },
+                    routes: [
+                      GoRoute(path: 'application', name: 'oauth2Application', builder: (context, state) => const OAuth2ClientPage()),
+                    ],
+                  ),
+                ],
               ),
 
-              // ==================== 邮件管理 - 邮件账号管理 ====================
+              // ==================== 消息管理（三级/四级） ====================
               GoRoute(
-                path: 'mail-account',
-                name: 'mailAccount',
-                builder: (context, state) => const MailAccountPage(),
-              ),
+                path: 'messages',
+                name: 'messages',
+                redirect: (context, state) {
+                  if (state.uri.path == Routes.messages) {
+                    return Routes.notice;
+                  }
+                  return null;
+                },
+                routes: [
+                  // 通知公告（三级）
+                  GoRoute(path: 'notice', name: 'notice', builder: (context, state) => const NoticePage()),
 
-              // ==================== 邮件管理 - 邮件模板管理 ====================
-              GoRoute(
-                path: 'mail-template',
-                name: 'mailTemplate',
-                builder: (context, state) => const MailTemplatePage(),
-              ),
+                  // 站内信管理（四级）
+                  GoRoute(
+                    path: 'notify',
+                    name: 'notify',
+                    redirect: (context, state) {
+                      if (state.uri.path == Routes.notify) {
+                        return Routes.notifyTemplate;
+                      }
+                      return null;
+                    },
+                    routes: [
+                      GoRoute(path: 'notify-template', name: 'notifyTemplate', builder: (context, state) => const NotifyTemplatePage()),
+                      GoRoute(path: 'notify-message', name: 'notifyMessage', builder: (context, state) => const NotifyMessagePage()),
+                    ],
+                  ),
 
-              // ==================== 邮件管理 - 邮件日志 ====================
-              GoRoute(
-                path: 'mail-log',
-                name: 'mailLog',
-                builder: (context, state) => const MailLogPage(),
-              ),
+                  // 邮件管理（四级）
+                  GoRoute(
+                    path: 'mail',
+                    name: 'mail',
+                    redirect: (context, state) {
+                      if (state.uri.path == Routes.mail) {
+                        return Routes.mailAccount;
+                      }
+                      return null;
+                    },
+                    routes: [
+                      GoRoute(path: 'mail-account', name: 'mailAccount', builder: (context, state) => const MailAccountPage()),
+                      GoRoute(path: 'mail-template', name: 'mailTemplate', builder: (context, state) => const MailTemplatePage()),
+                      GoRoute(path: 'mail-log', name: 'mailLog', builder: (context, state) => const MailLogPage()),
+                    ],
+                  ),
 
-              // ==================== 短信管理 - 短信渠道管理 ====================
-              GoRoute(
-                path: 'sms-channel',
-                name: 'smsChannel',
-                builder: (context, state) => const SmsChannelPage(),
-              ),
-
-              // ==================== 短信管理 - 短信日志 ====================
-              GoRoute(
-                path: 'sms-log',
-                name: 'smsLog',
-                builder: (context, state) => const SmsLogPage(),
-              ),
-
-              // ==================== 短信管理 - 短信模板管理 ====================
-              GoRoute(
-                path: 'sms-template',
-                name: 'smsTemplate',
-                builder: (context, state) => const SmsTemplatePage(),
+                  // 短信管理（四级）
+                  GoRoute(
+                    path: 'sms',
+                    name: 'sms',
+                    redirect: (context, state) {
+                      if (state.uri.path == Routes.sms) {
+                        return Routes.smsChannel;
+                      }
+                      return null;
+                    },
+                    routes: [
+                      GoRoute(path: 'sms-channel', name: 'smsChannel', builder: (context, state) => const SmsChannelPage()),
+                      GoRoute(path: 'sms-template', name: 'smsTemplate', builder: (context, state) => const SmsTemplatePage()),
+                      GoRoute(path: 'sms-log', name: 'smsLog', builder: (context, state) => const SmsLogPage()),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),
         ],
       ),
 
-      // ==================== BPM移动端流程表单（特殊路由，不需要Layout） ====================
+      // ==================== BPM移动端流程表单 ====================
       GoRoute(
         path: Routes.bpmMobileFormPreview,
         name: 'BpmMobileFormPreview',
         builder: (context, state) {
-          // 可以根据需要传递参数
           return const Scaffold(
-            body: Center(
-              child: Text('BPM流程表单预览'),
-            ),
+            body: Center(child: Text('BPM流程表单预览')),
           );
         },
       ),
@@ -569,28 +566,12 @@ final routerProvider = Provider<GoRouter>((ref) {
 
 // ==================== 路由守卫逻辑 ====================
 
-/// 处理路由重定向逻辑
-/// 参考 TypeScript 版本的 guard.ts 中的 setupAccessGuard 实现
-String? _handleRedirect(
-  BuildContext context,
-  GoRouterState state,
-  AccessState accessState,
-) {
+String? _handleRedirect(BuildContext context, GoRouterState state, AccessState accessState) {
   final currentPath = state.matchedLocation;
   final currentName = state.name;
 
-  // 1. 检查是否为核心路由（不需要权限验证）
-  // 参考 TypeScript 版本的 coreRouteNames.includes(to.name as string)
+  // 1. 检查是否为核心路由
   if (_isCoreRoute(currentPath, currentName)) {
-    // 如果是登录页且已登录，重定向到首页或指定页面
-    // 参考 TypeScript 版本的：
-    // if (to.path === LOGIN_PATH && accessStore.accessToken) {
-    //   return decodeURIComponent(
-    //     (to.query?.redirect as string) ||
-    //       userStore.userInfo?.homePath ||
-    //       preferences.app.defaultHomePath,
-    //   );
-    // }
     if (currentPath == Routes.login && accessState.isAuthenticated) {
       final redirect = state.uri.queryParameters['redirect'];
       if (redirect != null && redirect.isNotEmpty) {
@@ -602,25 +583,13 @@ String? _handleRedirect(
   }
 
   // 2. 检查是否忽略权限访问
-  // 参考 TypeScript 版本的：if (to.meta.ignoreAccess) { return true; }
   final meta = routeMetaMap[currentPath];
   if (meta?.ignoreAccess == true) {
     return null;
   }
 
   // 3. accessToken检查
-  // 参考 TypeScript 版本的：if (!accessStore.accessToken)
   if (!accessState.isAuthenticated) {
-    // 没有访问权限，跳转登录页面
-    // 携带当前跳转的页面，登录后重新跳转该页面
-    // 参考 TypeScript 版本的：
-    // return {
-    //   path: LOGIN_PATH,
-    //   query: to.fullPath === preferences.app.defaultHomePath
-    //     ? {}
-    //     : { redirect: encodeURIComponent(to.fullPath) },
-    //   replace: true,
-    // };
     if (currentPath != Routes.login) {
       final queryString = currentPath == Routes.dashboard
           ? ''
@@ -630,54 +599,30 @@ String? _handleRedirect(
     return Routes.login;
   }
 
-  // 4. 权限检查（如果路由需要特定权限）
-  final requiredPermission = routePermissionMap[currentPath];
-  // if (requiredPermission != null &&
-  //     !accessState.hasPermission(requiredPermission)) {
-  //   // 无权限访问，重定向到403页面
-  //   return Routes.forbidden;
-  // }
-
-  // 5. 已认证且有权访问
+  // 4. 已认证且有权访问
   return null;
 }
 
-/// 检查是否为核心路由（不需要权限验证）
-/// 参考 TypeScript 版本的 coreRouteNames
+/// 检查是否为核心路由
 bool _isCoreRoute(String path, String? name) {
-  // 检查路径
-  if (coreRoutePaths.contains(path)) {
-    return true;
-  }
-  // 检查是否以/auth开头
-  if (path.startsWith(Routes.auth)) {
-    return true;
-  }
-  // 检查名称
-  if (name != null && coreRouteNames.contains(name)) {
-    return true;
-  }
+  if (coreRoutePaths.contains(path)) return true;
+  if (path.startsWith(Routes.auth)) return true;
+  if (name != null && coreRouteNames.contains(name)) return true;
   return false;
 }
 
 // ==================== 路由导航帮助类 ====================
 
 /// 路由导航帮助类
-/// 提供常用的路由导航方法
 class RouterHelper {
-  /// 导航到登录页并记录重定向路径
   static void goToLogin(BuildContext context, {String? redirect}) {
     final uri = Uri(
       path: Routes.login,
-      queryParameters: redirect != null
-          ? {'redirect': Uri.encodeComponent(redirect)}
-          : null,
+      queryParameters: redirect != null ? {'redirect': Uri.encodeComponent(redirect)} : null,
     );
     context.go(uri.toString());
   }
 
-  /// 登录成功后导航到原始页面或首页
-  /// 参考 TypeScript 版本的登录后重定向逻辑
   static void goToAfterLogin(BuildContext context, {String? redirect}) {
     if (redirect != null && redirect.isNotEmpty) {
       context.go(Uri.decodeComponent(redirect));
@@ -686,45 +631,24 @@ class RouterHelper {
     }
   }
 
-  /// 导航到403禁止访问页面
-  static void goToForbidden(BuildContext context) {
-    context.go(Routes.forbidden);
-  }
+  static void goToForbidden(BuildContext context) => context.go(Routes.forbidden);
+  static void goToDashboard(BuildContext context) => context.go(Routes.dashboard);
 
-  /// 导航到首页
-  static void goToDashboard(BuildContext context) {
-    context.go(Routes.dashboard);
-  }
-
-  /// 检查是否有权限访问指定路由
   static bool canAccess(String path, AccessState accessState) {
     final permission = routePermissionMap[path];
     if (permission == null) return true;
     return accessState.hasPermission(permission);
   }
 
-  /// 获取路由元数据
-  static RouteMeta? getRouteMeta(String path) {
-    return routeMetaMap[path];
-  }
-
-  /// 获取路由所需权限
-  static String? getRequiredPermission(String path) {
-    return routePermissionMap[path];
-  }
-
-  /// 检查是否为核心路由
-  static bool isCoreRoute(String path) {
-    return coreRoutePaths.contains(path) || path.startsWith(Routes.auth);
-  }
+  static RouteMeta? getRouteMeta(String path) => routeMetaMap[path];
+  static String? getRequiredPermission(String path) => routePermissionMap[path];
+  static bool isCoreRoute(String path) => coreRoutePaths.contains(path) || path.startsWith(Routes.auth);
 }
 
 // ==================== 错误页面 ====================
 
-/// 错误页面
 class ScaffoldErrorPage extends StatelessWidget {
   final Exception? error;
-
   const ScaffoldErrorPage({super.key, this.error});
 
   @override
@@ -750,7 +674,6 @@ class ScaffoldErrorPage extends StatelessWidget {
   }
 }
 
-/// 403禁止访问页面
 class ForbiddenPage extends StatelessWidget {
   const ForbiddenPage({super.key});
 
@@ -764,32 +687,16 @@ class ForbiddenPage extends StatelessWidget {
           children: [
             const Icon(Icons.lock_outline, size: 64, color: Colors.orange),
             const SizedBox(height: 24),
-            const Text(
-              '403',
-              style: TextStyle(
-                fontSize: 48,
-                fontWeight: FontWeight.bold,
-                color: Colors.orange,
-              ),
-            ),
+            const Text('403', style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: Colors.orange)),
             const SizedBox(height: 16),
-            const Text(
-              '抱歉，您没有权限访问此页面',
-              style: TextStyle(fontSize: 16),
-            ),
+            const Text('抱歉，您没有权限访问此页面', style: TextStyle(fontSize: 16)),
             const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ElevatedButton(
-                  onPressed: () => context.go(Routes.dashboard),
-                  child: const Text('返回首页'),
-                ),
+                ElevatedButton(onPressed: () => context.go(Routes.dashboard), child: const Text('返回首页')),
                 const SizedBox(width: 16),
-                OutlinedButton(
-                  onPressed: () => context.go(Routes.login),
-                  child: const Text('重新登录'),
-                ),
+                OutlinedButton(onPressed: () => context.go(Routes.login), child: const Text('重新登录')),
               ],
             ),
           ],
