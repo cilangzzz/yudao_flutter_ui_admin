@@ -96,7 +96,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         }
 
         if (mounted) {
-          context.go(Routes.dashboard);
+          // 使用 addPostFrameCallback 确保状态稳定后再导航
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              context.go(Routes.dashboard);
+            }
+          });
         }
       } else {
         if (mounted) {

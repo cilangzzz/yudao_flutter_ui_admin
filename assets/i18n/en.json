@@ -23,6 +23,8 @@
   "submit": "Submit",
   "save": "Save",
   "close": "Close",
+  "closeOtherTabs": "Close Other Tabs",
+  "closeAllTabs": "Close All Tabs",
   "refresh": "Refresh",
   "export": "Export",
   "import": "Import",

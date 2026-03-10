@@ -39,6 +39,9 @@ class BasicLayout extends ConsumerStatefulWidget {
 class _BasicLayoutState extends ConsumerState<BasicLayout> {
   bool _extended = true;
 
+  /// 页面缓存，用于保持页面状态
+  final Map<String, Widget> _pageCache = {};
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -46,12 +49,57 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
     final currentPath = GoRouterState.of(context).matchedLocation;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(menuProvider.notifier).expandPath(currentPath);
+      // 同步 Tab 状态
+      _syncTabWithRoute(currentPath);
     });
+  }
+
+  /// 同步路由与 Tab 状态
+  void _syncTabWithRoute(String path) {
+    final meta = routeMetaMap[path];
+    if (meta == null) return;
+
+    final tabNotifier = ref.read(tabProvider.notifier);
+    final tabItem = TabItem(
+      path: path,
+      title: meta.title,
+      icon: meta.icon,
+      affix: meta.affixTab,
+      hideInTab: meta.hideInTab,
+    );
+
+    tabNotifier.addTab(tabItem);
+
+    // 缓存当前页面
+    if (!_pageCache.containsKey(path)) {
+      _pageCache[path] = widget.child;
+    }
   }
 
   void _handleNavigation(String path) {
     ref.read(menuProvider.notifier).setSelectedPath(path);
-    context.go(path);
+
+    final tabState = ref.read(tabProvider);
+    final meta = routeMetaMap[path];
+
+    // 检查 Tab 是否已存在
+    if (tabState.hasPath(path)) {
+      // Tab 已存在，仅激活它
+      ref.read(tabProvider.notifier).activateTab(path);
+    } else {
+      // 新 Tab，添加并导航
+      if (meta != null) {
+        final tabItem = TabItem(
+          path: path,
+          title: meta.title,
+          icon: meta.icon,
+          affix: meta.affixTab,
+          hideInTab: meta.hideInTab,
+        );
+        ref.read(tabProvider.notifier).addTab(tabItem);
+      }
+      context.go(path);
+    }
   }
 
   void _toggleExtended() {
@@ -97,12 +145,213 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
               children: [
                 _buildTopAppBar(userInfo, isMobile),
                 const Divider(height: 1),
-                Expanded(child: widget.child),
+                // Tab 栏
+                _buildTabBar(),
+                const Divider(height: 1),
+                // 主内容区（使用 IndexedStack 保持页面状态）
+                Expanded(child: _buildContent()),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  /// 构建 Tab 栏
+  Widget _buildTabBar() {
+    final tabState = ref.watch(tabProvider);
+    final visibleTabs = tabState.visibleTabs;
+
+    if (visibleTabs.length <= 1) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      height: 40,
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      child: Row(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: visibleTabs.length,
+              itemBuilder: (context, index) {
+                final tab = visibleTabs[index];
+                final isActive = tab.path == tabState.activePath;
+                return _buildTabItem(tab, isActive);
+              },
+            ),
+          ),
+          // Tab 操作按钮
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.close, size: 18),
+            tooltip: '关闭标签',
+            onSelected: (value) {
+              switch (value) {
+                case 'closeOther':
+                  if (tabState.activePath != null) {
+                    ref.read(tabProvider.notifier).closeOtherTabs(tabState.activePath!);
+                    _removeClosedTabsFromCache(tabState.activePath!);
+                  }
+                  break;
+                case 'closeAll':
+                  ref.read(tabProvider.notifier).closeAllTabs();
+                  _clearNonAffixTabsFromCache();
+                  // 导航到第一个固定 Tab
+                  final newTabState = ref.read(tabProvider);
+                  if (newTabState.activePath != null) {
+                    context.go(newTabState.activePath!);
+                  }
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'closeOther',
+                child: Row(
+                  children: [
+                    const Icon(Icons.tab, size: 18),
+                    const SizedBox(width: 8),
+                    Text(S.current.closeOtherTabs),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'closeAll',
+                child: Row(
+                  children: [
+                    const Icon(Icons.tab, size: 18),
+                    const SizedBox(width: 8),
+                    Text(S.current.closeAllTabs),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+    );
+  }
+
+  /// 构建单个 Tab 项
+  Widget _buildTabItem(TabItem tab, bool isActive) {
+    return InkWell(
+      onTap: () => _onTabTap(tab),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        constraints: const BoxConstraints(minWidth: 100, maxWidth: 200),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: isActive
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.transparent,
+              width: 2,
+            ),
+          ),
+          color: isActive
+              ? Theme.of(context).colorScheme.surface
+              : Colors.transparent,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                tab.title,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                  color: isActive
+                      ? Theme.of(context).colorScheme.primary
+                      : null,
+                ),
+              ),
+            ),
+            if (!tab.affix) ...[
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () => _onTabClose(tab),
+                child: Icon(
+                  Icons.close,
+                  size: 16,
+                  color: isActive
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Tab 点击事件
+  void _onTabTap(TabItem tab) {
+    ref.read(tabProvider.notifier).activateTab(tab.path);
+    context.go(tab.path);
+  }
+
+  /// Tab 关闭事件
+  void _onTabClose(TabItem tab) {
+    final tabState = ref.read(tabProvider);
+    final wasActive = tabState.activePath == tab.path;
+
+    ref.read(tabProvider.notifier).closeTab(tab.path);
+    _pageCache.remove(tab.path);
+
+    if (wasActive) {
+      // 导航到新的激活 Tab
+      final newTabState = ref.read(tabProvider);
+      if (newTabState.activePath != null) {
+        context.go(newTabState.activePath!);
+      }
+    }
+  }
+
+  /// 移除关闭的 Tab 从缓存（保留指定的）
+  void _removeClosedTabsFromCache(String keepPath) {
+    final tabState = ref.read(tabProvider);
+    final pathsToKeep = tabState.tabs.map((t) => t.path).toSet();
+    _pageCache.removeWhere((path, _) => !pathsToKeep.contains(path));
+  }
+
+  /// 清除非固定 Tab 的缓存
+  void _clearNonAffixTabsFromCache() {
+    final tabState = ref.read(tabProvider);
+    final affixPaths = tabState.tabs.where((t) => t.affix).map((t) => t.path).toSet();
+    _pageCache.removeWhere((path, _) => !affixPaths.contains(path));
+  }
+
+  /// 构建主内容区（使用 IndexedStack 保持页面状态）
+  Widget _buildContent() {
+    final tabState = ref.watch(tabProvider);
+    final visibleTabs = tabState.visibleTabs;
+    final currentPath = GoRouterState.of(context).matchedLocation;
+
+    if (visibleTabs.isEmpty) {
+      return widget.child;
+    }
+
+    // 更新当前页面缓存
+    _pageCache[currentPath] = widget.child;
+
+    // 找到激活的 Tab 索引
+    final activeIndex = visibleTabs.indexWhere((t) => t.path == tabState.activePath);
+
+    // 构建 IndexedStack 的子组件
+    return IndexedStack(
+      index: activeIndex >= 0 ? activeIndex : 0,
+      children: visibleTabs.map((tab) {
+        if (tab.path == currentPath) {
+          return widget.child;
+        }
+        // 返回缓存的页面，如果没有则返回空容器
+        return _pageCache[tab.path] ?? const SizedBox.shrink();
+      }).toList(),
     );
   }
 

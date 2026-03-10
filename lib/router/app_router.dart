@@ -264,6 +264,22 @@ final Map<String, String> routePermissionMap = {
   Routes.smsTemplate: 'system:sms-template:list',
 };
 
+// ==================== GoRouter 刷新流 ====================
+
+/// 用于 go_router 的刷新流
+/// 监听认证状态变化，触发路由刷新
+class GoRouterRefreshStream extends ChangeNotifier {
+  final Ref ref;
+
+  GoRouterRefreshStream(this.ref) {
+    ref.listen<AccessState>(accessStoreProvider, (previous, next) {
+      if (previous?.isAuthenticated != next.isAuthenticated) {
+        notifyListeners();
+      }
+    });
+  }
+}
+
 // ==================== 路由配置提供者 ====================
 
 /// 路由配置提供者
@@ -274,6 +290,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: Routes.dashboard,
     debugLogDiagnostics: true,
+    refreshListenable: GoRouterRefreshStream(ref),
     redirect: (context, state) {
       return _handleRedirect(context, state, accessState);
     },

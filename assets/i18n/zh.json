@@ -23,6 +23,8 @@
   "submit": "提交",
   "save": "保存",
   "close": "关闭",
+  "closeOtherTabs": "关闭其他",
+  "closeAllTabs": "关闭所有",
   "refresh": "刷新",
   "export": "导出",
   "import": "导入",

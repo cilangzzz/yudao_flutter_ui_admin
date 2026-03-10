@@ -49,6 +49,8 @@ abstract class S {
   String get submit;
   String get save;
   String get close;
+  String get closeOtherTabs;
+  String get closeAllTabs;
   String get refresh;
   String get export;
   String get import;
@@ -772,6 +774,10 @@ class _AppLocalizations extends S {
   String get save => _get('save', 'Save');
   @override
   String get close => _get('close', 'Close');
+  @override
+  String get closeOtherTabs => _get('closeOtherTabs', 'Close Other Tabs');
+  @override
+  String get closeAllTabs => _get('closeAllTabs', 'Close All Tabs');
   @override
   String get refresh => _get('refresh', 'Refresh');
   @override
