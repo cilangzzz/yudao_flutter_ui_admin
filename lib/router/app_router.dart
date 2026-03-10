@@ -31,6 +31,17 @@ import '../pages/system/mail/template/mail_template_page.dart';
 import '../pages/system/sms/channel/sms_channel_page.dart';
 import '../pages/system/sms/log/sms_log_page.dart';
 import '../pages/system/sms/template/sms_template_page.dart';
+import 'route_registry.dart';
+import 'page_routes.dart';
+
+// ==================== 路由初始化 ====================
+
+/// 初始化路由系统
+///
+/// 在应用启动时调用，注册所有页面路由到 RouteRegistry。
+void initializeRouter() {
+  registerAllPageRoutes();
+}
 
 // ==================== 路由路径常量 ====================
 
@@ -88,6 +99,7 @@ class Routes {
   // ==================== OAuth2管理（三级/四级） ====================
   static const String oauth2 = '/system/oauth2';
   static const String oauth2Token = '/system/oauth2/token';
+  static const String oauth2Client = '/system/oauth2/oauth2/client';
   static const String oauth2Application = '/system/oauth2/oauth2/application';
 
   // ==================== 消息管理（三级/四级） ====================

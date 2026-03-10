@@ -5,7 +5,7 @@ import 'router/app_router.dart' show initializeRouter;
 
 void main() {
   // 初始化路由系统
-  // initializeRouter();
+  initializeRouter();
 
   runApp(
     const ProviderScope(
