@@ -82,12 +82,8 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
     final tabState = ref.read(tabProvider);
     final meta = routeMetaMap[path];
 
-    // 检查 Tab 是否已存在
-    if (tabState.hasPath(path)) {
-      // Tab 已存在，仅激活它
-      ref.read(tabProvider.notifier).activateTab(path);
-    } else {
-      // 新 Tab，添加并导航
+    // 如果 Tab 不存在，添加新 Tab
+    if (!tabState.hasPath(path)) {
       if (meta != null) {
         final tabItem = TabItem(
           path: path,
@@ -98,8 +94,13 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
         );
         ref.read(tabProvider.notifier).addTab(tabItem);
       }
-      context.go(path);
+    } else {
+      // Tab 已存在，激活它
+      ref.read(tabProvider.notifier).activateTab(path);
     }
+
+    // 始终执行导航，确保 widget.child 更新
+    context.go(path);
   }
 
   void _toggleExtended() {
@@ -343,10 +344,15 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
     final activeIndex = visibleTabs.indexWhere((t) => t.path == tabState.activePath);
 
     // 构建 IndexedStack 的子组件
+    // 注意：必须确保每个 child 是不同的 Widget 实例
+    // 使用 Offstage 包装来保持页面状态
     return IndexedStack(
       index: activeIndex >= 0 ? activeIndex : 0,
       children: visibleTabs.map((tab) {
-        if (tab.path == currentPath) {
+        // 对于当前路由，使用 widget.child
+        // 对于其他路由，使用缓存的 widget
+        // 但需要避免同一个 widget 实例出现多次
+        if (tab.path == tabState.activePath) {
           return widget.child;
         }
         // 返回缓存的页面，如果没有则返回空容器

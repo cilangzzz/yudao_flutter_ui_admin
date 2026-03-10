@@ -347,189 +347,197 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const DashboardPage(),
           ),
 
-          // ==================== 系统管理 - 用户管理 ====================
+          // ==================== 系统管理（嵌套路由） ====================
           GoRoute(
-            path: Routes.user,
-            name: 'user',
-            builder: (context, state) => const UserPage(),
-          ),
+            path: Routes.system,
+            name: 'system',
+            redirect: (context, state) => Routes.user,
+            routes: [
+              // ==================== 系统管理 - 用户管理 ====================
+              GoRoute(
+                path: 'user',
+                name: 'user',
+                builder: (context, state) => const UserPage(),
+              ),
 
-          // ==================== 系统管理 - 角色管理 ====================
-          GoRoute(
-            path: Routes.role,
-            name: 'role',
-            builder: (context, state) => const RolePage(),
-          ),
+              // ==================== 系统管理 - 角色管理 ====================
+              GoRoute(
+                path: 'role',
+                name: 'role',
+                builder: (context, state) => const RolePage(),
+              ),
 
-          // ==================== 系统管理 - 菜单管理 ====================
-          GoRoute(
-            path: Routes.menu,
-            name: 'menu',
-            builder: (context, state) => const MenuPage(),
-          ),
+              // ==================== 系统管理 - 菜单管理 ====================
+              GoRoute(
+                path: 'menu',
+                name: 'menu',
+                builder: (context, state) => const MenuPage(),
+              ),
 
-          // ==================== 系统管理 - 部门管理 ====================
-          GoRoute(
-            path: Routes.dept,
-            name: 'dept',
-            builder: (context, state) => const DeptPage(),
-          ),
+              // ==================== 系统管理 - 部门管理 ====================
+              GoRoute(
+                path: 'dept',
+                name: 'dept',
+                builder: (context, state) => const DeptPage(),
+              ),
 
-          // ==================== 系统管理 - 字典管理 ====================
-          GoRoute(
-            path: Routes.dict,
-            name: 'dict',
-            builder: (context, state) => const DictPage(),
-          ),
+              // ==================== 系统管理 - 字典管理 ====================
+              GoRoute(
+                path: 'dict',
+                name: 'dict',
+                builder: (context, state) => const DictPage(),
+              ),
 
-          // ==================== 系统管理 - 字典类型 ====================
-          GoRoute(
-            path: Routes.dictType,
-            name: 'dictType',
-            builder: (context, state) => const DictTypePage(),
-          ),
+              // ==================== 系统管理 - 字典类型 ====================
+              GoRoute(
+                path: 'dict-type',
+                name: 'dictType',
+                builder: (context, state) => const DictTypePage(),
+              ),
 
-          // ==================== 系统管理 - 字典数据 ====================
-          GoRoute(
-            path: Routes.dictData,
-            name: 'dictData',
-            builder: (context, state) {
-              final dictType = state.uri.queryParameters['dictType'];
-              return DictDataPage(dictType: dictType);
-            },
-          ),
+              // ==================== 系统管理 - 字典数据 ====================
+              GoRoute(
+                path: 'dict-data',
+                name: 'dictData',
+                builder: (context, state) {
+                  final dictType = state.uri.queryParameters['dictType'];
+                  return DictDataPage(dictType: dictType);
+                },
+              ),
 
-          // ==================== 系统管理 - 地区管理 ====================
-          GoRoute(
-            path: Routes.area,
-            name: 'area',
-            builder: (context, state) => const AreaPage(),
-          ),
+              // ==================== 系统管理 - 地区管理 ====================
+              GoRoute(
+                path: 'area',
+                name: 'area',
+                builder: (context, state) => const AreaPage(),
+              ),
 
-          // ==================== 系统管理 - 登录日志 ====================
-          GoRoute(
-            path: Routes.loginLog,
-            name: 'loginLog',
-            builder: (context, state) => const LoginLogPage(),
-          ),
+              // ==================== 系统管理 - 登录日志 ====================
+              GoRoute(
+                path: 'login-log',
+                name: 'loginLog',
+                builder: (context, state) => const LoginLogPage(),
+              ),
 
-          // ==================== 系统管理 - OAuth2客户端 ====================
-          GoRoute(
-            path: Routes.oauth2Client,
-            name: 'oauth2Client',
-            builder: (context, state) => const OAuth2ClientPage(),
-          ),
+              // ==================== 系统管理 - OAuth2客户端 ====================
+              GoRoute(
+                path: 'oauth2-client',
+                name: 'oauth2Client',
+                builder: (context, state) => const OAuth2ClientPage(),
+              ),
 
-          // ==================== 系统管理 - OAuth2令牌 ====================
-          GoRoute(
-            path: Routes.oauth2Token,
-            name: 'oauth2Token',
-            builder: (context, state) => const OAuth2TokenPage(),
-          ),
+              // ==================== 系统管理 - OAuth2令牌 ====================
+              GoRoute(
+                path: 'oauth2-token',
+                name: 'oauth2Token',
+                builder: (context, state) => const OAuth2TokenPage(),
+              ),
 
-          // ==================== 系统管理 - 操作日志 ====================
-          GoRoute(
-            path: Routes.operateLog,
-            name: 'operateLog',
-            builder: (context, state) => const OperateLogPage(),
-          ),
+              // ==================== 系统管理 - 操作日志 ====================
+              GoRoute(
+                path: 'operate-log',
+                name: 'operateLog',
+                builder: (context, state) => const OperateLogPage(),
+              ),
 
-          // ==================== 系统管理 - 社交客户端 ====================
-          GoRoute(
-            path: Routes.socialClient,
-            name: 'socialClient',
-            builder: (context, state) => const SocialClientPage(),
-          ),
+              // ==================== 系统管理 - 社交客户端 ====================
+              GoRoute(
+                path: 'social-client',
+                name: 'socialClient',
+                builder: (context, state) => const SocialClientPage(),
+              ),
 
-          // ==================== 系统管理 - 社交用户 ====================
-          GoRoute(
-            path: Routes.socialUser,
-            name: 'socialUser',
-            builder: (context, state) => const SocialUserPage(),
-          ),
+              // ==================== 系统管理 - 社交用户 ====================
+              GoRoute(
+                path: 'social-user',
+                name: 'socialUser',
+                builder: (context, state) => const SocialUserPage(),
+              ),
 
-          // ==================== 系统管理 - 通知公告 ====================
-          GoRoute(
-            path: Routes.notice,
-            name: 'notice',
-            builder: (context, state) => const NoticePage(),
-          ),
+              // ==================== 系统管理 - 通知公告 ====================
+              GoRoute(
+                path: 'notice',
+                name: 'notice',
+                builder: (context, state) => const NoticePage(),
+              ),
 
-          // ==================== 系统管理 - 岗位管理 ====================
-          GoRoute(
-            path: Routes.post,
-            name: 'post',
-            builder: (context, state) => const PostPage(),
-          ),
+              // ==================== 系统管理 - 岗位管理 ====================
+              GoRoute(
+                path: 'post',
+                name: 'post',
+                builder: (context, state) => const PostPage(),
+              ),
 
-          // ==================== 系统管理 - 租户管理 ====================
-          GoRoute(
-            path: Routes.tenant,
-            name: 'tenant',
-            builder: (context, state) => const TenantPage(),
-          ),
+              // ==================== 系统管理 - 租户管理 ====================
+              GoRoute(
+                path: 'tenant',
+                name: 'tenant',
+                builder: (context, state) => const TenantPage(),
+              ),
 
-          // ==================== 系统管理 - 租户套餐 ====================
-          GoRoute(
-            path: Routes.tenantPackage,
-            name: 'tenantPackage',
-            builder: (context, state) => const TenantPackagePage(),
-          ),
+              // ==================== 系统管理 - 租户套餐 ====================
+              GoRoute(
+                path: 'tenant-package',
+                name: 'tenantPackage',
+                builder: (context, state) => const TenantPackagePage(),
+              ),
 
-          // ==================== 系统管理 - 通知消息 ====================
-          GoRoute(
-            path: Routes.notifyMessage,
-            name: 'notifyMessage',
-            builder: (context, state) => const NotifyMessagePage(),
-          ),
+              // ==================== 系统管理 - 通知消息 ====================
+              GoRoute(
+                path: 'notify-message',
+                name: 'notifyMessage',
+                builder: (context, state) => const NotifyMessagePage(),
+              ),
 
-          // ==================== 系统管理 - 通知模板 ====================
-          GoRoute(
-            path: Routes.notifyTemplate,
-            name: 'notifyTemplate',
-            builder: (context, state) => const NotifyTemplatePage(),
-          ),
+              // ==================== 系统管理 - 通知模板 ====================
+              GoRoute(
+                path: 'notify-template',
+                name: 'notifyTemplate',
+                builder: (context, state) => const NotifyTemplatePage(),
+              ),
 
-          // ==================== 邮件管理 - 邮件账号管理 ====================
-          GoRoute(
-            path: Routes.mailAccount,
-            name: 'mailAccount',
-            builder: (context, state) => const MailAccountPage(),
-          ),
+              // ==================== 邮件管理 - 邮件账号管理 ====================
+              GoRoute(
+                path: 'mail-account',
+                name: 'mailAccount',
+                builder: (context, state) => const MailAccountPage(),
+              ),
 
-          // ==================== 邮件管理 - 邮件模板管理 ====================
-          GoRoute(
-            path: Routes.mailTemplate,
-            name: 'mailTemplate',
-            builder: (context, state) => const MailTemplatePage(),
-          ),
+              // ==================== 邮件管理 - 邮件模板管理 ====================
+              GoRoute(
+                path: 'mail-template',
+                name: 'mailTemplate',
+                builder: (context, state) => const MailTemplatePage(),
+              ),
 
-          // ==================== 邮件管理 - 邮件日志 ====================
-          GoRoute(
-            path: Routes.mailLog,
-            name: 'mailLog',
-            builder: (context, state) => const MailLogPage(),
-          ),
+              // ==================== 邮件管理 - 邮件日志 ====================
+              GoRoute(
+                path: 'mail-log',
+                name: 'mailLog',
+                builder: (context, state) => const MailLogPage(),
+              ),
 
-          // ==================== 短信管理 - 短信渠道管理 ====================
-          GoRoute(
-            path: Routes.smsChannel,
-            name: 'smsChannel',
-            builder: (context, state) => const SmsChannelPage(),
-          ),
+              // ==================== 短信管理 - 短信渠道管理 ====================
+              GoRoute(
+                path: 'sms-channel',
+                name: 'smsChannel',
+                builder: (context, state) => const SmsChannelPage(),
+              ),
 
-          // ==================== 短信管理 - 短信日志 ====================
-          GoRoute(
-            path: Routes.smsLog,
-            name: 'smsLog',
-            builder: (context, state) => const SmsLogPage(),
-          ),
+              // ==================== 短信管理 - 短信日志 ====================
+              GoRoute(
+                path: 'sms-log',
+                name: 'smsLog',
+                builder: (context, state) => const SmsLogPage(),
+              ),
 
-          // ==================== 短信管理 - 短信模板管理 ====================
-          GoRoute(
-            path: Routes.smsTemplate,
-            name: 'smsTemplate',
-            builder: (context, state) => const SmsTemplatePage(),
+              // ==================== 短信管理 - 短信模板管理 ====================
+              GoRoute(
+                path: 'sms-template',
+                name: 'smsTemplate',
+                builder: (context, state) => const SmsTemplatePage(),
+              ),
+            ],
           ),
         ],
       ),
