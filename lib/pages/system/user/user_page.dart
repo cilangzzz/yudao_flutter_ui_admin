@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
+import 'package:data_table_2/data_table_2.dart';
 import '../../../api/system/user_api.dart';
 import '../../../api/system/dept_api.dart';
 import '../../../api/system/role_api.dart';
@@ -399,7 +400,8 @@ class _UserPageState extends ConsumerState<UserPage> {
   }
 
   Widget _buildDesktopSearchBar(BuildContext context) {
-    return Padding(
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
@@ -598,65 +600,185 @@ class _UserPageState extends ConsumerState<UserPage> {
       return Center(child: Text(S.current.noData));
     }
 
-    return SingleChildScrollView(
+    return Padding(
       padding: const EdgeInsets.all(16),
-      child: PaginatedDataTable(
-        header: Row(
-          children: [
-            Checkbox(
-              value: _selectedIds.length == _userList.length && _userList.isNotEmpty,
-              tristate: true,
-              onChanged: (value) {
-                setState(() {
-                  if (value == true) {
-                    _selectedIds = _userList.where((u) => u.id != null).map((u) => u.id!).toSet();
-                  } else {
-                    _selectedIds.clear();
-                  }
-                });
-              },
+      child: Column(
+        children: [
+          // 表头工具栏
+          Row(
+            children: [
+              Checkbox(
+                value: _selectedIds.length == _userList.length && _userList.isNotEmpty,
+                tristate: true,
+                onChanged: (value) {
+                  setState(() {
+                    if (value == true) {
+                      _selectedIds = _userList.where((u) => u.id != null).map((u) => u.id!).toSet();
+                    } else {
+                      _selectedIds.clear();
+                    }
+                  });
+                },
+              ),
+              Text(S.current.userList),
+              const Spacer(),
+              Text('${S.current.total}: $_totalCount'),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // 表格
+          Expanded(
+            child: DataTable2(
+              columnSpacing: 12,
+              horizontalMargin: 12,
+              minWidth: 900,
+              smRatio: 0.75,
+              lmRatio: 1.5,
+              headingRowColor: WidgetStateProperty.resolveWith(
+                (states) => Theme.of(context).colorScheme.surfaceContainerHighest,
+              ),
+              headingTextStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              dataRowColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3);
+                }
+                return null;
+              }),
+              columns: [
+                DataColumn2(
+                  label: Text('ID'),
+                  size: ColumnSize.S,
+                ),
+                DataColumn2(
+                  label: Text(S.current.username),
+                  size: ColumnSize.M,
+                ),
+                DataColumn2(
+                  label: Text(S.current.nickname),
+                  size: ColumnSize.M,
+                ),
+                DataColumn2(
+                  label: Text(S.current.department),
+                  size: ColumnSize.L,
+                ),
+                DataColumn2(
+                  label: Text(S.current.mobile),
+                  size: ColumnSize.M,
+                ),
+                DataColumn2(
+                  label: Text(S.current.status),
+                  size: ColumnSize.S,
+                ),
+                DataColumn2(
+                  label: Text(S.current.createTime),
+                  size: ColumnSize.L,
+                ),
+                DataColumn2(
+                  label: Text(S.current.operation),
+                  size: ColumnSize.M,
+                ),
+              ],
+              rows: _userList.map((user) {
+                final isSelected = user.id != null && _selectedIds.contains(user.id);
+                return DataRow2(
+                  selected: isSelected,
+                  onSelectChanged: (selected) {
+                    if (user.id != null) {
+                      setState(() {
+                        if (selected == true) {
+                          _selectedIds.add(user.id!);
+                        } else {
+                          _selectedIds.remove(user.id!);
+                        }
+                      });
+                    }
+                  },
+                  cells: [
+                    DataCell(Text(user.id?.toString() ?? '-')),
+                    DataCell(Text(user.username)),
+                    DataCell(Text(user.nickname)),
+                    DataCell(Text(user.deptName ?? '-')),
+                    DataCell(Text(user.mobile ?? '-')),
+                    DataCell(
+                      _StatusSwitch(
+                        isEnabled: user.status == 0,
+                        onChanged: () => _updateStatus(user),
+                      ),
+                    ),
+                    DataCell(Text(user.createTime?.toString().substring(0, 19) ?? '-')),
+                    DataCell(
+                      _ActionButtons(
+                        user: user,
+                        onEdit: _editUser,
+                        onDelete: _deleteUser,
+                        onResetPassword: _showResetPasswordDialog,
+                        onAssignRole: _showAssignRoleDialog,
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
             ),
-            Text(S.current.userList),
-          ],
-        ),
-        rowsPerPage: _pageSize,
-        availableRowsPerPage: const [10, 20, 50, 100],
-        onPageChanged: (page) {
-          setState(() {
-            _currentPage = page ~/ _pageSize + 1;
-          });
-          _loadUserList();
-        },
-        onRowsPerPageChanged: (value) {
-          if (value != null) {
-            setState(() {
-              _pageSize = value;
-              _currentPage = 1;
-            });
-            _loadUserList();
-          }
-        },
-        columns: [
-          DataColumn(label: Text('ID')),
-          DataColumn(label: Text(S.current.username)),
-          DataColumn(label: Text(S.current.nickname)),
-          DataColumn(label: Text(S.current.department)),
-          DataColumn(label: Text(S.current.mobile)),
-          DataColumn(label: Text(S.current.status)),
-          DataColumn(label: Text(S.current.createTime)),
-          DataColumn(label: Text(S.current.operation)),
+          ),
+          // 分页控件
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              // 每页行数选择
+              Row(
+                children: [
+                  Text('${S.current.pageSize}: '),
+                  DropdownButton<int>(
+                    value: _pageSize,
+                    items: [10, 20, 50, 100].map((value) {
+                      return DropdownMenuItem(
+                        value: value,
+                        child: Text('$value'),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _pageSize = value;
+                          _currentPage = 1;
+                        });
+                        _loadUserList();
+                      }
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(width: 24),
+              // 分页导航
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left),
+                    onPressed: _currentPage > 1
+                        ? () {
+                            setState(() => _currentPage--);
+                            _loadUserList();
+                          }
+                        : null,
+                  ),
+                  Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right),
+                    onPressed: _currentPage * _pageSize < _totalCount
+                        ? () {
+                            setState(() => _currentPage++);
+                            _loadUserList();
+                          }
+                        : null,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ],
-        source: _UserDataSource(
-          _userList,
-          context,
-          _selectedIds,
-          (ids) => setState(() => _selectedIds = ids),
-          _editUser,
-          _deleteUser,
-          _updateStatus,
-          _showResetPasswordDialog,
-          _showAssignRoleDialog,
-        ),
       ),
     );
   }
@@ -1354,111 +1476,81 @@ class _UserPageState extends ConsumerState<UserPage> {
   }
 }
 
-/// 数据源
-class _UserDataSource extends DataTableSource {
-  final List<User> users;
-  final BuildContext context;
-  Set<int> selectedIds;
-  final void Function(Set<int>) onSelectionChanged;
+/// 状态开关组件 - 使用 StatelessWidget 避免不必要的重建
+class _StatusSwitch extends StatelessWidget {
+  final bool isEnabled;
+  final VoidCallback onChanged;
+
+  const _StatusSwitch({
+    required this.isEnabled,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Switch(
+      value: isEnabled,
+      onChanged: (_) => onChanged(),
+    );
+  }
+}
+
+/// 操作按钮组件 - 使用 StatelessWidget 避免不必要的重建
+class _ActionButtons extends StatelessWidget {
+  final User user;
   final void Function(User) onEdit;
   final Future<void> Function(User) onDelete;
-  final Future<void> Function(User) onUpdateStatus;
   final void Function(User) onResetPassword;
   final void Function(User) onAssignRole;
 
-  _UserDataSource(
-    this.users,
-    this.context,
-    this.selectedIds,
-    this.onSelectionChanged,
-    this.onEdit,
-    this.onDelete,
-    this.onUpdateStatus,
-    this.onResetPassword,
-    this.onAssignRole,
-  );
+  const _ActionButtons({
+    required this.user,
+    required this.onEdit,
+    required this.onDelete,
+    required this.onResetPassword,
+    required this.onAssignRole,
+  });
 
   @override
-  int get rowCount => users.length;
-
-  @override
-  DataRow getRow(int index) {
-    final user = users[index];
-    final isSelected = user.id != null && selectedIds.contains(user.id);
-
-    return DataRow(
-      selected: isSelected,
-      onSelectChanged: (selected) {
-        if (user.id != null) {
-          final newSet = Set<int>.from(selectedIds);
-          if (selected == true) {
-            newSet.add(user.id!);
-          } else {
-            newSet.remove(user.id!);
-          }
-          onSelectionChanged(newSet);
-        }
-      },
-      cells: [
-        DataCell(Text(user.id?.toString() ?? '-')),
-        DataCell(Text(user.username)),
-        DataCell(Text(user.nickname)),
-        DataCell(Text(user.deptName ?? '-')),
-        DataCell(Text(user.mobile ?? '-')),
-        DataCell(
-          Switch(
-            value: user.status == 0,
-            onChanged: (_) => onUpdateStatus(user),
-          ),
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextButton(
+          onPressed: () => onEdit(user),
+          child: Text(S.current.edit),
         ),
-        DataCell(Text(user.createTime?.toString().substring(0, 19) ?? '-')),
-        DataCell(
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextButton(
-                onPressed: () => onEdit(user),
-                child: Text(S.current.edit),
-              ),
-              PopupMenuButton<String>(
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'resetPassword',
-                    child: Text(S.current.resetPassword),
-                  ),
-                  PopupMenuItem(
-                    value: 'assignRole',
-                    child: Text(S.current.assignRole),
-                  ),
-                  PopupMenuItem(
-                    value: 'delete',
-                    child: Text(S.current.delete, style: const TextStyle(color: Colors.red)),
-                  ),
-                ],
-                onSelected: (value) {
-                  switch (value) {
-                    case 'resetPassword':
-                      onResetPassword(user);
-                      break;
-                    case 'assignRole':
-                      onAssignRole(user);
-                      break;
-                    case 'delete':
-                      onDelete(user);
-                      break;
-                  }
-                },
-              ),
-            ],
-          ),
+        PopupMenuButton<String>(
+          tooltip: S.current.operation,
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'resetPassword',
+              child: Text(S.current.resetPassword),
+            ),
+            PopupMenuItem(
+              value: 'assignRole',
+              child: Text(S.current.assignRole),
+            ),
+            PopupMenuItem(
+              value: 'delete',
+              child: Text(S.current.delete, style: const TextStyle(color: Colors.red)),
+            ),
+          ],
+          onSelected: (value) {
+            switch (value) {
+              case 'resetPassword':
+                onResetPassword(user);
+                break;
+              case 'assignRole':
+                onAssignRole(user);
+                break;
+              case 'delete':
+                onDelete(user);
+                break;
+            }
+          },
         ),
       ],
     );
   }
-
-  @override
-  bool get isRowCountApproximate => false;
-
-  @override
-  int get selectedRowCount => selectedIds.length;
 }
