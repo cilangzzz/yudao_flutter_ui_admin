@@ -26,16 +26,16 @@ class MailTemplate {
 
   factory MailTemplate.fromJson(Map<String, dynamic> json) {
     return MailTemplate(
-      id: json['id'] as int?,
-      name: json['name'] as String? ?? '',
-      code: json['code'] as String? ?? '',
-      accountId: json['accountId'] as int? ?? 0,
-      nickname: json['nickname'] as String?,
-      title: json['title'] as String? ?? '',
-      content: json['content'] as String? ?? '',
-      params: (json['params'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
-      status: json['status'] as int? ?? 0,
-      createTime: json['createTime'] as String?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      name: json['name']?.toString() ?? '',
+      code: json['code']?.toString() ?? '',
+      accountId: json['accountId'] is int ? json['accountId'] : int.tryParse(json['accountId']?.toString() ?? '') ?? 0,
+      nickname: json['nickname']?.toString(),
+      title: json['title']?.toString() ?? '',
+      content: json['content']?.toString() ?? '',
+      params: (json['params'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      status: json['status'] is int ? json['status'] : int.tryParse(json['status']?.toString() ?? '') ?? 0,
+      createTime: json['createTime']?.toString(),
     );
   }
 

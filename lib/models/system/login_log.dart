@@ -28,17 +28,17 @@ class LoginLog {
 
   factory LoginLog.fromJson(Map<String, dynamic> json) {
     return LoginLog(
-      id: json['id'] as int?,
-      logType: json['logType'] as int?,
-      traceId: json['traceId'] as int?,
-      userId: json['userId'] as int?,
-      userType: json['userType'] as int?,
-      username: json['username'] as String?,
-      result: json['result'] as int?,
-      status: json['status'] as int?,
-      userIp: json['userIp'] as String?,
-      userAgent: json['userAgent'] as String?,
-      createTime: json['createTime'] as String?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      logType: json['logType'] is int ? json['logType'] : int.tryParse(json['logType']?.toString() ?? ''),
+      traceId: json['traceId'] is int ? json['traceId'] : int.tryParse(json['traceId']?.toString() ?? ''),
+      userId: json['userId'] is int ? json['userId'] : int.tryParse(json['userId']?.toString() ?? ''),
+      userType: json['userType'] is int ? json['userType'] : int.tryParse(json['userType']?.toString() ?? ''),
+      username: json['username']?.toString(),
+      result: json['result'] is int ? json['result'] : int.tryParse(json['result']?.toString() ?? ''),
+      status: json['status'] is int ? json['status'] : int.tryParse(json['status']?.toString() ?? ''),
+      userIp: json['userIp']?.toString(),
+      userAgent: json['userAgent']?.toString(),
+      createTime: json['createTime']?.toString(),
     );
   }
 

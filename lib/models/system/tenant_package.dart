@@ -18,14 +18,14 @@ class TenantPackage {
 
   factory TenantPackage.fromJson(Map<String, dynamic> json) {
     return TenantPackage(
-      id: json['id'] as int?,
-      name: json['name'] as String? ?? '',
-      status: json['status'] as int?,
-      remark: json['remark'] as String?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      name: json['name']?.toString() ?? '',
+      status: json['status'] is int ? json['status'] : int.tryParse(json['status']?.toString() ?? ''),
+      remark: json['remark']?.toString(),
       menuIds: (json['menuIds'] as List<dynamic>?)
-          ?.map((e) => e is int ? e : int.parse(e.toString()))
+          ?.map((e) => e is int ? e : int.tryParse(e.toString()) ?? 0)
           .toList(),
-      createTime: json['createTime'] as String?,
+      createTime: json['createTime']?.toString(),
     );
   }
 

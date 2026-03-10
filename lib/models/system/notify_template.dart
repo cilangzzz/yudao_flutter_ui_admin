@@ -24,17 +24,17 @@ class NotifyTemplate {
 
   factory NotifyTemplate.fromJson(Map<String, dynamic> json) {
     return NotifyTemplate(
-      id: json['id'] as int?,
-      name: json['name'] as String? ?? '',
-      nickname: json['nickname'] as String?,
-      code: json['code'] as String? ?? '',
-      content: json['content'] as String?,
-      type: json['type'] as int?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      name: json['name']?.toString() ?? '',
+      nickname: json['nickname']?.toString(),
+      code: json['code']?.toString() ?? '',
+      content: json['content']?.toString(),
+      type: json['type'] is int ? json['type'] : int.tryParse(json['type']?.toString() ?? ''),
       params: (json['params'] as List<dynamic>?)
           ?.map((e) => e.toString())
           .toList(),
-      status: json['status'] as int?,
-      remark: json['remark'] as String?,
+      status: json['status'] is int ? json['status'] : int.tryParse(json['status']?.toString() ?? ''),
+      remark: json['remark']?.toString(),
     );
   }
 

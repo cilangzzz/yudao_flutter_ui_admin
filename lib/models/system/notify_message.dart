@@ -30,18 +30,18 @@ class NotifyMessage {
 
   factory NotifyMessage.fromJson(Map<String, dynamic> json) {
     return NotifyMessage(
-      id: json['id'] as int?,
-      userId: json['userId'] as int?,
-      userType: json['userType'] as int?,
-      templateId: json['templateId'] as int?,
-      templateCode: json['templateCode'] as String?,
-      templateNickname: json['templateNickname'] as String?,
-      templateContent: json['templateContent'] as String?,
-      templateType: json['templateType'] as int?,
-      templateParams: json['templateParams'] as String?,
-      readStatus: json['readStatus'] as bool?,
-      readTime: json['readTime'] as String?,
-      createTime: json['createTime'] as String?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      userId: json['userId'] is int ? json['userId'] : int.tryParse(json['userId']?.toString() ?? ''),
+      userType: json['userType'] is int ? json['userType'] : int.tryParse(json['userType']?.toString() ?? ''),
+      templateId: json['templateId'] is int ? json['templateId'] : int.tryParse(json['templateId']?.toString() ?? ''),
+      templateCode: json['templateCode']?.toString(),
+      templateNickname: json['templateNickname']?.toString(),
+      templateContent: json['templateContent']?.toString(),
+      templateType: json['templateType'] is int ? json['templateType'] : int.tryParse(json['templateType']?.toString() ?? ''),
+      templateParams: json['templateParams']?.toString(),
+      readStatus: json['readStatus'] is bool ? json['readStatus'] : bool.tryParse(json['readStatus']?.toString() ?? ''),
+      readTime: json['readTime']?.toString(),
+      createTime: json['createTime']?.toString(),
     );
   }
 

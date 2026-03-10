@@ -20,13 +20,13 @@ class Post {
 
   factory Post.fromJson(Map<String, dynamic> json) {
     return Post(
-      id: json['id'] as int?,
-      name: json['name'] as String? ?? '',
-      code: json['code'] as String? ?? '',
-      sort: json['sort'] as int? ?? 0,
-      status: json['status'] as int? ?? 0,
-      remark: json['remark'] as String?,
-      createTime: json['createTime'] as String?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      name: json['name']?.toString() ?? '',
+      code: json['code']?.toString() ?? '',
+      sort: json['sort'] is int ? json['sort'] : int.tryParse(json['sort']?.toString() ?? '') ?? 0,
+      status: json['status'] is int ? json['status'] : int.tryParse(json['status']?.toString() ?? '') ?? 0,
+      remark: json['remark']?.toString(),
+      createTime: json['createTime']?.toString(),
     );
   }
 

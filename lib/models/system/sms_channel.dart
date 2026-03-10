@@ -24,15 +24,15 @@ class SmsChannel {
 
   factory SmsChannel.fromJson(Map<String, dynamic> json) {
     return SmsChannel(
-      id: json['id'] as int?,
-      code: json['code'] as String? ?? '',
-      status: json['status'] as int? ?? 0,
-      signature: json['signature'] as String? ?? '',
-      remark: json['remark'] as String?,
-      apiKey: json['apiKey'] as String? ?? '',
-      apiSecret: json['apiSecret'] as String?,
-      callbackUrl: json['callbackUrl'] as String?,
-      createTime: json['createTime'] as String?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      code: json['code']?.toString() ?? '',
+      status: json['status'] is int ? json['status'] : int.tryParse(json['status']?.toString() ?? '') ?? 0,
+      signature: json['signature']?.toString() ?? '',
+      remark: json['remark']?.toString(),
+      apiKey: json['apiKey']?.toString() ?? '',
+      apiSecret: json['apiSecret']?.toString(),
+      callbackUrl: json['callbackUrl']?.toString(),
+      createTime: json['createTime']?.toString(),
     );
   }
 

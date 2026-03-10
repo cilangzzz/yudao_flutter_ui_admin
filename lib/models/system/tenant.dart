@@ -26,18 +26,18 @@ class Tenant {
 
   factory Tenant.fromJson(Map<String, dynamic> json) {
     return Tenant(
-      id: json['id'] as int?,
-      name: json['name'] as String? ?? '',
-      packageId: json['packageId'] as int?,
-      contactName: json['contactName'] as String?,
-      contactMobile: json['contactMobile'] as String?,
-      accountCount: json['accountCount'] as int?,
-      expireTime: json['expireTime'] as String?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      name: json['name']?.toString() ?? '',
+      packageId: json['packageId'] is int ? json['packageId'] : int.tryParse(json['packageId']?.toString() ?? ''),
+      contactName: json['contactName']?.toString(),
+      contactMobile: json['contactMobile']?.toString(),
+      accountCount: json['accountCount'] is int ? json['accountCount'] : int.tryParse(json['accountCount']?.toString() ?? ''),
+      expireTime: json['expireTime']?.toString(),
       websites: (json['websites'] as List<dynamic>?)
           ?.map((e) => e.toString())
           .toList(),
-      status: json['status'] as int?,
-      createTime: json['createTime'] as String?,
+      status: json['status'] is int ? json['status'] : int.tryParse(json['status']?.toString() ?? ''),
+      createTime: json['createTime']?.toString(),
     );
   }
 

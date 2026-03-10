@@ -10,8 +10,8 @@ class OAuth2AuthorizeClient {
 
   factory OAuth2AuthorizeClient.fromJson(Map<String, dynamic> json) {
     return OAuth2AuthorizeClient(
-      logo: json['logo'] as String?,
-      name: json['name'] as String?,
+      logo: json['logo']?.toString(),
+      name: json['name']?.toString(),
     );
   }
 }
@@ -28,8 +28,8 @@ class OAuth2AuthorizeScope {
 
   factory OAuth2AuthorizeScope.fromJson(Map<String, dynamic> json) {
     return OAuth2AuthorizeScope(
-      key: json['key'] as String? ?? '',
-      value: json['value'] as bool? ?? false,
+      key: json['key']?.toString() ?? '',
+      value: json['value'] is bool ? json['value'] : bool.tryParse(json['value']?.toString() ?? '') ?? false,
     );
   }
 }
