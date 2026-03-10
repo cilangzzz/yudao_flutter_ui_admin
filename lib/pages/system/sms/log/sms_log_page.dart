@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:data_table_2/data_table_2.dart';
 import '/../../api/system/sms_log_api.dart';
 import '/../../api/system/sms_channel_api.dart';
 import '/../../models/system/sms_log.dart';
@@ -20,18 +21,19 @@ class _SmsLogPageState extends ConsumerState<SmsLogPage> {
   int? _selectedSendStatus;
   int? _selectedReceiveStatus;
 
-  List<SmsLog> _logs = [];
-  List<SmsChannel> _channels = [];
-  bool _isLoading = false;
+  List<SmsLog> _logList = [];
+  List<SmsChannel> _channelList = [];
+  int _totalCount = 0;
   int _currentPage = 1;
   int _pageSize = 10;
-  int _total = 0;
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _loadChannels();
-    _loadData();
+    _loadChannelList();
+    _loadLogList();
   }
 
   @override
@@ -41,24 +43,27 @@ class _SmsLogPageState extends ConsumerState<SmsLogPage> {
     super.dispose();
   }
 
-  Future<void> _loadChannels() async {
+  Future<void> _loadChannelList() async {
     try {
       final api = ref.read(smsChannelApiProvider);
       final response = await api.getSimpleSmsChannelList();
       if (response.isSuccess && response.data != null) {
-        setState(() => _channels = response.data!);
+        setState(() => _channelList = response.data!);
       }
     } catch (e) {
-      // Ignore error for channel loading
+      // 渠道列表加载失败不影响日志列表
     }
   }
 
-  Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+  Future<void> _loadLogList() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
 
     try {
       final api = ref.read(smsLogApiProvider);
-      final params = {
+      final params = <String, dynamic>{
         'pageNo': _currentPage,
         'pageSize': _pageSize,
         if (_mobileController.text.isNotEmpty) 'mobile': _mobileController.text,
@@ -70,26 +75,42 @@ class _SmsLogPageState extends ConsumerState<SmsLogPage> {
       };
 
       final response = await api.getSmsLogPage(params);
+
       if (response.isSuccess && response.data != null) {
         setState(() {
-          _logs = response.data!.list;
-          _total = response.data!.total;
+          _logList = response.data!.list;
+          _totalCount = response.data!.total;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _error = response.msg.isNotEmpty ? response.msg : '加载失败';
+          _isLoading = false;
         });
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('加载失败: $e')),
-        );
-      }
-    } finally {
-      setState(() => _isLoading = false);
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
     }
   }
 
-  void _refresh() {
+  void _search() {
     _currentPage = 1;
-    _loadData();
+    _loadLogList();
+  }
+
+  void _reset() {
+    _mobileController.clear();
+    _templateIdController.clear();
+    setState(() {
+      _selectedChannelId = null;
+      _selectedSendStatus = null;
+      _selectedReceiveStatus = null;
+    });
+    _currentPage = 1;
+    _loadLogList();
   }
 
   void _showDetailDialog(SmsLog log) {
@@ -106,15 +127,15 @@ class _SmsLogPageState extends ConsumerState<SmsLogPage> {
               children: [
                 _buildDetailRow('创建时间', log.createTime ?? '-'),
                 _buildDetailRow('手机号', log.mobile ?? '-'),
-                _buildDetailRow('短信渠道', log.channelCode ?? '-'),
+                _buildDetailRow('短信渠道', _getChannelCodeText(log.channelCode)),
                 _buildDetailRow('模板编号', log.templateId?.toString() ?? '-'),
                 _buildDetailRow('模板类型', _getTemplateTypeText(log.templateType)),
                 _buildDetailRow('短信内容', log.templateContent ?? '-', maxLines: 3),
-                _buildDetailRow('发送状态', _getSendStatusText(log.sendStatus), isStatus: true),
+                _buildDetailRow('发送状态', _getSendStatusText(log.sendStatus), isSendStatus: true),
                 _buildDetailRow('发送时间', log.sendTime ?? '-'),
                 _buildDetailRow('API 发送编码', log.apiSendCode ?? '-'),
                 _buildDetailRow('API 发送消息', log.apiSendMsg ?? '-'),
-                _buildDetailRow('接收状态', _getReceiveStatusText(log.receiveStatus), isStatus: true),
+                _buildDetailRow('接收状态', _getReceiveStatusText(log.receiveStatus), isReceiveStatus: true),
                 _buildDetailRow('接收时间', log.receiveTime ?? '-'),
                 _buildDetailRow('API 接收编码', log.apiReceiveCode ?? '-'),
                 _buildDetailRow('API 接收消息', log.apiReceiveMsg ?? '-'),
@@ -134,7 +155,7 @@ class _SmsLogPageState extends ConsumerState<SmsLogPage> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value, {int maxLines = 1, bool isStatus = false}) {
+  Widget _buildDetailRow(String label, String value, {int maxLines = 1, bool isSendStatus = false, bool isReceiveStatus = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -148,78 +169,73 @@ class _SmsLogPageState extends ConsumerState<SmsLogPage> {
             ),
           ),
           Expanded(
-            child: isStatus
-                ? _buildStatusBadge(value)
-                : Text(value, maxLines: maxLines, overflow: TextOverflow.ellipsis),
+            child: isSendStatus
+                ? _buildSendStatusTag(_getSendStatusCode(value))
+                : isReceiveStatus
+                    ? _buildReceiveStatusTag(_getReceiveStatusCode(value))
+                    : Text(value, maxLines: maxLines, overflow: TextOverflow.ellipsis),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatusBadge(String statusText) {
-    Color color;
-    if (statusText.contains('成功') || statusText.contains('已接收')) {
-      color = Colors.green;
-    } else if (statusText.contains('失败') || statusText.contains('拒绝')) {
-      color = Colors.red;
-    } else {
-      color = Colors.orange;
+  int _getSendStatusCode(String text) {
+    switch (text) {
+      case '初始化': return 0;
+      case '发送中': return 10;
+      case '发送成功': return 20;
+      case '发送失败': return 30;
+      case '不发送': return 40;
+      default: return -1;
     }
+  }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        statusText,
-        style: TextStyle(color: color, fontSize: 12),
-      ),
-    );
+  int _getReceiveStatusCode(String text) {
+    switch (text) {
+      case '等待接收': return 0;
+      case '接收成功': return 10;
+      case '接收失败': return 20;
+      default: return -1;
+    }
   }
 
   String _getTemplateTypeText(int? type) {
     switch (type) {
-      case 1:
-        return '验证码';
-      case 2:
-        return '通知';
-      case 3:
-        return '营销';
-      default:
-        return '-';
+      case 1: return '验证码';
+      case 2: return '通知';
+      case 3: return '营销';
+      default: return '-';
     }
   }
 
   String _getSendStatusText(int? status) {
     switch (status) {
-      case 0:
-        return '初始化';
-      case 10:
-        return '发送中';
-      case 20:
-        return '发送成功';
-      case 30:
-        return '发送失败';
-      case 40:
-        return '不发送';
-      default:
-        return '-';
+      case 0: return '初始化';
+      case 10: return '发送中';
+      case 20: return '发送成功';
+      case 30: return '发送失败';
+      case 40: return '不发送';
+      default: return '-';
     }
   }
 
   String _getReceiveStatusText(int? status) {
     switch (status) {
-      case 0:
-        return '等待接收';
-      case 10:
-        return '接收成功';
-      case 20:
-        return '接收失败';
-      default:
-        return '-';
+      case 0: return '等待接收';
+      case 10: return '接收成功';
+      case 20: return '接收失败';
+      default: return '-';
+    }
+  }
+
+  String _getChannelCodeText(String? code) {
+    switch (code) {
+      case 'aliyun': return '阿里云';
+      case 'tencent': return '腾讯云';
+      case 'huawei': return '华为云';
+      case 'yunpian': return '云片';
+      default: return code ?? '-';
     }
   }
 
@@ -230,11 +246,7 @@ class _SmsLogPageState extends ConsumerState<SmsLogPage> {
         children: [
           _buildSearchBar(context),
           const Divider(height: 1),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _buildDataTable(context),
-          ),
+          Expanded(child: _buildDataTable(context)),
         ],
       ),
     );
@@ -257,7 +269,7 @@ class _SmsLogPageState extends ConsumerState<SmsLogPage> {
                 border: OutlineInputBorder(),
                 isDense: true,
               ),
-              onSubmitted: (_) => _refresh(),
+              onSubmitted: (_) => _search(),
             ),
           ),
           SizedBox(
@@ -271,14 +283,14 @@ class _SmsLogPageState extends ConsumerState<SmsLogPage> {
               ),
               items: [
                 const DropdownMenuItem(value: null, child: Text('全部')),
-                ..._channels.map((c) => DropdownMenuItem(
+                ..._channelList.map((c) => DropdownMenuItem(
                       value: c.id,
                       child: Text(c.signature),
                     )),
               ],
               onChanged: (value) {
                 setState(() => _selectedChannelId = value);
-                _refresh();
+                _search();
               },
             ),
           ),
@@ -292,7 +304,7 @@ class _SmsLogPageState extends ConsumerState<SmsLogPage> {
                 isDense: true,
               ),
               keyboardType: TextInputType.number,
-              onSubmitted: (_) => _refresh(),
+              onSubmitted: (_) => _search(),
             ),
           ),
           SizedBox(
@@ -313,7 +325,7 @@ class _SmsLogPageState extends ConsumerState<SmsLogPage> {
               ],
               onChanged: (value) {
                 setState(() => _selectedSendStatus = value);
-                _refresh();
+                _search();
               },
             ),
           ),
@@ -334,26 +346,17 @@ class _SmsLogPageState extends ConsumerState<SmsLogPage> {
               ],
               onChanged: (value) {
                 setState(() => _selectedReceiveStatus = value);
-                _refresh();
+                _search();
               },
             ),
           ),
           ElevatedButton.icon(
-            onPressed: _refresh,
+            onPressed: _search,
             icon: const Icon(Icons.search),
             label: const Text('搜索'),
           ),
           OutlinedButton.icon(
-            onPressed: () {
-              _mobileController.clear();
-              _templateIdController.clear();
-              setState(() {
-                _selectedChannelId = null;
-                _selectedSendStatus = null;
-                _selectedReceiveStatus = null;
-              });
-              _refresh();
-            },
+            onPressed: _reset,
             icon: const Icon(Icons.clear),
             label: const Text('重置'),
           ),
@@ -363,120 +366,158 @@ class _SmsLogPageState extends ConsumerState<SmsLogPage> {
   }
 
   Widget _buildDataTable(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: PaginatedDataTable(
-        header: Row(
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('短信日志列表'),
-            const Spacer(),
-            Text('共 $_total 条记录', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+            Text('加载失败: $_error', style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _loadLogList, child: const Text('重试')),
           ],
         ),
-        rowsPerPage: _pageSize,
-        availableRowsPerPage: const [10, 20, 50, 100],
-        onPageChanged: (page) {
-          _currentPage = (page ~/ _pageSize) + 1;
-          _loadData();
-        },
-        onRowsPerPageChanged: (value) {
-          setState(() => _pageSize = value ?? 10);
-          _loadData();
-        },
-        columns: const [
-          DataColumn(label: Text('编号')),
-          DataColumn(label: Text('手机号')),
-          DataColumn(label: Text('短信内容')),
-          DataColumn(label: Text('发送状态')),
-          DataColumn(label: Text('发送时间')),
-          DataColumn(label: Text('接收状态')),
-          DataColumn(label: Text('接收时间')),
-          DataColumn(label: Text('渠道')),
-          DataColumn(label: Text('操作')),
+      );
+    }
+
+    if (_logList.isEmpty) {
+      return const Center(child: Text('暂无数据'));
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Text('短信日志列表'),
+              const Spacer(),
+              Text('共 $_totalCount 条'),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: DataTable2(
+              columnSpacing: 12,
+              horizontalMargin: 12,
+              minWidth: 1000,
+              smRatio: 0.75,
+              lmRatio: 1.5,
+              headingRowColor: WidgetStateProperty.resolveWith(
+                (states) => Theme.of(context).colorScheme.surfaceContainerHighest,
+              ),
+              headingTextStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              columns: const [
+                DataColumn2(label: Text('编号'), size: ColumnSize.S),
+                DataColumn2(label: Text('手机号'), size: ColumnSize.M),
+                DataColumn2(label: Text('短信内容'), size: ColumnSize.L),
+                DataColumn2(label: Text('发送状态'), size: ColumnSize.M),
+                DataColumn2(label: Text('发送时间'), size: ColumnSize.L),
+                DataColumn2(label: Text('接收状态'), size: ColumnSize.M),
+                DataColumn2(label: Text('接收时间'), size: ColumnSize.L),
+                DataColumn2(label: Text('渠道'), size: ColumnSize.M),
+                DataColumn2(label: Text('操作'), size: ColumnSize.S),
+              ],
+              rows: _logList.map((log) {
+                return DataRow2(
+                  cells: [
+                    DataCell(Text(log.id?.toString() ?? '-')),
+                    DataCell(Text(log.mobile ?? '-')),
+                    DataCell(
+                      SizedBox(
+                        width: 200,
+                        child: Text(
+                          log.templateContent ?? '-',
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                    ),
+                    DataCell(_buildSendStatusTag(log.sendStatus)),
+                    DataCell(Text(log.sendTime ?? '-')),
+                    DataCell(_buildReceiveStatusTag(log.receiveStatus)),
+                    DataCell(Text(log.receiveTime ?? '-')),
+                    DataCell(Text(_getChannelCodeText(log.channelCode))),
+                    DataCell(
+                      TextButton(
+                        onPressed: () => _showDetailDialog(log),
+                        child: const Text('详情'),
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 8),
+          _buildPagination(),
         ],
-        source: _SmsLogDataSource(
-          _logs,
-          context,
-          onDetail: _showDetailDialog,
-          getSendStatusText: _getSendStatusText,
-          getReceiveStatusText: _getReceiveStatusText,
-          getChannelCodeText: _getChannelCodeText,
-        ),
       ),
     );
   }
 
-  String _getChannelCodeText(String? code) {
-    switch (code) {
-      case 'aliyun':
-        return '阿里云';
-      case 'tencent':
-        return '腾讯云';
-      case 'huawei':
-        return '华为云';
-      case 'yunpian':
-        return '云片';
-      default:
-        return code ?? '-';
-    }
-  }
-}
-
-/// 数据源
-class _SmsLogDataSource extends DataTableSource {
-  final List<SmsLog> logs;
-  final BuildContext context;
-  final void Function(SmsLog) onDetail;
-  final String Function(int?) getSendStatusText;
-  final String Function(int?) getReceiveStatusText;
-  final String Function(String?) getChannelCodeText;
-
-  _SmsLogDataSource(
-    this.logs,
-    this.context, {
-    required this.onDetail,
-    required this.getSendStatusText,
-    required this.getReceiveStatusText,
-    required this.getChannelCodeText,
-  });
-
-  @override
-  int get rowCount => logs.length;
-
-  @override
-  DataRow getRow(int index) {
-    final log = logs[index];
-    return DataRow(
-      cells: [
-        DataCell(Text(log.id?.toString() ?? '-')),
-        DataCell(Text(log.mobile ?? '-')),
-        DataCell(
-          SizedBox(
-            width: 200,
-            child: Text(
-              log.templateContent ?? '-',
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
+  Widget _buildPagination() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Row(
+          children: [
+            const Text('每页: '),
+            DropdownButton<int>(
+              value: _pageSize,
+              items: [10, 20, 50, 100].map((value) {
+                return DropdownMenuItem(
+                  value: value,
+                  child: Text('$value'),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _pageSize = value;
+                    _currentPage = 1;
+                  });
+                  _loadLogList();
+                }
+              },
             ),
-          ),
+          ],
         ),
-        DataCell(_buildSendStatusTag(log.sendStatus)),
-        DataCell(Text(log.sendTime ?? '-')),
-        DataCell(_buildReceiveStatusTag(log.receiveStatus)),
-        DataCell(Text(log.receiveTime ?? '-')),
-        DataCell(Text(getChannelCodeText(log.channelCode))),
-        DataCell(
-          TextButton(
-            onPressed: () => onDetail(log),
-            child: const Text('详情'),
-          ),
+        const SizedBox(width: 24),
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.chevron_left),
+              onPressed: _currentPage > 1
+                  ? () {
+                      setState(() => _currentPage--);
+                      _loadLogList();
+                    }
+                  : null,
+            ),
+            Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
+            IconButton(
+              icon: const Icon(Icons.chevron_right),
+              onPressed: _currentPage * _pageSize < _totalCount
+                  ? () {
+                      setState(() => _currentPage++);
+                      _loadLogList();
+                    }
+                  : null,
+            ),
+          ],
         ),
       ],
     );
   }
 
   Widget _buildSendStatusTag(int? status) {
-    String text = getSendStatusText(status);
+    String text = _getSendStatusText(status);
     Color color;
     switch (status) {
       case 20:
@@ -503,7 +544,7 @@ class _SmsLogDataSource extends DataTableSource {
   }
 
   Widget _buildReceiveStatusTag(int? status) {
-    String text = getReceiveStatusText(status);
+    String text = _getReceiveStatusText(status);
     Color color;
     switch (status) {
       case 10:
@@ -525,10 +566,4 @@ class _SmsLogDataSource extends DataTableSource {
       child: Text(text, style: TextStyle(color: color, fontSize: 12)),
     );
   }
-
-  @override
-  bool get isRowCountApproximate => false;
-
-  @override
-  int get selectedRowCount => 0;
 }

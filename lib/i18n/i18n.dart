@@ -220,15 +220,34 @@ abstract class S {
   String get roleManagement;
   String get roleList;
   String get addRole;
+  String get editRole;
   String get roleName;
   String get roleCode;
 
   // 菜单管理
   String get menuManagement;
+  String get menuList;
   String get addMenu;
+  String get editMenu;
   String get menuName;
   String get icon;
+  String get iconHint;
   String get routePath;
+  String get routePathHint;
+  String get componentPath;
+  String get componentName;
+  String get permissionHint;
+  String get menuType;
+  String get parentMenu;
+  String get topMenu;
+  String get searchMenuName;
+  String get visible;
+  String get show;
+  String get hide;
+  String get cache;
+  String get alwaysShow;
+  String get confirmDeleteMenu;
+  String get menuHasChildren;
 
   // 部门管理
   String get deptManagement;
@@ -244,6 +263,10 @@ abstract class S {
   String get collapseAll;
   String get confirmDeleteDept;
   String get department;
+  String get parentDept;
+  String get topDept;
+  String get addChild;
+  String get deptHasChildren;
 
   // 用户管理
   String get userManagement;
@@ -260,8 +283,10 @@ abstract class S {
   String get areaManagement;
   String get areaCode;
   String get areaName;
+  String get areaList;
   String get ipQuery;
   String get ipAddress;
+  String get ipAddressHint;
   String get pleaseInputIp;
   String get queryResult;
   String get queryFailed;
@@ -532,6 +557,10 @@ abstract class S {
   String get avatar;
   String get rawUserInfo;
   String get none;
+  String get socialToken;
+  String get rawTokenInfo;
+  String get lastAuthCode;
+  String get lastAuthState;
 
   // 提示信息
   String get updateSuccess;
@@ -566,6 +595,8 @@ abstract class S {
   String get colorWarning;
   String get colorDanger;
   String get colorInfo;
+  String get cssClass;
+  String get cssClassHint;
   String get addDictData;
   String get editDictData;
   String get addData;
@@ -1123,6 +1154,8 @@ class _AppLocalizations extends S {
   @override
   String get addRole => _get('addRole', 'Add Role');
   @override
+  String get editRole => _get('editRole', 'Edit Role');
+  @override
   String get roleName => _get('roleName', 'Role Name');
   @override
   String get roleCode => _get('roleCode', 'Role Code');
@@ -1131,13 +1164,49 @@ class _AppLocalizations extends S {
   @override
   String get menuManagement => _get('menuManagement', 'Menu Management');
   @override
+  String get menuList => _get('menuList', 'Menu List');
+  @override
   String get addMenu => _get('addMenu', 'Add Menu');
+  @override
+  String get editMenu => _get('editMenu', 'Edit Menu');
   @override
   String get menuName => _get('menuName', 'Menu Name');
   @override
   String get icon => _get('icon', 'Icon');
   @override
+  String get iconHint => _get('iconHint', 'Please input icon name');
+  @override
   String get routePath => _get('routePath', 'Route Path');
+  @override
+  String get routePathHint => _get('routePathHint', 'Route path like: user');
+  @override
+  String get componentPath => _get('componentPath', 'Component Path');
+  @override
+  String get componentName => _get('componentName', 'Component Name');
+  @override
+  String get permissionHint => _get('permissionHint', 'Permission identifier like: system:user:add');
+  @override
+  String get menuType => _get('menuType', 'Menu Type');
+  @override
+  String get parentMenu => _get('parentMenu', 'Parent Menu');
+  @override
+  String get topMenu => _get('topMenu', 'Top Menu');
+  @override
+  String get searchMenuName => _get('searchMenuName', 'Search Menu Name');
+  @override
+  String get visible => _get('visible', 'Visible');
+  @override
+  String get show => _get('show', 'Show');
+  @override
+  String get hide => _get('hide', 'Hide');
+  @override
+  String get cache => _get('cache', 'Cache');
+  @override
+  String get alwaysShow => _get('alwaysShow', 'Always Show');
+  @override
+  String get confirmDeleteMenu => _get('confirmDeleteMenu', 'Are you sure to delete this menu?');
+  @override
+  String get menuHasChildren => _get('menuHasChildren', 'Menu has children, cannot delete');
 
   // 部门管理
   @override
@@ -1166,6 +1235,14 @@ class _AppLocalizations extends S {
   String get confirmDeleteDept => _get('confirmDeleteDept', 'Are you sure to delete this department?');
   @override
   String get department => _get('department', 'Department');
+  @override
+  String get parentDept => _get('parentDept', 'Parent Department');
+  @override
+  String get topDept => _get('topDept', 'Top Department');
+  @override
+  String get addChild => _get('addChild', 'Add Child');
+  @override
+  String get deptHasChildren => _get('deptHasChildren', 'Department has children, cannot delete');
 
   // 用户管理
   @override
@@ -1195,9 +1272,13 @@ class _AppLocalizations extends S {
   @override
   String get areaName => _get('areaName', 'Area Name');
   @override
+  String get areaList => _get('areaList', 'Area List');
+  @override
   String get ipQuery => _get('ipQuery', 'IP Query');
   @override
   String get ipAddress => _get('ipAddress', 'IP Address');
+  @override
+  String get ipAddressHint => _get('ipAddressHint', 'Please input IP address');
   @override
   String get pleaseInputIp => _get('pleaseInputIp', 'Please input IP');
   @override
@@ -1692,6 +1773,14 @@ class _AppLocalizations extends S {
   String get rawUserInfo => _get('rawUserInfo', 'Raw User Info');
   @override
   String get none => _get('none', 'None');
+  @override
+  String get socialToken => _get('socialToken', 'Social Token');
+  @override
+  String get rawTokenInfo => _get('rawTokenInfo', 'Raw Token Info');
+  @override
+  String get lastAuthCode => _get('lastAuthCode', 'Last Auth Code');
+  @override
+  String get lastAuthState => _get('lastAuthState', 'Last Auth State');
 
   // 提示信息
   @override
@@ -1754,6 +1843,10 @@ class _AppLocalizations extends S {
   String get colorDanger => _get('colorDanger', 'Danger');
   @override
   String get colorInfo => _get('colorInfo', 'Info');
+  @override
+  String get cssClass => _get('cssClass', 'CSS Class');
+  @override
+  String get cssClassHint => _get('cssClassHint', 'Enter hex color, e.g. #108ee9');
   @override
   String get addDictData => _get('addDictData', 'Add Dict Data');
   @override

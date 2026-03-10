@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
+import 'package:data_table_2/data_table_2.dart';
 import '../../../api/system/login_log_api.dart';
+import '../../../core/api_client.dart';
 import '../../../models/system/login_log.dart';
-import '../../../models/common/page_result.dart';
 import '../../../i18n/i18n.dart';
 
 /// 登录日志管理页面
@@ -23,6 +25,7 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
   int _currentPage = 1;
   int _pageSize = 10;
   int _totalCount = 0;
+  String? _error;
 
   @override
   void initState() {
@@ -40,6 +43,7 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
   Future<void> _loadData() async {
     setState(() {
       _isLoading = true;
+      _error = null;
     });
 
     try {
@@ -66,18 +70,14 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
           _totalCount = response.data!.total;
         });
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(response.msg ?? S.current.loginLog_loadFailed)),
-          );
-        }
+        setState(() {
+          _error = response.msg ?? S.current.loginLog_loadFailed;
+        });
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${S.current.loginLog_loadFailed}: $e')),
-        );
-      }
+      setState(() {
+        _error = e.toString();
+      });
     } finally {
       setState(() {
         _isLoading = false;
@@ -98,6 +98,44 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
     });
     _currentPage = 1;
     _loadData();
+  }
+
+  Future<void> _exportLogs() async {
+    try {
+      final dio = ref.read(dioProvider);
+      final params = <String, dynamic>{};
+      if (_usernameController.text.isNotEmpty) {
+        params['username'] = _usernameController.text;
+      }
+      if (_userIpController.text.isNotEmpty) {
+        params['userIp'] = _userIpController.text;
+      }
+      if (_dateRange != null) {
+        params['createTime'] = [
+          _dateRange!.start.toIso8601String(),
+          _dateRange!.end.toIso8601String(),
+        ];
+      }
+
+      final response = await dio.get<List<int>>(
+        '/system/login-log/export-excel',
+        queryParameters: params,
+        options: Options(responseType: ResponseType.bytes),
+      );
+
+      // response.data contains the Excel file bytes
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(S.current.exportSuccess)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${S.current.exportFailed}: $e')),
+        );
+      }
+    }
   }
 
   void _showDetail(LoginLog log) {
@@ -124,7 +162,7 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(S.current.common_close),
+            child: Text(S.current.close),
           ),
         ],
       ),
@@ -166,9 +204,9 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
   String _getResultText(int? result) {
     switch (result) {
       case 0:
-        return S.current.common_success;
+        return S.current.success;
       case 1:
-        return S.current.common_failed;
+        return S.current.failed;
       default:
         return '-';
     }
@@ -270,7 +308,7 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
           ElevatedButton.icon(
             onPressed: _search,
             icon: const Icon(Icons.search),
-            label: Text(S.current.common_search),
+            label: Text(S.current.search),
           ),
           const SizedBox(width: 8),
 
@@ -278,7 +316,15 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
           OutlinedButton.icon(
             onPressed: _reset,
             icon: const Icon(Icons.refresh),
-            label: Text(S.current.common_reset),
+            label: Text(S.current.reset),
+          ),
+          const SizedBox(width: 8),
+
+          // 导出按钮
+          ElevatedButton.icon(
+            onPressed: _exportLogs,
+            icon: const Icon(Icons.download),
+            label: Text(S.current.export),
           ),
         ],
       ),
@@ -290,82 +336,175 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return SingleChildScrollView(
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('${S.current.loadFailed}: $_error', style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _loadData, child: Text(S.current.retry)),
+          ],
+        ),
+      );
+    }
+
+    if (_logs.isEmpty) {
+      return Center(child: Text(S.current.noData));
+    }
+
+    return Padding(
       padding: const EdgeInsets.all(16),
-      child: PaginatedDataTable(
-        header: Text('${S.current.loginLog_list} (${S.current.cacl_common_totalCount(_totalCount)})'),
-        rowsPerPage: _pageSize,
-        availableRowsPerPage: const [10, 20, 50, 100],
-        onPageChanged: (page) {
-          _currentPage = page ~/ _pageSize + 1;
-          _loadData();
-        },
-        onRowsPerPageChanged: (value) {
-          if (value != null) {
-            setState(() {
-              _pageSize = value;
-            });
-            _loadData();
-          }
-        },
-        columns: [
-          DataColumn(label: Text(S.current.loginLog_logId)),
-          DataColumn(label: Text(S.current.loginLog_logType)),
-          DataColumn(label: Text(S.current.loginLog_username)),
-          DataColumn(label: Text(S.current.loginLog_loginAddress)),
-          DataColumn(label: Text(S.current.loginLog_browser)),
-          DataColumn(label: Text(S.current.loginLog_loginResult)),
-          DataColumn(label: Text(S.current.loginLog_loginDate)),
-          DataColumn(label: Text(S.current.common_operation)),
-        ],
-        source: _LoginLogDataSource(_logs, context, _showDetail),
-      ),
-    );
-  }
-}
-
-/// 登录日志数据源
-class _LoginLogDataSource extends DataTableSource {
-  final List<LoginLog> logs;
-  final BuildContext context;
-  final void Function(LoginLog) onShowDetail;
-
-  _LoginLogDataSource(this.logs, this.context, this.onShowDetail);
-
-  @override
-  int get rowCount => logs.length;
-
-  @override
-  DataRow getRow(int index) {
-    final log = logs[index];
-    return DataRow(
-      cells: [
-        DataCell(Text(log.id?.toString() ?? '-')),
-        DataCell(_buildLogTypeCell(log.logType)),
-        DataCell(Text(log.username ?? '-')),
-        DataCell(Text(log.userIp ?? '-')),
-        DataCell(
-          Tooltip(
-            message: log.userAgent ?? '-',
-            child: SizedBox(
-              width: 150,
-              child: Text(
-                log.userAgent ?? '-',
-                overflow: TextOverflow.ellipsis,
+      child: Column(
+        children: [
+          // 表头工具栏
+          Row(
+            children: [
+              Text(S.current.loginLog_list),
+              const Spacer(),
+              Text('${S.current.total}: $_totalCount'),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // 表格
+          Expanded(
+            child: DataTable2(
+              columnSpacing: 12,
+              horizontalMargin: 12,
+              minWidth: 800,
+              smRatio: 0.75,
+              lmRatio: 1.5,
+              headingRowColor: WidgetStateProperty.resolveWith(
+                (states) => Theme.of(context).colorScheme.surfaceContainerHighest,
               ),
+              headingTextStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              columns: [
+                DataColumn2(
+                  label: Text(S.current.loginLog_logId),
+                  size: ColumnSize.S,
+                ),
+                DataColumn2(
+                  label: Text(S.current.loginLog_logType),
+                  size: ColumnSize.M,
+                ),
+                DataColumn2(
+                  label: Text(S.current.loginLog_username),
+                  size: ColumnSize.M,
+                ),
+                DataColumn2(
+                  label: Text(S.current.loginLog_loginAddress),
+                  size: ColumnSize.M,
+                ),
+                DataColumn2(
+                  label: Text(S.current.loginLog_browser),
+                  size: ColumnSize.L,
+                ),
+                DataColumn2(
+                  label: Text(S.current.loginLog_loginResult),
+                  size: ColumnSize.S,
+                ),
+                DataColumn2(
+                  label: Text(S.current.loginLog_loginDate),
+                  size: ColumnSize.L,
+                ),
+                DataColumn2(
+                  label: Text(S.current.operation),
+                  size: ColumnSize.S,
+                ),
+              ],
+              rows: _logs.map((log) {
+                return DataRow2(
+                  cells: [
+                    DataCell(Text(log.id?.toString() ?? '-')),
+                    DataCell(_buildLogTypeCell(log.logType)),
+                    DataCell(Text(log.username ?? '-')),
+                    DataCell(Text(log.userIp ?? '-')),
+                    DataCell(
+                      Tooltip(
+                        message: log.userAgent ?? '-',
+                        child: SizedBox(
+                          width: 150,
+                          child: Text(
+                            log.userAgent ?? '-',
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ),
+                    DataCell(_buildResultCell(log.result)),
+                    DataCell(Text(log.createTime ?? '-')),
+                    DataCell(
+                      IconButton(
+                        icon: const Icon(Icons.visibility, size: 20),
+                        tooltip: S.current.detail,
+                        onPressed: () => _showDetail(log),
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
             ),
           ),
-        ),
-        DataCell(_buildResultCell(log.result)),
-        DataCell(Text(log.createTime ?? '-')),
-        DataCell(
-          TextButton.icon(
-            onPressed: () => onShowDetail(log),
-            icon: const Icon(Icons.visibility, size: 18),
-            label: Text(S.current.common_detail),
+          // 分页控件
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              // 每页行数选择
+              Row(
+                children: [
+                  Text('${S.current.pageSize}: '),
+                  DropdownButton<int>(
+                    value: _pageSize,
+                    items: [10, 20, 50, 100].map((value) {
+                      return DropdownMenuItem(
+                        value: value,
+                        child: Text('$value'),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _pageSize = value;
+                          _currentPage = 1;
+                        });
+                        _loadData();
+                      }
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(width: 24),
+              // 分页导航
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left),
+                    onPressed: _currentPage > 1
+                        ? () {
+                            setState(() => _currentPage--);
+                            _loadData();
+                          }
+                        : null,
+                  ),
+                  Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right),
+                    onPressed: _currentPage * _pageSize < _totalCount
+                        ? () {
+                            setState(() => _currentPage++);
+                            _loadData();
+                          }
+                        : null,
+                  ),
+                ],
+              ),
+            ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -406,11 +545,11 @@ class _LoginLogDataSource extends DataTableSource {
 
     switch (result) {
       case 0:
-        text = S.current.common_success;
+        text = S.current.success;
         color = Colors.green;
         break;
       case 1:
-        text = S.current.common_failed;
+        text = S.current.failed;
         color = Colors.red;
         break;
       default:
@@ -430,10 +569,4 @@ class _LoginLogDataSource extends DataTableSource {
       ),
     );
   }
-
-  @override
-  bool get isRowCountApproximate => false;
-
-  @override
-  int get selectedRowCount => 0;
 }

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:data_table_2/data_table_2.dart';
 import '/../../api/system/mail_account_api.dart';
 import '/../../models/system/mail_account.dart';
-import '/../../models/common/page_result.dart';
 
-// 邮件账号管理页面
+/// 邮箱账号管理页面
 class MailAccountPage extends ConsumerStatefulWidget {
   const MailAccountPage({super.key});
 
@@ -17,10 +17,12 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
   final _searchUsernameController = TextEditingController();
 
   List<MailAccount> _dataList = [];
+  Set<int> _selectedIds = {};
   int _totalCount = 0;
   int _currentPage = 1;
   int _pageSize = 10;
-  bool _isLoading = false;
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -36,10 +38,9 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
   }
 
   Future<void> _loadData() async {
-    if (_isLoading) return;
-
     setState(() {
       _isLoading = true;
+      _error = null;
     });
 
     try {
@@ -55,34 +56,89 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
         setState(() {
           _dataList = response.data!.list;
           _totalCount = response.data!.total;
+          _isLoading = false;
+          _selectedIds.clear();
         });
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(response.msg ?? '加载失败')),
-          );
-        }
+        setState(() {
+          _error = response.msg ?? '加载失败';
+          _isLoading = false;
+        });
       }
-    } finally {
+    } catch (e) {
       setState(() {
+        _error = e.toString();
         _isLoading = false;
       });
     }
   }
 
-  void _refresh() {
+  void _search() {
     _currentPage = 1;
     _loadData();
   }
 
-  void _showAccountDialog([MailAccount? account]) {
-    showDialog(
+  void _reset() {
+    _searchMailController.clear();
+    _searchUsernameController.clear();
+    _currentPage = 1;
+    _loadData();
+  }
+
+  Future<void> _deleteSelected() async {
+    if (_selectedIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请选择要删除的数据')),
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => _MailAccountFormDialog(
-        account: account,
-        onSuccess: _refresh,
+      builder: (context) => AlertDialog(
+        title: const Text('确认删除'),
+        content: Text('确定要删除选中的 ${_selectedIds.length} 条记录吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('删除'),
+          ),
+        ],
       ),
     );
+
+    if (confirmed == true) {
+      try {
+        final api = ref.read(mailAccountApiProvider);
+        final response = await api.deleteMailAccountList(_selectedIds.toList());
+
+        if (response.isSuccess) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('删除成功')),
+            );
+            _loadData();
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(response.msg ?? '删除失败')),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('删除失败: $e')),
+          );
+        }
+      }
+    }
   }
 
   Future<void> _deleteAccount(MailAccount account) async {
@@ -98,10 +154,7 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('删除'),
           ),
         ],
@@ -116,8 +169,8 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('删除成功')),
           );
+          _loadData();
         }
-        _loadData();
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -128,6 +181,16 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
     }
   }
 
+  void _showAccountDialog([MailAccount? account]) {
+    showDialog(
+      context: context,
+      builder: (context) => _MailAccountFormDialog(
+        account: account,
+        onSuccess: _loadData,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -135,9 +198,9 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
         children: [
           _buildSearchBar(context),
           const Divider(height: 1),
-          Expanded(
-            child: _buildDataTable(context),
-          ),
+          _buildToolbar(context),
+          const Divider(height: 1),
+          Expanded(child: _buildDataTable(context)),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -163,7 +226,7 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
                 border: OutlineInputBorder(),
                 isDense: true,
               ),
-              onSubmitted: (_) => _refresh(),
+              onSubmitted: (_) => _search(),
             ),
           ),
           const SizedBox(width: 16),
@@ -177,22 +240,18 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
                 border: OutlineInputBorder(),
                 isDense: true,
               ),
-              onSubmitted: (_) => _refresh(),
+              onSubmitted: (_) => _search(),
             ),
           ),
           const SizedBox(width: 16),
           ElevatedButton.icon(
-            onPressed: _refresh,
+            onPressed: _search,
             icon: const Icon(Icons.search),
             label: const Text('搜索'),
           ),
           const SizedBox(width: 8),
           OutlinedButton.icon(
-            onPressed: () {
-              _searchMailController.clear();
-              _searchUsernameController.clear();
-              _refresh();
-            },
+            onPressed: _reset,
             icon: const Icon(Icons.refresh),
             label: const Text('重置'),
           ),
@@ -201,98 +260,148 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
     );
   }
 
-  Widget _buildDataTable(BuildContext context) {
-    if (_isLoading && _dataList.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: PaginatedDataTable(
-        header: const Text('邮箱账号列表'),
-        rowsPerPage: _pageSize,
-        availableRowsPerPage: const [10, 20, 50, 100],
-        onPageChanged: (page) {
-          _currentPage = page ~/ _pageSize + 1;
-          _loadData();
-        },
-        onRowsPerPageChanged: (value) {
-          if (value != null) {
-            setState(() {
-              _pageSize = value;
-              _currentPage = 1;
-            });
-            _loadData();
-          }
-        },
-        columns: const [
-          DataColumn(label: Text('编号')),
-          DataColumn(label: Text('邮箱')),
-          DataColumn(label: Text('用户名')),
-          DataColumn(label: Text('SMTP服务器域名')),
-          DataColumn(label: Text('SMTP端口')),
-          DataColumn(label: Text('SSL')),
-          DataColumn(label: Text('STARTTLS')),
-          DataColumn(label: Text('创建时间')),
-          DataColumn(label: Text('操作')),
+  Widget _buildToolbar(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          ElevatedButton.icon(
+            onPressed: () => _showAccountDialog(),
+            icon: const Icon(Icons.add),
+            label: const Text('新增'),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton.icon(
+            onPressed: _selectedIds.isEmpty ? null : _deleteSelected,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            icon: const Icon(Icons.delete),
+            label: const Text('批量删除'),
+          ),
         ],
-        source: _MailAccountDataSource(
-          _dataList,
-          context,
-          onEdit: _showAccountDialog,
-          onDelete: _deleteAccount,
-        ),
       ),
     );
   }
-}
 
-/// 数据源
-class _MailAccountDataSource extends DataTableSource {
-  final List<MailAccount> dataList;
-  final BuildContext context;
-  final void Function(MailAccount) onEdit;
-  final void Function(MailAccount) onDelete;
+  Widget _buildDataTable(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-  _MailAccountDataSource(
-    this.dataList,
-    this.context, {
-    required this.onEdit,
-    required this.onDelete,
-  });
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('加载失败: $_error', style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _loadData, child: const Text('重试')),
+          ],
+        ),
+      );
+    }
 
-  @override
-  int get rowCount => dataList.length;
+    if (_dataList.isEmpty) {
+      return const Center(child: Text('暂无数据'));
+    }
 
-  @override
-  DataRow getRow(int index) {
-    final item = dataList[index];
-    return DataRow(
-      cells: [
-        DataCell(Text(item.id?.toString() ?? '-')),
-        DataCell(Text(item.mail)),
-        DataCell(Text(item.username)),
-        DataCell(Text(item.host)),
-        DataCell(Text(item.port.toString())),
-        DataCell(_buildBoolTag(item.sslEnable)),
-        DataCell(_buildBoolTag(item.starttlsEnable)),
-        DataCell(Text(item.createTime ?? '-')),
-        DataCell(
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
           Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              TextButton(
-                onPressed: () => onEdit(item),
-                child: const Text('编辑'),
+              Checkbox(
+                value: _selectedIds.length == _dataList.length && _dataList.isNotEmpty,
+                tristate: true,
+                onChanged: (value) {
+                  setState(() {
+                    if (value == true) {
+                      _selectedIds = _dataList.where((e) => e.id != null).map((e) => e.id!).toSet();
+                    } else {
+                      _selectedIds.clear();
+                    }
+                  });
+                },
               ),
-              TextButton(
-                onPressed: () => onDelete(item),
-                child: const Text('删除', style: TextStyle(color: Colors.red)),
-              ),
+              const Text('邮箱账号列表'),
+              const Spacer(),
+              Text('共 $_totalCount 条'),
             ],
           ),
-        ),
-      ],
+          const SizedBox(height: 8),
+          Expanded(
+            child: DataTable2(
+              columnSpacing: 12,
+              horizontalMargin: 12,
+              minWidth: 800,
+              smRatio: 0.75,
+              lmRatio: 1.5,
+              headingRowColor: WidgetStateProperty.resolveWith(
+                (states) => Theme.of(context).colorScheme.surfaceContainerHighest,
+              ),
+              headingTextStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              columns: const [
+                DataColumn2(label: Text('编号'), size: ColumnSize.S),
+                DataColumn2(label: Text('邮箱'), size: ColumnSize.M),
+                DataColumn2(label: Text('用户名'), size: ColumnSize.M),
+                DataColumn2(label: Text('SMTP服务器域名'), size: ColumnSize.L),
+                DataColumn2(label: Text('SMTP端口'), size: ColumnSize.S),
+                DataColumn2(label: Text('SSL'), size: ColumnSize.S),
+                DataColumn2(label: Text('STARTTLS'), size: ColumnSize.S),
+                DataColumn2(label: Text('创建时间'), size: ColumnSize.L),
+                DataColumn2(label: Text('操作'), size: ColumnSize.M),
+              ],
+              rows: _dataList.map((item) {
+                final isSelected = item.id != null && _selectedIds.contains(item.id);
+                return DataRow2(
+                  selected: isSelected,
+                  onSelectChanged: (selected) {
+                    if (item.id != null) {
+                      setState(() {
+                        if (selected == true) {
+                          _selectedIds.add(item.id!);
+                        } else {
+                          _selectedIds.remove(item.id!);
+                        }
+                      });
+                    }
+                  },
+                  cells: [
+                    DataCell(Text(item.id?.toString() ?? '-')),
+                    DataCell(Text(item.mail)),
+                    DataCell(Text(item.username)),
+                    DataCell(Text(item.host)),
+                    DataCell(Text(item.port.toString())),
+                    DataCell(_buildBoolTag(item.sslEnable)),
+                    DataCell(_buildBoolTag(item.starttlsEnable)),
+                    DataCell(Text(item.createTime ?? '-')),
+                    DataCell(Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextButton(
+                          onPressed: () => _showAccountDialog(item),
+                          child: const Text('编辑'),
+                        ),
+                        TextButton(
+                          onPressed: () => _deleteAccount(item),
+                          child: const Text('删除', style: TextStyle(color: Colors.red)),
+                        ),
+                      ],
+                    )),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 8),
+          _buildPagination(),
+        ],
+      ),
     );
   }
 
@@ -305,19 +414,62 @@ class _MailAccountDataSource extends DataTableSource {
       ),
       child: Text(
         value ? '是' : '否',
-        style: TextStyle(
-          color: value ? Colors.green : Colors.grey,
-          fontSize: 12,
-        ),
+        style: TextStyle(color: value ? Colors.green : Colors.grey, fontSize: 12),
       ),
     );
   }
 
-  @override
-  bool get isRowCountApproximate => false;
-
-  @override
-  int get selectedRowCount => 0;
+  Widget _buildPagination() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Row(
+          children: [
+            const Text('每页: '),
+            DropdownButton<int>(
+              value: _pageSize,
+              items: [10, 20, 50, 100].map((value) {
+                return DropdownMenuItem(value: value, child: Text('$value'));
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _pageSize = value;
+                    _currentPage = 1;
+                  });
+                  _loadData();
+                }
+              },
+            ),
+          ],
+        ),
+        const SizedBox(width: 24),
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.chevron_left),
+              onPressed: _currentPage > 1
+                  ? () {
+                      setState(() => _currentPage--);
+                      _loadData();
+                    }
+                  : null,
+            ),
+            Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
+            IconButton(
+              icon: const Icon(Icons.chevron_right),
+              onPressed: _currentPage * _pageSize < _totalCount
+                  ? () {
+                      setState(() => _currentPage++);
+                      _loadData();
+                    }
+                  : null,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 }
 
 /// 邮箱账号表单对话框
@@ -359,6 +511,8 @@ class _MailAccountFormDialogState extends State<_MailAccountFormDialog> {
       _remarkController.text = widget.account!.remark ?? '';
       _sslEnable = widget.account!.sslEnable;
       _starttlsEnable = widget.account!.starttlsEnable;
+    } else {
+      _portController.text = '25';
     }
   }
 
@@ -376,9 +530,7 @@ class _MailAccountFormDialogState extends State<_MailAccountFormDialog> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final data = MailAccount(
@@ -416,9 +568,7 @@ class _MailAccountFormDialogState extends State<_MailAccountFormDialog> {
         }
       }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
@@ -437,7 +587,7 @@ class _MailAccountFormDialogState extends State<_MailAccountFormDialog> {
                 TextFormField(
                   controller: _mailController,
                   decoration: const InputDecoration(
-                    labelText: '邮箱',
+                    labelText: '邮箱 *',
                     border: OutlineInputBorder(),
                   ),
                   validator: (v) => v?.isEmpty == true ? '请输入邮箱' : null,
@@ -446,7 +596,7 @@ class _MailAccountFormDialogState extends State<_MailAccountFormDialog> {
                 TextFormField(
                   controller: _usernameController,
                   decoration: const InputDecoration(
-                    labelText: '用户名',
+                    labelText: '用户名 *',
                     border: OutlineInputBorder(),
                   ),
                   validator: (v) => v?.isEmpty == true ? '请输入用户名' : null,
@@ -455,7 +605,7 @@ class _MailAccountFormDialogState extends State<_MailAccountFormDialog> {
                 TextFormField(
                   controller: _passwordController,
                   decoration: const InputDecoration(
-                    labelText: '密码',
+                    labelText: '密码 *',
                     border: OutlineInputBorder(),
                   ),
                   obscureText: true,
@@ -465,7 +615,7 @@ class _MailAccountFormDialogState extends State<_MailAccountFormDialog> {
                 TextFormField(
                   controller: _hostController,
                   decoration: const InputDecoration(
-                    labelText: 'SMTP服务器域名',
+                    labelText: 'SMTP服务器域名 *',
                     border: OutlineInputBorder(),
                   ),
                   validator: (v) => v?.isEmpty == true ? '请输入SMTP服务器域名' : null,
@@ -474,7 +624,7 @@ class _MailAccountFormDialogState extends State<_MailAccountFormDialog> {
                 TextFormField(
                   controller: _portController,
                   decoration: const InputDecoration(
-                    labelText: 'SMTP服务器端口',
+                    labelText: 'SMTP服务器端口 *',
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.number,
@@ -524,11 +674,7 @@ class _MailAccountFormDialogState extends State<_MailAccountFormDialog> {
         ElevatedButton(
           onPressed: _isLoading ? null : _submit,
           child: _isLoading
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
+              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
               : const Text('确定'),
         ),
       ],

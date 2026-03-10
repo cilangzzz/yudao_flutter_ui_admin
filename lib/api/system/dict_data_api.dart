@@ -12,10 +12,20 @@ class DictDataApi {
   DictDataApi(this._client);
 
   /// 分页查询字典数据
-  Future<ApiResponse<PageResult<DictData>>> getDictDataPage(PageParam params) async {
+  Future<ApiResponse<PageResult<DictData>>> getDictDataPage(
+    PageParam params, {
+    String? dictType,
+    String? label,
+    int? status,
+  }) async {
+    final queryParams = params.toJson();
+    if (dictType != null) queryParams['dictType'] = dictType;
+    if (label != null) queryParams['label'] = label;
+    if (status != null) queryParams['status'] = status;
+
     return _client.get<PageResult<DictData>>(
       '/system/dict-data/page',
-      queryParameters: params.toJson(),
+      queryParameters: queryParams,
       fromJsonT: (json) => PageResult.fromJson(
         json as Map<String, dynamic>,
         (e) => DictData.fromJson(e as Map<String, dynamic>),

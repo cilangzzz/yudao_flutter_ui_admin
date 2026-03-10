@@ -80,11 +80,11 @@ class UserApi {
   }
 
   /// 获取精简用户列表
-  Future<ApiResponse<List<User>>> getSimpleUserList() async {
-    return _client.get<List<User>>(
+  Future<ApiResponse<List<SimpleUser>>> getSimpleUserList() async {
+    return _client.get<List<SimpleUser>>(
       '/system/user/simple-list',
       fromJsonT: (json) => (json as List<dynamic>)
-          .map((e) => User.fromJson(e as Map<String, dynamic>))
+          .map((e) => SimpleUser.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
   }

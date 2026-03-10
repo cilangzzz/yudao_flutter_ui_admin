@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:data_table_2/data_table_2.dart';
 import '../../../api/system/notify_template_api.dart';
 import '../../../models/system/notify_template.dart';
+import '../../../i18n/i18n.dart';
 
-/// 通知模板管理页面
+/// 站内信模板管理页面
 class NotifyTemplatePage extends ConsumerStatefulWidget {
   const NotifyTemplatePage({super.key});
 
@@ -12,56 +14,173 @@ class NotifyTemplatePage extends ConsumerStatefulWidget {
 }
 
 class _NotifyTemplatePageState extends ConsumerState<NotifyTemplatePage> {
-  List<NotifyTemplate> _templates = [];
-  bool _isLoading = false;
+  final _nameController = TextEditingController();
+  final _codeController = TextEditingController();
+  DateTimeRange? _createTimeRange;
+  int? _selectedStatus;
+  int? _selectedType;
+
+  List<NotifyTemplate> _templateList = [];
+  Set<int> _selectedIds = {};
+  int _totalCount = 0;
   int _currentPage = 1;
-  int _total = 0;
-  final int _pageSize = 10;
+  int _pageSize = 10;
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _loadTemplateList();
   }
 
-  Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _codeController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadTemplateList() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
 
     try {
       final api = ref.read(notifyTemplateApiProvider);
-      final response = await api.getNotifyTemplatePage({
+      final params = <String, dynamic>{
         'pageNo': _currentPage,
         'pageSize': _pageSize,
-      });
+      };
+
+      if (_nameController.text.isNotEmpty) {
+        params['name'] = _nameController.text;
+      }
+      if (_codeController.text.isNotEmpty) {
+        params['code'] = _codeController.text;
+      }
+      if (_selectedStatus != null) {
+        params['status'] = _selectedStatus;
+      }
+      if (_selectedType != null) {
+        params['type'] = _selectedType;
+      }
+      if (_createTimeRange != null) {
+        params['createTime'] = _formatDate(_createTimeRange!.start);
+        params['createTimeEnd'] = _formatDate(_createTimeRange!.end);
+      }
+
+      final response = await api.getNotifyTemplatePage(params);
 
       if (response.isSuccess && response.data != null) {
         setState(() {
-          _templates = response.data!.list;
-          _total = response.data!.total;
+          _templateList = response.data!.list;
+          _totalCount = response.data!.total;
+          _isLoading = false;
+          _selectedIds.clear();
         });
       } else {
-        _showError(response.msg ?? '加载失败');
+        setState(() {
+          _error = response.msg.isNotEmpty ? response.msg : S.current.loadFailed;
+          _isLoading = false;
+        });
       }
     } catch (e) {
-      _showError('加载异常: $e');
-    } finally {
-      setState(() => _isLoading = false);
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
     }
   }
 
-  void _showError(String message) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: Colors.red),
-      );
+  void _search() {
+    _currentPage = 1;
+    _loadTemplateList();
+  }
+
+  void _reset() {
+    _nameController.clear();
+    _codeController.clear();
+    setState(() {
+      _createTimeRange = null;
+      _selectedStatus = null;
+      _selectedType = null;
+    });
+    _currentPage = 1;
+    _loadTemplateList();
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
+  String _getTypeText(int? type) {
+    switch (type) {
+      case 1:
+        return '站内信';
+      case 2:
+        return '邮件';
+      case 3:
+        return '短信';
+      default:
+        return '-';
     }
   }
 
-  void _showSuccess(String message) {
-    if (mounted) {
+  Future<void> _deleteSelected() async {
+    if (_selectedIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: Colors.green),
+        SnackBar(content: Text(S.current.pleaseSelectData)),
       );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(S.current.confirmDelete),
+        content: Text('${S.current.confirmDeleteSelected} (${_selectedIds.length})?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(S.current.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(S.current.delete),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final api = ref.read(notifyTemplateApiProvider);
+        final response = await api.deleteNotifyTemplateList(_selectedIds.toList());
+
+        if (response.isSuccess) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(S.current.deleteSuccess)),
+            );
+            _loadTemplateList();
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(response.msg.isNotEmpty ? response.msg : S.current.deleteFailed)),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${S.current.deleteFailed}: $e')),
+          );
+        }
+      }
     }
   }
 
@@ -69,17 +188,17 @@ class _NotifyTemplatePageState extends ConsumerState<NotifyTemplatePage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('确认删除'),
-        content: Text('确定要删除模板 "${template.name}" 吗？'),
+        title: Text(S.current.confirmDelete),
+        content: Text('${S.current.confirmDeleteUser} "${template.name}" ?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(S.current.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('删除'),
+            child: Text(S.current.delete),
           ),
         ],
       ),
@@ -89,14 +208,27 @@ class _NotifyTemplatePageState extends ConsumerState<NotifyTemplatePage> {
       try {
         final api = ref.read(notifyTemplateApiProvider);
         final response = await api.deleteNotifyTemplate(template.id!);
+
         if (response.isSuccess) {
-          _showSuccess('删除成功');
-          _loadData();
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(S.current.deleteSuccess)),
+            );
+            _loadTemplateList();
+          }
         } else {
-          _showError(response.msg ?? '删除失败');
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(response.msg.isNotEmpty ? response.msg : S.current.deleteFailed)),
+            );
+          }
         }
       } catch (e) {
-        _showError('删除异常: $e');
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${S.current.deleteFailed}: $e')),
+          );
+        }
       }
     }
   }
@@ -112,131 +244,174 @@ class _NotifyTemplatePageState extends ConsumerState<NotifyTemplatePage> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(template == null ? '添加通知模板' : '编辑通知模板'),
-        content: SizedBox(
-          width: 500,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: '模板名称',
-                    border: OutlineInputBorder(),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(template == null ? '新增站内信模板' : '编辑站内信模板'),
+          content: SizedBox(
+            width: 500,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      labelText: '模板名称 *',
+                      border: const OutlineInputBorder(),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: codeController,
-                  decoration: const InputDecoration(
-                    labelText: '模板编码',
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: codeController,
+                    decoration: InputDecoration(
+                      labelText: '模板编码 *',
+                      border: const OutlineInputBorder(),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: nicknameController,
-                  decoration: const InputDecoration(
-                    labelText: '发送人名称',
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: nicknameController,
+                    decoration: InputDecoration(
+                      labelText: '发送人名称 *',
+                      border: const OutlineInputBorder(),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<int>(
-                  value: type,
-                  decoration: const InputDecoration(
-                    labelText: '模板类型',
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<int>(
+                    value: type,
+                    decoration: const InputDecoration(
+                      labelText: '模板类型',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 1, child: Text('站内信')),
+                      DropdownMenuItem(value: 2, child: Text('邮件')),
+                      DropdownMenuItem(value: 3, child: Text('短信')),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        type = value ?? 1;
+                      });
+                    },
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 1, child: Text('站内信')),
-                    DropdownMenuItem(value: 2, child: Text('邮件')),
-                    DropdownMenuItem(value: 3, child: Text('短信')),
-                  ],
-                  onChanged: (value) => type = value ?? 1,
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: contentController,
-                  decoration: const InputDecoration(
-                    labelText: '模板内容',
-                    border: OutlineInputBorder(),
-                    hintText: '支持使用 {param} 格式定义参数',
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: contentController,
+                    decoration: const InputDecoration(
+                      labelText: '模板内容 *',
+                      border: OutlineInputBorder(),
+                      hintText: '支持使用 {param} 格式定义参数',
+                    ),
+                    maxLines: 5,
                   ),
-                  maxLines: 5,
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<int>(
-                  value: status,
-                  decoration: const InputDecoration(
-                    labelText: '状态',
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 16),
+                  // 状态
+                  Row(
+                    children: [
+                      Text('${S.current.status}: '),
+                      Radio<int>(
+                        value: 0,
+                        groupValue: status,
+                        onChanged: (value) {
+                          setState(() {
+                            status = value!;
+                          });
+                        },
+                      ),
+                      Text(S.current.enabled),
+                      Radio<int>(
+                        value: 1,
+                        groupValue: status,
+                        onChanged: (value) {
+                          setState(() {
+                            status = value!;
+                          });
+                        },
+                      ),
+                      Text(S.current.disabled),
+                    ],
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 0, child: Text('开启')),
-                    DropdownMenuItem(value: 1, child: Text('关闭')),
-                  ],
-                  onChanged: (value) => status = value ?? 0,
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: remarkController,
-                  decoration: const InputDecoration(
-                    labelText: '备注',
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: remarkController,
+                    decoration: InputDecoration(
+                      labelText: S.current.remark,
+                      border: const OutlineInputBorder(),
+                    ),
+                    maxLines: 2,
                   ),
-                  maxLines: 2,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final data = NotifyTemplate(
-                id: template?.id,
-                name: nameController.text,
-                code: codeController.text,
-                nickname: nicknameController.text.isEmpty ? null : nicknameController.text,
-                content: contentController.text,
-                type: type,
-                status: status,
-                remark: remarkController.text.isEmpty ? null : remarkController.text,
-              );
-
-              try {
-                final api = ref.read(notifyTemplateApiProvider);
-                final response = template == null
-                    ? await api.createNotifyTemplate(data)
-                    : await api.updateNotifyTemplate(data);
-
-                if (response.isSuccess) {
-                  Navigator.pop(context);
-                  _showSuccess(template == null ? '添加成功' : '更新成功');
-                  _loadData();
-                } else {
-                  _showError(response.msg ?? '操作失败');
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(S.current.cancel),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (nameController.text.isEmpty ||
+                    codeController.text.isEmpty ||
+                    nicknameController.text.isEmpty ||
+                    contentController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(S.current.pleaseFillRequired)),
+                  );
+                  return;
                 }
-              } catch (e) {
-                _showError('操作异常: $e');
-              }
-            },
-            child: const Text('确定'),
-          ),
-        ],
+
+                final templateData = NotifyTemplate(
+                  id: template?.id,
+                  name: nameController.text,
+                  code: codeController.text,
+                  nickname: nicknameController.text,
+                  content: contentController.text,
+                  type: type,
+                  status: status,
+                  remark: remarkController.text.isEmpty ? null : remarkController.text,
+                );
+
+                try {
+                  final api = ref.read(notifyTemplateApiProvider);
+                  final response = template == null
+                      ? await api.createNotifyTemplate(templateData)
+                      : await api.updateNotifyTemplate(templateData);
+
+                  if (response.isSuccess) {
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(template == null ? S.current.addSuccess : S.current.editSuccess)),
+                      );
+                      _loadTemplateList();
+                    }
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(response.msg.isNotEmpty ? response.msg : S.current.operationFailed)),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('${S.current.operationFailed}: $e')),
+                    );
+                  }
+                }
+              },
+              child: Text(S.current.confirm),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   void _showSendTestDialog(NotifyTemplate template) {
     final userIdController = TextEditingController();
+    int userType = 1; // 默认管理员
     final Map<String, TextEditingController> paramControllers = {};
 
     // 解析模板参数
@@ -253,158 +428,411 @@ class _NotifyTemplatePageState extends ConsumerState<NotifyTemplatePage> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.send, color: Colors.blue),
-            const SizedBox(width: 8),
-            Text('发送测试 - ${template.name}'),
-          ],
-        ),
-        content: SizedBox(
-          width: 450,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '模板内容:',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(template.content ?? '-'),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: userIdController,
-                  decoration: const InputDecoration(
-                    labelText: '接收用户ID',
-                    border: OutlineInputBorder(),
-                    hintText: '输入要发送的用户ID',
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 16),
-                if (paramControllers.isNotEmpty) ...[
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.send, color: Colors.blue),
+              const SizedBox(width: 8),
+              Text('发送测试 - ${template.name}'),
+            ],
+          ),
+          content: SizedBox(
+            width: 450,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 模板内容
                   Text(
-                    '模板参数:',
+                    '模板内容:',
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 8),
-                  ...paramControllers.entries.map((entry) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: TextField(
-                        controller: entry.value,
-                        decoration: InputDecoration(
-                          labelText: entry.key,
-                          border: const OutlineInputBorder(),
-                        ),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(template.content ?? '-'),
+                  ),
+                  const SizedBox(height: 16),
+                  // 用户类型
+                  Row(
+                    children: [
+                      const Text('用户类型: '),
+                      Radio<int>(
+                        value: 1,
+                        groupValue: userType,
+                        onChanged: (value) {
+                          setState(() {
+                            userType = value!;
+                          });
+                        },
                       ),
-                    );
-                  }),
+                      const Text('管理员'),
+                      Radio<int>(
+                        value: 2,
+                        groupValue: userType,
+                        onChanged: (value) {
+                          setState(() {
+                            userType = value!;
+                          });
+                        },
+                      ),
+                      const Text('会员'),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // 接收用户ID
+                  TextField(
+                    controller: userIdController,
+                    decoration: const InputDecoration(
+                      labelText: '接收用户ID *',
+                      border: OutlineInputBorder(),
+                      hintText: '输入要发送的用户ID',
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  // 动态模板参数
+                  if (paramControllers.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      '模板参数:',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    ...paramControllers.entries.map((entry) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: TextField(
+                          controller: entry.value,
+                          decoration: InputDecoration(
+                            labelText: '参数 ${entry.key}',
+                            border: const OutlineInputBorder(),
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
-          ),
-          ElevatedButton.icon(
-            onPressed: () async {
-              final userId = int.tryParse(userIdController.text);
-              if (userId == null) {
-                _showError('请输入有效的用户ID');
-                return;
-              }
-
-              final templateParams = <String, dynamic>{};
-              for (final entry in paramControllers.entries) {
-                templateParams[entry.key] = entry.value.text;
-              }
-
-              try {
-                final api = ref.read(notifyTemplateApiProvider);
-                final response = await api.sendNotify(NotifySendReq(
-                  userId: userId,
-                  userType: 1, // 默认管理员类型
-                  templateCode: template.code,
-                  templateParams: templateParams,
-                ));
-
-                if (response.isSuccess) {
-                  Navigator.pop(context);
-                  _showSuccess('发送成功');
-                } else {
-                  _showError(response.msg ?? '发送失败');
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(S.current.cancel),
+            ),
+            ElevatedButton.icon(
+              onPressed: () async {
+                final userId = int.tryParse(userIdController.text);
+                if (userId == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('请输入有效的用户ID')),
+                  );
+                  return;
                 }
-              } catch (e) {
-                _showError('发送异常: $e');
-              }
-            },
-            icon: const Icon(Icons.send),
-            label: const Text('发送'),
-          ),
-        ],
+
+                final templateParams = <String, dynamic>{};
+                for (final entry in paramControllers.entries) {
+                  templateParams[entry.key] = entry.value.text;
+                }
+
+                try {
+                  final api = ref.read(notifyTemplateApiProvider);
+                  final response = await api.sendNotify(NotifySendReq(
+                    userId: userId,
+                    userType: userType,
+                    templateCode: template.code,
+                    templateParams: templateParams,
+                  ));
+
+                  if (response.isSuccess) {
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(S.current.operationSuccess)),
+                      );
+                    }
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(response.msg.isNotEmpty ? response.msg : S.current.operationFailed)),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('${S.current.operationFailed}: $e')),
+                    );
+                  }
+                }
+              },
+              icon: const Icon(Icons.send),
+              label: const Text('发送'),
+            ),
+          ],
+        ),
       ),
     );
-  }
-
-  String _getTypeText(int? type) {
-    switch (type) {
-      case 1:
-        return '站内信';
-      case 2:
-        return '邮件';
-      case 3:
-        return '短信';
-      default:
-        return '未知';
-    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 800;
+
     return Scaffold(
-      body: Column(
-        children: [
-          _buildSearchBar(context),
-          const Divider(height: 1),
-          Expanded(child: _buildDataTable(context)),
-        ],
-      ),
+      body: isMobile
+          ? _buildMobileLayout(context)
+          : _buildDesktopLayout(context),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showTemplateDialog(),
         icon: const Icon(Icons.add),
-        label: const Text('添加模板'),
+        label: const Text('新增模板'),
       ),
     );
   }
 
-  Widget _buildSearchBar(BuildContext context) {
-    return Padding(
+  Widget _buildDesktopLayout(BuildContext context) {
+    return Column(
+      children: [
+        _buildDesktopSearchBar(context),
+        const Divider(height: 1),
+        _buildToolbar(context),
+        const Divider(height: 1),
+        Expanded(child: _buildDataTable(context)),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context) {
+    return Column(
+      children: [
+        _buildMobileSearchBar(context),
+        const Divider(height: 1),
+        Expanded(child: _buildMobileList(context)),
+      ],
+    );
+  }
+
+  Widget _buildDesktopSearchBar(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          Text(
-            '通知模板管理',
-            style: Theme.of(context).textTheme.titleLarge,
+          SizedBox(
+            width: 180,
+            child: TextField(
+              controller: _nameController,
+              decoration: InputDecoration(
+                hintText: '模板名称',
+                prefixIcon: const Icon(Icons.text_fields, size: 18),
+                border: const OutlineInputBorder(),
+                isDense: true,
+              ),
+              onSubmitted: (_) => _search(),
+            ),
           ),
-          const Spacer(),
+          const SizedBox(width: 16),
+          SizedBox(
+            width: 180,
+            child: TextField(
+              controller: _codeController,
+              decoration: InputDecoration(
+                hintText: '模板编码',
+                prefixIcon: const Icon(Icons.code, size: 18),
+                border: const OutlineInputBorder(),
+                isDense: true,
+              ),
+              onSubmitted: (_) => _search(),
+            ),
+          ),
+          const SizedBox(width: 16),
+          SizedBox(
+            width: 120,
+            child: DropdownButtonFormField<int?>(
+              value: _selectedStatus,
+              decoration: const InputDecoration(
+                hintText: '状态',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+              items: const [
+                DropdownMenuItem(value: null, child: Text('全部')),
+                DropdownMenuItem(value: 0, child: Text('开启')),
+                DropdownMenuItem(value: 1, child: Text('关闭')),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _selectedStatus = value;
+                });
+              },
+            ),
+          ),
+          const SizedBox(width: 16),
+          SizedBox(
+            width: 150,
+            child: DropdownButtonFormField<int?>(
+              value: _selectedType,
+              decoration: const InputDecoration(
+                hintText: '模板类型',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+              items: const [
+                DropdownMenuItem(value: null, child: Text('全部')),
+                DropdownMenuItem(value: 1, child: Text('站内信')),
+                DropdownMenuItem(value: 2, child: Text('邮件')),
+                DropdownMenuItem(value: 3, child: Text('短信')),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _selectedType = value;
+                });
+              },
+            ),
+          ),
+          const SizedBox(width: 16),
+          // 创建时间范围选择
+          InkWell(
+            onTap: () async {
+              final range = await showDateRangePicker(
+                context: context,
+                firstDate: DateTime(2000),
+                lastDate: DateTime.now(),
+                initialDateRange: _createTimeRange,
+              );
+              if (range != null) {
+                setState(() {
+                  _createTimeRange = range;
+                });
+              }
+            },
+            child: Container(
+              width: 240,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.date_range, size: 18, color: Colors.grey),
+                  const SizedBox(width: 8),
+                  Text(
+                    _createTimeRange != null
+                        ? '${_formatDate(_createTimeRange!.start)} - ${_formatDate(_createTimeRange!.end)}'
+                        : S.current.createTime,
+                    style: TextStyle(
+                      color: _createTimeRange != null ? null : Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
           ElevatedButton.icon(
-            onPressed: _loadData,
+            onPressed: _search,
+            icon: const Icon(Icons.search),
+            label: Text(S.current.search),
+          ),
+          const SizedBox(width: 8),
+          OutlinedButton.icon(
+            onPressed: _reset,
             icon: const Icon(Icons.refresh),
-            label: const Text('刷新'),
+            label: Text(S.current.reset),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileSearchBar(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _nameController,
+                  decoration: InputDecoration(
+                    hintText: '模板名称',
+                    prefixIcon: const Icon(Icons.text_fields, size: 20),
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onSubmitted: (_) => _search(),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _codeController,
+                  decoration: InputDecoration(
+                    hintText: '模板编码',
+                    prefixIcon: const Icon(Icons.code, size: 20),
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onSubmitted: (_) => _search(),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _search,
+                  icon: const Icon(Icons.search, size: 20),
+                  label: Text(S.current.search),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _reset,
+                  icon: const Icon(Icons.refresh, size: 20),
+                  label: Text(S.current.reset),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToolbar(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          ElevatedButton.icon(
+            onPressed: () => _showTemplateDialog(),
+            icon: const Icon(Icons.add),
+            label: const Text('新增'),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton.icon(
+            onPressed: _selectedIds.isEmpty ? null : _deleteSelected,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            icon: const Icon(Icons.delete),
+            label: Text(S.current.deleteBatch),
           ),
         ],
       ),
@@ -416,111 +844,341 @@ class _NotifyTemplatePageState extends ConsumerState<NotifyTemplatePage> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_templates.isEmpty) {
-      return const Center(
-        child: Text('暂无模板数据'),
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('${S.current.loadFailed}: $_error', style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _loadTemplateList, child: Text(S.current.retry)),
+          ],
+        ),
       );
     }
 
-    return SingleChildScrollView(
+    if (_templateList.isEmpty) {
+      return Center(child: Text(S.current.noData));
+    }
+
+    return Padding(
       padding: const EdgeInsets.all(16),
-      child: PaginatedDataTable(
-        header: const Text('模板列表'),
-        rowsPerPage: _pageSize,
-        availableRowsPerPage: const [10, 20, 50],
-        onPageChanged: (page) {
-          _currentPage = page + 1;
-          _loadData();
-        },
-        // total: _total,
-        columns: const [
-          DataColumn(label: Text('ID')),
-          DataColumn(label: Text('模板名称')),
-          DataColumn(label: Text('模板编码')),
-          DataColumn(label: Text('发送人')),
-          DataColumn(label: Text('模板类型')),
-          DataColumn(label: Text('状态')),
-          DataColumn(label: Text('创建时间')),
-          DataColumn(label: Text('操作')),
+      child: Column(
+        children: [
+          // 表头工具栏
+          Row(
+            children: [
+              Checkbox(
+                value: _selectedIds.length == _templateList.length && _templateList.isNotEmpty,
+                tristate: true,
+                onChanged: (value) {
+                  setState(() {
+                    if (value == true) {
+                      _selectedIds = _templateList.where((t) => t.id != null).map((t) => t.id!).toSet();
+                    } else {
+                      _selectedIds.clear();
+                    }
+                  });
+                },
+              ),
+              const Text('站内信模板列表'),
+              const Spacer(),
+              Text('${S.current.total}: $_totalCount'),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // 表格
+          Expanded(
+            child: DataTable2(
+              columnSpacing: 12,
+              horizontalMargin: 12,
+              minWidth: 1000,
+              smRatio: 0.75,
+              lmRatio: 1.5,
+              headingRowColor: WidgetStateProperty.resolveWith(
+                (states) => Theme.of(context).colorScheme.surfaceContainerHighest,
+              ),
+              headingTextStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              dataRowColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3);
+                }
+                return null;
+              }),
+              columns: [
+                DataColumn2(
+                  label: Text('编号'),
+                  size: ColumnSize.S,
+                ),
+                DataColumn2(
+                  label: Text('模板名称'),
+                  size: ColumnSize.M,
+                ),
+                DataColumn2(
+                  label: Text('模板编码'),
+                  size: ColumnSize.M,
+                ),
+                DataColumn2(
+                  label: Text('发送人名称'),
+                  size: ColumnSize.M,
+                ),
+                DataColumn2(
+                  label: Text('模板内容'),
+                  size: ColumnSize.L,
+                ),
+                DataColumn2(
+                  label: Text('模板类型'),
+                  size: ColumnSize.S,
+                ),
+                DataColumn2(
+                  label: Text(S.current.status),
+                  size: ColumnSize.S,
+                ),
+                DataColumn2(
+                  label: Text(S.current.remark),
+                  size: ColumnSize.M,
+                ),
+                DataColumn2(
+                  label: Text(S.current.createTime),
+                  size: ColumnSize.L,
+                ),
+                DataColumn2(
+                  label: Text(S.current.operation),
+                  size: ColumnSize.M,
+                  fixedWidth: 200,
+                ),
+              ],
+              rows: _templateList.map((template) {
+                final isSelected = template.id != null && _selectedIds.contains(template.id);
+                return DataRow2(
+                  selected: isSelected,
+                  onSelectChanged: (selected) {
+                    if (template.id != null) {
+                      setState(() {
+                        if (selected == true) {
+                          _selectedIds.add(template.id!);
+                        } else {
+                          _selectedIds.remove(template.id!);
+                        }
+                      });
+                    }
+                  },
+                  cells: [
+                    DataCell(Text(template.id?.toString() ?? '-')),
+                    DataCell(Text(template.name)),
+                    DataCell(Text(template.code)),
+                    DataCell(Text(template.nickname ?? '-')),
+                    DataCell(ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 200),
+                      child: Text(
+                        template.content ?? '-',
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
+                      ),
+                    )),
+                    DataCell(Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _getTypeColor(template.type).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        _getTypeText(template.type),
+                        style: TextStyle(
+                          color: _getTypeColor(template.type),
+                          fontSize: 12,
+                        ),
+                      ),
+                    )),
+                    DataCell(Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: template.status == 0
+                            ? Colors.green.withValues(alpha: 0.1)
+                            : Colors.red.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        template.status == 0 ? '开启' : '关闭',
+                        style: TextStyle(
+                          color: template.status == 0 ? Colors.green : Colors.red,
+                          fontSize: 12,
+                        ),
+                      ),
+                    )),
+                    DataCell(Text(template.remark ?? '-')),
+                    DataCell(Text('-')),
+                    DataCell(Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextButton(
+                          onPressed: () => _showTemplateDialog(template),
+                          child: Text(S.current.edit),
+                        ),
+                        TextButton(
+                          onPressed: () => _showSendTestDialog(template),
+                          child: const Text('测试', style: TextStyle(color: Colors.blue)),
+                        ),
+                        TextButton(
+                          onPressed: () => _deleteTemplate(template),
+                          child: Text(S.current.delete, style: const TextStyle(color: Colors.red)),
+                        ),
+                      ],
+                    )),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+          // 分页控件
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Row(
+                children: [
+                  Text('${S.current.pageSize}: '),
+                  DropdownButton<int>(
+                    value: _pageSize,
+                    items: [10, 20, 50, 100].map((value) {
+                      return DropdownMenuItem(
+                        value: value,
+                        child: Text('$value'),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _pageSize = value;
+                          _currentPage = 1;
+                        });
+                        _loadTemplateList();
+                      }
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(width: 24),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left),
+                    onPressed: _currentPage > 1
+                        ? () {
+                            setState(() => _currentPage--);
+                            _loadTemplateList();
+                          }
+                        : null,
+                  ),
+                  Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right),
+                    onPressed: _currentPage * _pageSize < _totalCount
+                        ? () {
+                            setState(() => _currentPage++);
+                            _loadTemplateList();
+                          }
+                        : null,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ],
-        source: _NotifyTemplateDataSource(
-          _templates,
-          context,
-          getTypeText: _getTypeText,
-          onEdit: _showTemplateDialog,
-          onDelete: _deleteTemplate,
-          onSend: _showSendTestDialog,
-        ),
       ),
     );
   }
-}
 
-/// 通知模板数据源
-class _NotifyTemplateDataSource extends DataTableSource {
-  final List<NotifyTemplate> templates;
-  final BuildContext context;
-  final String Function(int?) getTypeText;
-  final void Function(NotifyTemplate)? onEdit;
-  final void Function(NotifyTemplate)? onDelete;
-  final void Function(NotifyTemplate)? onSend;
+  Color _getTypeColor(int? type) {
+    switch (type) {
+      case 1:
+        return Colors.blue;
+      case 2:
+        return Colors.orange;
+      case 3:
+        return Colors.purple;
+      default:
+        return Colors.grey;
+    }
+  }
 
-  _NotifyTemplateDataSource(
-    this.templates,
-    this.context, {
-    required this.getTypeText,
-    this.onEdit,
-    this.onDelete,
-    this.onSend,
-  });
+  Widget _buildMobileList(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-  @override
-  int get rowCount => templates.length;
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('${S.current.loadFailed}: $_error', style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _loadTemplateList, child: Text(S.current.retry)),
+          ],
+        ),
+      );
+    }
 
-  @override
-  DataRow getRow(int index) {
-    final template = templates[index];
-    return DataRow(
-      cells: [
-        DataCell(Text(template.id?.toString() ?? '')),
-        DataCell(Text(template.name)),
-        DataCell(Text(template.code)),
-        DataCell(Text(template.nickname ?? '-')),
-        DataCell(Text(getTypeText(template.type))),
-        DataCell(
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: template.status == 0
-                  ? Colors.green.withOpacity(0.1)
-                  : Colors.red.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              template.status == 0 ? '开启' : '关闭',
-              style: TextStyle(
-                color: template.status == 0 ? Colors.green : Colors.red,
-                fontSize: 12,
-              ),
+    if (_templateList.isEmpty) {
+      return Center(child: Text(S.current.noData));
+    }
+
+    return Column(
+      children: [
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: _loadTemplateList,
+            child: ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: _templateList.length,
+              itemBuilder: (context, index) {
+                final template = _templateList[index];
+                return _buildTemplateCard(template);
+              },
             ),
           ),
         ),
-        DataCell(Text('-')),
-        DataCell(
-          Row(
-            mainAxisSize: MainAxisSize.min,
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 4,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              TextButton(
-                onPressed: () => onEdit?.call(template),
-                child: const Text('编辑'),
-              ),
-              TextButton(
-                onPressed: () => onSend?.call(template),
-                child: const Text('测试', style: TextStyle(color: Colors.blue)),
-              ),
-              TextButton(
-                onPressed: () => onDelete?.call(template),
-                child: const Text('删除', style: TextStyle(color: Colors.red)),
+              Text('${S.current.total}: $_totalCount'),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left),
+                    onPressed: _currentPage > 1
+                        ? () {
+                            setState(() => _currentPage--);
+                            _loadTemplateList();
+                          }
+                        : null,
+                  ),
+                  Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right),
+                    onPressed: _currentPage * _pageSize < _totalCount
+                        ? () {
+                            setState(() => _currentPage++);
+                            _loadTemplateList();
+                          }
+                        : null,
+                  ),
+                ],
               ),
             ],
           ),
@@ -529,9 +1187,107 @@ class _NotifyTemplateDataSource extends DataTableSource {
     );
   }
 
-  @override
-  bool get isRowCountApproximate => false;
+  Widget _buildTemplateCard(NotifyTemplate template) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    template.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: template.status == 0
+                        ? Colors.green.withValues(alpha: 0.1)
+                        : Colors.red.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    template.status == 0 ? '开启' : '关闭',
+                    style: TextStyle(
+                      color: template.status == 0 ? Colors.green : Colors.red,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _getTypeColor(template.type).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    _getTypeText(template.type),
+                    style: TextStyle(
+                      color: _getTypeColor(template.type),
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 24),
+            _buildInfoRow(Icons.code, '模板编码', template.code),
+            _buildInfoRow(Icons.person, '发送人', template.nickname ?? '-'),
+            _buildInfoRow(Icons.message, '模板内容', template.content ?? '-', maxLines: 3),
+            if (template.remark != null && template.remark!.isNotEmpty)
+              _buildInfoRow(Icons.note, S.current.remark, template.remark!),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              children: [
+                TextButton.icon(
+                  onPressed: () => _showTemplateDialog(template),
+                  icon: const Icon(Icons.edit, size: 18),
+                  label: Text(S.current.edit),
+                ),
+                TextButton.icon(
+                  onPressed: () => _showSendTestDialog(template),
+                  icon: const Icon(Icons.send, size: 18, color: Colors.blue),
+                  label: const Text('测试', style: TextStyle(color: Colors.blue)),
+                ),
+                TextButton.icon(
+                  onPressed: () => _deleteTemplate(template),
+                  icon: const Icon(Icons.delete, size: 18, color: Colors.red),
+                  label: Text(S.current.delete, style: const TextStyle(color: Colors.red)),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-  @override
-  int get selectedRowCount => 0;
+  Widget _buildInfoRow(IconData icon, String label, String value, {int maxLines = 1}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: Colors.grey[600]),
+          const SizedBox(width: 8),
+          Text('$label: ', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 13),
+              maxLines: maxLines,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

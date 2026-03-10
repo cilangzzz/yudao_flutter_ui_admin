@@ -15,6 +15,7 @@ class Menu {
   final bool? keepAlive;
   final bool? alwaysShow;
   final DateTime? createTime;
+  final List<Menu>? children;
 
   const Menu({
     this.id,
@@ -32,6 +33,7 @@ class Menu {
     this.keepAlive,
     this.alwaysShow,
     this.createTime,
+    this.children,
   });
 
   factory Menu.fromJson(Map<String, dynamic> json) {
@@ -53,6 +55,11 @@ class Menu {
       createTime: json['createTime'] != null
           ? DateTime.tryParse(json['createTime'] as String)
           : null,
+      children: json['children'] != null
+          ? (json['children'] as List<dynamic>)
+              .map((e) => Menu.fromJson(e as Map<String, dynamic>))
+              .toList()
+          : null,
     );
   }
 
@@ -73,6 +80,7 @@ class Menu {
       if (keepAlive != null) 'keepAlive': keepAlive,
       if (alwaysShow != null) 'alwaysShow': alwaysShow,
       if (createTime != null) 'createTime': createTime?.toIso8601String(),
+      if (children != null) 'children': children!.map((e) => e.toJson()).toList(),
     };
   }
 
@@ -92,6 +100,7 @@ class Menu {
     bool? keepAlive,
     bool? alwaysShow,
     DateTime? createTime,
+    List<Menu>? children,
   }) {
     return Menu(
       id: id ?? this.id,
@@ -109,6 +118,7 @@ class Menu {
       keepAlive: keepAlive ?? this.keepAlive,
       alwaysShow: alwaysShow ?? this.alwaysShow,
       createTime: createTime ?? this.createTime,
+      children: children ?? this.children,
     );
   }
 }
