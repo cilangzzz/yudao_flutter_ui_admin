@@ -205,6 +205,17 @@
   "expandAll": "展开全部",
   "collapseAll": "折叠全部",
   "confirmDeleteDept": "确定要删除该部门吗？",
+  "department": "部门",
+
+  "userManagement": "用户管理",
+  "userList": "用户列表",
+  "addUser": "添加用户",
+  "editUser": "编辑用户",
+  "confirmEnableUser": "确定要启用该用户吗？",
+  "confirmDisableUser": "确定要禁用该用户吗？",
+  "confirmDeleteUser": "确定要删除该用户吗？",
+  "enable": "启用",
+  "disable": "禁用",
 
   "tenantName": "租户名称",
   "tenantPackage": "租户套餐",

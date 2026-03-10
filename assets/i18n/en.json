@@ -205,6 +205,17 @@
   "expandAll": "Expand All",
   "collapseAll": "Collapse All",
   "confirmDeleteDept": "Are you sure to delete this department?",
+  "department": "Department",
+
+  "userManagement": "User Management",
+  "userList": "User List",
+  "addUser": "Add User",
+  "editUser": "Edit User",
+  "confirmEnableUser": "Are you sure to enable this user?",
+  "confirmDisableUser": "Are you sure to disable this user?",
+  "confirmDeleteUser": "Are you sure to delete this user?",
+  "enable": "Enable",
+  "disable": "Disable",
 
   "tenantName": "Tenant Name",
   "tenantPackage": "Tenant Package",

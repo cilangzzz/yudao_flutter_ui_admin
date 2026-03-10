@@ -138,6 +138,12 @@ class AccessStore extends Notifier<AccessState> {
     );
   }
 
+  /// 仅更新 accessToken（用于 token 刷新）
+  Future<void> setAccessToken(String accessToken) async {
+    await _storage.write(key: AppConstants.tokenKey, value: accessToken);
+    state = state.copyWith(accessToken: accessToken);
+  }
+
   /// 设置权限
   void setPermissions(Set<String> permissions) {
     state = state.copyWith(permissions: permissions);

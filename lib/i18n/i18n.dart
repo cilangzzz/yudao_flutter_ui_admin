@@ -243,6 +243,18 @@ abstract class S {
   String get expandAll;
   String get collapseAll;
   String get confirmDeleteDept;
+  String get department;
+
+  // 用户管理
+  String get userManagement;
+  String get userList;
+  String get addUser;
+  String get editUser;
+  String get confirmEnableUser;
+  String get confirmDisableUser;
+  String get confirmDeleteUser;
+  String get enable;
+  String get disable;
 
   // 地区管理
   String get areaManagement;
@@ -1138,6 +1150,28 @@ class _AppLocalizations extends S {
   String get collapseAll => _get('collapseAll', 'Collapse All');
   @override
   String get confirmDeleteDept => _get('confirmDeleteDept', 'Are you sure to delete this department?');
+  @override
+  String get department => _get('department', 'Department');
+
+  // 用户管理
+  @override
+  String get userManagement => _get('userManagement', 'User Management');
+  @override
+  String get userList => _get('userList', 'User List');
+  @override
+  String get addUser => _get('addUser', 'Add User');
+  @override
+  String get editUser => _get('editUser', 'Edit User');
+  @override
+  String get confirmEnableUser => _get('confirmEnableUser', 'Are you sure to enable this user?');
+  @override
+  String get confirmDisableUser => _get('confirmDisableUser', 'Are you sure to disable this user?');
+  @override
+  String get confirmDeleteUser => _get('confirmDeleteUser', 'Are you sure to delete this user?');
+  @override
+  String get enable => _get('enable', 'Enable');
+  @override
+  String get disable => _get('disable', 'Disable');
 
   // 地区管理
   @override

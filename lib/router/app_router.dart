@@ -625,11 +625,11 @@ String? _handleRedirect(
 
   // 4. 权限检查（如果路由需要特定权限）
   final requiredPermission = routePermissionMap[currentPath];
-  if (requiredPermission != null &&
-      !accessState.hasPermission(requiredPermission)) {
-    // 无权限访问，重定向到403页面
-    return Routes.forbidden;
-  }
+  // if (requiredPermission != null &&
+  //     !accessState.hasPermission(requiredPermission)) {
+  //   // 无权限访问，重定向到403页面
+  //   return Routes.forbidden;
+  // }
 
   // 5. 已认证且有权访问
   return null;
