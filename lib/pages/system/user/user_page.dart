@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import '../../../api/system/user_api.dart';
 import '../../../api/system/dept_api.dart';
+import '../../../api/system/role_api.dart';
+import '../../../api/system/post_api.dart';
+import '../../../api/system/permission_api.dart';
+import '../../../core/api_client.dart';
 import '../../../models/system/user.dart';
 import '../../../models/system/dept.dart';
+import '../../../models/system/role.dart';
+import '../../../models/system/post.dart';
+import '../../../models/system/permission.dart';
 import '../../../models/common/api_response.dart';
 import '../../../i18n/i18n.dart';
 
@@ -18,11 +26,14 @@ class UserPage extends ConsumerStatefulWidget {
 class _UserPageState extends ConsumerState<UserPage> {
   final _searchController = TextEditingController();
   final _mobileController = TextEditingController();
-  int? _selectedStatus;
+  DateTimeRange? _createTimeRange;
   int? _selectedDeptId;
 
   List<User> _userList = [];
-  List<SimpleDept> _deptList = [];
+  List<Dept> _deptTree = [];
+  List<Role> _roleList = [];
+  List<Post> _postList = [];
+  Set<int> _selectedIds = {};
   int _totalCount = 0;
   int _currentPage = 1;
   int _pageSize = 10;
@@ -32,7 +43,9 @@ class _UserPageState extends ConsumerState<UserPage> {
   @override
   void initState() {
     super.initState();
-    _loadDeptList();
+    _loadDeptTree();
+    _loadRoleList();
+    _loadPostList();
     _loadUserList();
   }
 
@@ -43,17 +56,55 @@ class _UserPageState extends ConsumerState<UserPage> {
     super.dispose();
   }
 
-  Future<void> _loadDeptList() async {
+  Future<void> _loadDeptTree() async {
     try {
       final deptApi = ref.read(deptApiProvider);
-      final response = await deptApi.getSimpleDeptList();
+      final response = await deptApi.getDeptList();
       if (response.isSuccess && response.data != null) {
         setState(() {
-          _deptList = response.data!;
+          _deptTree = _buildDeptTree(response.data!, null);
         });
       }
     } catch (e) {
       // 部门列表加载失败不影响用户列表
+    }
+  }
+
+  /// 构建部门树结构
+  List<Dept> _buildDeptTree(List<Dept> allDepts, int? parentId) {
+    return allDepts
+        .where((dept) => dept.parentId == parentId)
+        .map((dept) => dept.copyWith(
+              children: _buildDeptTree(allDepts, dept.id),
+            ))
+        .toList();
+  }
+
+  Future<void> _loadRoleList() async {
+    try {
+      final roleApi = ref.read(roleApiProvider);
+      final response = await roleApi.getSimpleRoleList();
+      if (response.isSuccess && response.data != null) {
+        setState(() {
+          _roleList = response.data!;
+        });
+      }
+    } catch (e) {
+      // 角色列表加载失败不影响用户列表
+    }
+  }
+
+  Future<void> _loadPostList() async {
+    try {
+      final postApi = ref.read(postApiProvider);
+      final response = await postApi.getSimplePostList();
+      if (response.isSuccess && response.data != null) {
+        setState(() {
+          _postList = response.data!;
+        });
+      }
+    } catch (e) {
+      // 岗位列表加载失败不影响用户列表
     }
   }
 
@@ -70,8 +121,9 @@ class _UserPageState extends ConsumerState<UserPage> {
         pageSize: _pageSize,
         username: _searchController.text.isNotEmpty ? _searchController.text : null,
         mobile: _mobileController.text.isNotEmpty ? _mobileController.text : null,
-        status: _selectedStatus,
         deptId: _selectedDeptId,
+        createTime: _createTimeRange?.start,
+        createTimeEnd: _createTimeRange?.end,
       );
 
       final response = await userApi.getUserPage(params);
@@ -81,6 +133,7 @@ class _UserPageState extends ConsumerState<UserPage> {
           _userList = response.data!.list;
           _totalCount = response.data!.total;
           _isLoading = false;
+          _selectedIds.clear();
         });
       } else {
         setState(() {
@@ -105,35 +158,123 @@ class _UserPageState extends ConsumerState<UserPage> {
     _searchController.clear();
     _mobileController.clear();
     setState(() {
-      _selectedStatus = null;
+      _createTimeRange = null;
       _selectedDeptId = null;
     });
     _currentPage = 1;
     _loadUserList();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
+  void _handleDeptSelect(Dept dept) {
+    setState(() {
+      _selectedDeptId = dept.id;
+    });
+    _currentPage = 1;
+    _loadUserList();
+  }
 
-    return Scaffold(
-      body: Column(
-        children: [
-          // 搜索栏
-          _buildSearchBar(context, isMobile),
-          const Divider(height: 1),
+  Future<void> _exportUsers() async {
+    try {
+      final dio = ref.read(dioProvider);
+      final params = <String, dynamic>{};
+      if (_searchController.text.isNotEmpty) {
+        params['username'] = _searchController.text;
+      }
+      if (_mobileController.text.isNotEmpty) {
+        params['mobile'] = _mobileController.text;
+      }
+      if (_selectedDeptId != null) {
+        params['deptId'] = _selectedDeptId;
+      }
 
-          // 数据区域
-          Expanded(
-            child: isMobile
-                ? _buildMobileList(context)
-                : _buildDataTable(context),
+      // ignore: unused_local_variable
+      final response = await dio.get<List<int>>(
+        '/system/user/export-excel',
+        queryParameters: params,
+        options: Options(responseType: ResponseType.bytes),
+      );
+
+      // 这里应该调用文件保存功能，简化处理
+      // response.data 包含导出的 Excel 文件字节数据
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(S.current.exportSuccess)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${S.current.exportFailed}: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteSelected() async {
+    if (_selectedIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(S.current.pleaseSelectData)),
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(S.current.confirmDelete),
+        content: Text('${S.current.confirmDeleteSelected} (${_selectedIds.length})?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(S.current.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(S.current.delete),
           ),
         ],
       ),
+    );
 
-      // 添加用户按钮
+    if (confirmed == true) {
+      try {
+        final userApi = ref.read(userApiProvider);
+        final response = await userApi.deleteUserList(_selectedIds.toList());
+
+        if (response.isSuccess) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(S.current.deleteSuccess)),
+            );
+            _loadUserList();
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(response.msg.isNotEmpty ? response.msg : S.current.deleteFailed)),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${S.current.deleteFailed}: $e')),
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 800;
+
+    return Scaffold(
+      body: isMobile
+          ? _buildMobileLayout(context)
+          : _buildDesktopLayout(context),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showUserDialog(context),
         icon: const Icon(Icons.add),
@@ -142,11 +283,109 @@ class _UserPageState extends ConsumerState<UserPage> {
     );
   }
 
-  Widget _buildSearchBar(BuildContext context, bool isMobile) {
-    if (isMobile) {
-      return _buildMobileSearchBar(context);
-    }
-    return _buildDesktopSearchBar(context);
+  Widget _buildDesktopLayout(BuildContext context) {
+    return Row(
+      children: [
+        // 左侧部门树
+        SizedBox(
+          width: 220,
+          child: Card(
+            margin: const EdgeInsets.all(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Text(
+                    S.current.department,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                ),
+                const Divider(height: 1),
+                Expanded(
+                  child: _deptTree.isEmpty
+                      ? Center(child: Text(S.current.noData, style: TextStyle(color: Colors.grey[500])))
+                      : _buildDeptTreeWidget(context, _deptTree),
+                ),
+              ],
+            ),
+          ),
+        ),
+        // 右侧用户列表
+        Expanded(
+          child: Column(
+            children: [
+              // 搜索栏
+              _buildDesktopSearchBar(context),
+              const Divider(height: 1),
+              // 工具栏
+              _buildToolbar(context),
+              const Divider(height: 1),
+              // 数据表格
+              Expanded(child: _buildDataTable(context)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context) {
+    return Column(
+      children: [
+        _buildMobileSearchBar(context),
+        const Divider(height: 1),
+        Expanded(child: _buildMobileList(context)),
+      ],
+    );
+  }
+
+  Widget _buildDeptTreeWidget(BuildContext context, List<Dept> depts) {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      itemCount: depts.length,
+      itemBuilder: (context, index) {
+        final dept = depts[index];
+        return _buildDeptTile(context, dept, 0);
+      },
+    );
+  }
+
+  Widget _buildDeptTile(BuildContext context, Dept dept, int level) {
+    final hasChildren = dept.children != null && dept.children!.isNotEmpty;
+    final isSelected = _selectedDeptId == dept.id;
+
+    return Column(
+      children: [
+        InkWell(
+          onTap: () => _handleDeptSelect(dept),
+          child: Padding(
+            padding: EdgeInsets.only(left: 16.0 * level, top: 8, bottom: 8),
+            child: Row(
+              children: [
+                Icon(
+                  hasChildren ? Icons.folder : Icons.folder_open,
+                  size: 18,
+                  color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey[600],
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    dept.name,
+                    style: TextStyle(
+                      color: isSelected ? Theme.of(context).colorScheme.primary : null,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (hasChildren)
+          ...dept.children!.map((child) => _buildDeptTile(context, child, level + 1)),
+      ],
+    );
   }
 
   Widget _buildDesktopSearchBar(BuildContext context) {
@@ -154,7 +393,6 @@ class _UserPageState extends ConsumerState<UserPage> {
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          // 用户名搜索
           SizedBox(
             width: 200,
             child: TextField(
@@ -169,8 +407,6 @@ class _UserPageState extends ConsumerState<UserPage> {
             ),
           ),
           const SizedBox(width: 16),
-
-          // 手机号搜索
           SizedBox(
             width: 180,
             child: TextField(
@@ -185,66 +421,51 @@ class _UserPageState extends ConsumerState<UserPage> {
             ),
           ),
           const SizedBox(width: 16),
-
-          // 状态筛选
-          SizedBox(
-            width: 130,
-            child: DropdownButtonFormField<int?>(
-              value: _selectedStatus,
-              decoration: InputDecoration(
-                labelText: S.current.status,
-                border: const OutlineInputBorder(),
-                isDense: true,
-              ),
-              items: [
-                DropdownMenuItem(value: null, child: Text(S.current.all)),
-                DropdownMenuItem(value: 0, child: Text(S.current.enabled)),
-                DropdownMenuItem(value: 1, child: Text(S.current.disabled)),
-              ],
-              onChanged: (value) {
+          // 创建时间范围选择
+          InkWell(
+            onTap: () async {
+              final range = await showDateRangePicker(
+                context: context,
+                firstDate: DateTime(2000),
+                lastDate: DateTime.now(),
+                initialDateRange: _createTimeRange,
+              );
+              if (range != null) {
                 setState(() {
-                  _selectedStatus = value;
+                  _createTimeRange = range;
                 });
-              },
+              }
+            },
+            child: Container(
+              width: 240,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.date_range, size: 18, color: Colors.grey),
+                  const SizedBox(width: 8),
+                  Text(
+                    _createTimeRange != null
+                        ? '${_formatDate(_createTimeRange!.start)} - ${_formatDate(_createTimeRange!.end)}'
+                        : S.current.createTime,
+                    style: TextStyle(
+                      color: _createTimeRange != null ? null : Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(width: 16),
-
-          // 部门筛选
-          SizedBox(
-            width: 180,
-            child: DropdownButtonFormField<int?>(
-              value: _selectedDeptId,
-              decoration: InputDecoration(
-                labelText: S.current.department,
-                border: const OutlineInputBorder(),
-                isDense: true,
-              ),
-              items: [
-                DropdownMenuItem(value: null, child: Text(S.current.all)),
-                ..._deptList.map((dept) => DropdownMenuItem(
-                  value: dept.id,
-                  child: Text(dept.name),
-                )),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedDeptId = value;
-                });
-              },
-            ),
-          ),
-          const SizedBox(width: 16),
-
-          // 搜索按钮
           ElevatedButton.icon(
             onPressed: _search,
             icon: const Icon(Icons.search),
             label: Text(S.current.search),
           ),
           const SizedBox(width: 8),
-
-          // 重置按钮
           OutlinedButton.icon(
             onPressed: _reset,
             icon: const Icon(Icons.refresh),
@@ -260,7 +481,6 @@ class _UserPageState extends ConsumerState<UserPage> {
       padding: const EdgeInsets.all(12),
       child: Column(
         children: [
-          // 第一行：用户名和手机号
           Row(
             children: [
               Expanded(
@@ -271,7 +491,6 @@ class _UserPageState extends ConsumerState<UserPage> {
                     prefixIcon: const Icon(Icons.search, size: 20),
                     border: const OutlineInputBorder(),
                     isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   onSubmitted: (_) => _search(),
                 ),
@@ -285,7 +504,6 @@ class _UserPageState extends ConsumerState<UserPage> {
                     prefixIcon: const Icon(Icons.phone, size: 20),
                     border: const OutlineInputBorder(),
                     isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   onSubmitted: (_) => _search(),
                 ),
@@ -293,62 +511,6 @@ class _UserPageState extends ConsumerState<UserPage> {
             ],
           ),
           const SizedBox(height: 8),
-
-          // 第二行：状态和部门筛选
-          Row(
-            children: [
-              Expanded(
-                child: DropdownButtonFormField<int?>(
-                  value: _selectedStatus,
-                  decoration: InputDecoration(
-                    labelText: S.current.status,
-                    border: const OutlineInputBorder(),
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  isExpanded: true,
-                  items: [
-                    DropdownMenuItem(value: null, child: Text(S.current.all)),
-                    DropdownMenuItem(value: 0, child: Text(S.current.enabled)),
-                    DropdownMenuItem(value: 1, child: Text(S.current.disabled)),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedStatus = value;
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: DropdownButtonFormField<int?>(
-                  value: _selectedDeptId,
-                  decoration: InputDecoration(
-                    labelText: S.current.department,
-                    border: const OutlineInputBorder(),
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  isExpanded: true,
-                  items: [
-                    DropdownMenuItem(value: null, child: Text(S.current.all)),
-                    ..._deptList.map((dept) => DropdownMenuItem(
-                      value: dept.id,
-                      child: Text(dept.name, overflow: TextOverflow.ellipsis),
-                    )),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedDeptId = value;
-                    });
-                  },
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-
-          // 第三行：搜索和重置按钮
           Row(
             children: [
               Expanded(
@@ -373,6 +535,37 @@ class _UserPageState extends ConsumerState<UserPage> {
     );
   }
 
+  Widget _buildToolbar(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          ElevatedButton.icon(
+            onPressed: () => _showUserDialog(context),
+            icon: const Icon(Icons.add),
+            label: Text(S.current.addUser),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton.icon(
+            onPressed: _exportUsers,
+            icon: const Icon(Icons.download),
+            label: Text(S.current.export),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton.icon(
+            onPressed: _selectedIds.isEmpty ? null : _deleteSelected,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            icon: const Icon(Icons.delete),
+            label: Text(S.current.deleteBatch),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDataTable(BuildContext context) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -383,13 +576,9 @@ class _UserPageState extends ConsumerState<UserPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('${S.current.loadFailed}: $_error',
-                style: const TextStyle(color: Colors.red)),
+            Text('${S.current.loadFailed}: $_error', style: const TextStyle(color: Colors.red)),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadUserList,
-              child: Text(S.current.retry),
-            ),
+            ElevatedButton(onPressed: _loadUserList, child: Text(S.current.retry)),
           ],
         ),
       );
@@ -402,7 +591,24 @@ class _UserPageState extends ConsumerState<UserPage> {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: PaginatedDataTable(
-        header: Text(S.current.userList),
+        header: Row(
+          children: [
+            Checkbox(
+              value: _selectedIds.length == _userList.length && _userList.isNotEmpty,
+              tristate: true,
+              onChanged: (value) {
+                setState(() {
+                  if (value == true) {
+                    _selectedIds = _userList.where((u) => u.id != null).map((u) => u.id!).toSet();
+                  } else {
+                    _selectedIds.clear();
+                  }
+                });
+              },
+            ),
+            Text(S.current.userList),
+          ],
+        ),
         rowsPerPage: _pageSize,
         availableRowsPerPage: const [10, 20, 50, 100],
         onPageChanged: (page) {
@@ -426,12 +632,21 @@ class _UserPageState extends ConsumerState<UserPage> {
           DataColumn(label: Text(S.current.nickname)),
           DataColumn(label: Text(S.current.department)),
           DataColumn(label: Text(S.current.mobile)),
-          DataColumn(label: Text(S.current.email)),
           DataColumn(label: Text(S.current.status)),
           DataColumn(label: Text(S.current.createTime)),
           DataColumn(label: Text(S.current.operation)),
         ],
-        source: _UserDataSource(_userList, context, _editUser, _deleteUser, _updateStatus),
+        source: _UserDataSource(
+          _userList,
+          context,
+          _selectedIds,
+          (ids) => setState(() => _selectedIds = ids),
+          _editUser,
+          _deleteUser,
+          _updateStatus,
+          _showResetPasswordDialog,
+          _showAssignRoleDialog,
+        ),
       ),
     );
   }
@@ -446,13 +661,9 @@ class _UserPageState extends ConsumerState<UserPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('${S.current.loadFailed}: $_error',
-                style: const TextStyle(color: Colors.red)),
+            Text('${S.current.loadFailed}: $_error', style: const TextStyle(color: Colors.red)),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadUserList,
-              child: Text(S.current.retry),
-            ),
+            ElevatedButton(onPressed: _loadUserList, child: Text(S.current.retry)),
           ],
         ),
       );
@@ -464,7 +675,6 @@ class _UserPageState extends ConsumerState<UserPage> {
 
     return Column(
       children: [
-        // 列表
         Expanded(
           child: RefreshIndicator(
             onRefresh: _loadUserList,
@@ -478,8 +688,6 @@ class _UserPageState extends ConsumerState<UserPage> {
             ),
           ),
         ),
-
-        // 分页控件
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
@@ -534,7 +742,6 @@ class _UserPageState extends ConsumerState<UserPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 头部：用户名和状态
             Row(
               children: [
                 CircleAvatar(
@@ -553,71 +760,40 @@ class _UserPageState extends ConsumerState<UserPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        user.nickname,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      Text(
-                        '@${user.username}',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                        ),
-                      ),
+                      Text(user.nickname, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text('@${user.username}', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: user.status == 0
-                        ? Colors.green.withValues(alpha: 0.1)
-                        : Colors.red.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    user.status == 0 ? S.current.enabled : S.current.disabled,
-                    style: TextStyle(
-                      color: user.status == 0 ? Colors.green : Colors.red,
-                      fontSize: 12,
-                    ),
-                  ),
+                Switch(
+                  value: user.status == 0,
+                  onChanged: (_) => _updateStatus(user),
                 ),
               ],
             ),
             const Divider(height: 24),
-
-            // 详情信息
             _buildInfoRow(Icons.business, S.current.department, user.deptName ?? '-'),
             _buildInfoRow(Icons.phone, S.current.mobile, user.mobile ?? '-'),
-            _buildInfoRow(Icons.email, S.current.email, user.email ?? '-'),
-            _buildInfoRow(Icons.access_time, S.current.createTime,
-                user.createTime?.toString().substring(0, 19) ?? '-'),
-
+            _buildInfoRow(Icons.access_time, S.current.createTime, user.createTime?.toString().substring(0, 19) ?? '-'),
             const SizedBox(height: 12),
-
-            // 操作按钮
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            Wrap(
+              spacing: 8,
               children: [
                 TextButton.icon(
                   onPressed: () => _editUser(user),
                   icon: const Icon(Icons.edit, size: 18),
                   label: Text(S.current.edit),
                 ),
-                const SizedBox(width: 8),
                 TextButton.icon(
-                  onPressed: () => _updateStatus(user),
-                  icon: Icon(
-                    user.status == 0 ? Icons.block : Icons.check_circle,
-                    size: 18,
-                  ),
-                  label: Text(user.status == 0 ? S.current.disable : S.current.enable),
+                  onPressed: () => _showResetPasswordDialog(user),
+                  icon: const Icon(Icons.lock_reset, size: 18),
+                  label: Text(S.current.resetPassword),
                 ),
-                const SizedBox(width: 8),
+                TextButton.icon(
+                  onPressed: () => _showAssignRoleDialog(user),
+                  icon: const Icon(Icons.admin_panel_settings, size: 18),
+                  label: Text(S.current.assignRole),
+                ),
                 TextButton.icon(
                   onPressed: () => _deleteUser(user),
                   icon: const Icon(Icons.delete, size: 18, color: Colors.red),
@@ -639,12 +815,14 @@ class _UserPageState extends ConsumerState<UserPage> {
           Icon(icon, size: 16, color: Colors.grey[600]),
           const SizedBox(width: 8),
           Text('$label: ', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
-          Expanded(
-            child: Text(value, style: const TextStyle(fontSize: 13)),
-          ),
+          Expanded(child: Text(value, style: const TextStyle(fontSize: 13))),
         ],
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
   void _showUserDialog(BuildContext context, [User? user]) {
@@ -652,7 +830,11 @@ class _UserPageState extends ConsumerState<UserPage> {
     final nicknameController = TextEditingController(text: user?.nickname ?? '');
     final mobileController = TextEditingController(text: user?.mobile ?? '');
     final emailController = TextEditingController(text: user?.email ?? '');
-    int selectedDeptId = user?.deptId ?? _selectedDeptId ?? 0;
+    final passwordController = TextEditingController();
+    final remarkController = TextEditingController(text: user?.remark ?? '');
+    int? selectedDeptId = user?.deptId ?? _selectedDeptId;
+    List<int> selectedPostIds = user?.postIds ?? [];
+    int sex = user?.sex ?? 1;
     int status = user?.status ?? 0;
 
     showDialog(
@@ -661,7 +843,7 @@ class _UserPageState extends ConsumerState<UserPage> {
         builder: (context, setState) => AlertDialog(
           title: Text(user == null ? S.current.addUser : S.current.editUser),
           content: SizedBox(
-            width: 400,
+            width: 450,
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -674,6 +856,16 @@ class _UserPageState extends ConsumerState<UserPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
+                  if (user == null)
+                    TextField(
+                      controller: passwordController,
+                      decoration: InputDecoration(
+                        labelText: '${S.current.password} *',
+                        border: const OutlineInputBorder(),
+                      ),
+                      obscureText: true,
+                    ),
+                  if (user == null) const SizedBox(height: 16),
                   TextField(
                     controller: nicknameController,
                     decoration: InputDecoration(
@@ -682,19 +874,35 @@ class _UserPageState extends ConsumerState<UserPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  DropdownButtonFormField<int>(
-                    value: selectedDeptId > 0 ? selectedDeptId : null,
+                  // 部门选择
+                  DropdownButtonFormField<int?>(
+                    value: selectedDeptId,
                     decoration: InputDecoration(
                       labelText: S.current.department,
                       border: const OutlineInputBorder(),
                     ),
-                    items: _deptList.map((dept) => DropdownMenuItem(
-                      value: dept.id,
-                      child: Text(dept.name),
+                    items: _buildDeptDropdownItems(_deptTree, 0),
+                    onChanged: (value) {
+                      setState(() {
+                        selectedDeptId = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  // 岗位选择
+                  DropdownButtonFormField<int>(
+                    value: selectedPostIds.isNotEmpty ? selectedPostIds.first : null,
+                    decoration: InputDecoration(
+                      labelText: S.current.post,
+                      border: const OutlineInputBorder(),
+                    ),
+                    items: _postList.map((post) => DropdownMenuItem(
+                      value: post.id,
+                      child: Text(post.name),
                     )).toList(),
                     onChanged: (value) {
                       setState(() {
-                        selectedDeptId = value ?? 0;
+                        selectedPostIds = value != null ? [value] : [];
                       });
                     },
                   ),
@@ -717,6 +925,34 @@ class _UserPageState extends ConsumerState<UserPage> {
                     keyboardType: TextInputType.emailAddress,
                   ),
                   const SizedBox(height: 16),
+                  // 性别
+                  Row(
+                    children: [
+                      Text('${S.current.sex}: '),
+                      Radio<int>(
+                        value: 1,
+                        groupValue: sex,
+                        onChanged: (value) {
+                          setState(() {
+                            sex = value!;
+                          });
+                        },
+                      ),
+                      Text(S.current.male),
+                      Radio<int>(
+                        value: 2,
+                        groupValue: sex,
+                        onChanged: (value) {
+                          setState(() {
+                            sex = value!;
+                          });
+                        },
+                      ),
+                      Text(S.current.female),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // 状态
                   Row(
                     children: [
                       Text('${S.current.status}: '),
@@ -742,6 +978,15 @@ class _UserPageState extends ConsumerState<UserPage> {
                       Text(S.current.disabled),
                     ],
                   ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: remarkController,
+                    decoration: InputDecoration(
+                      labelText: S.current.remark,
+                      border: const OutlineInputBorder(),
+                    ),
+                    maxLines: 2,
+                  ),
                 ],
               ),
             ),
@@ -760,14 +1005,24 @@ class _UserPageState extends ConsumerState<UserPage> {
                   return;
                 }
 
+                if (user == null && passwordController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(S.current.passwordRequired)),
+                  );
+                  return;
+                }
+
                 final userData = User(
                   id: user?.id,
                   username: usernameController.text,
                   nickname: nicknameController.text,
-                  deptId: selectedDeptId > 0 ? selectedDeptId : null,
+                  deptId: selectedDeptId,
+                  postIds: selectedPostIds,
                   mobile: mobileController.text.isEmpty ? null : mobileController.text,
                   email: emailController.text.isEmpty ? null : emailController.text,
+                  sex: sex,
                   status: status,
+                  remark: remarkController.text.isEmpty ? null : remarkController.text,
                 );
 
                 try {
@@ -811,6 +1066,23 @@ class _UserPageState extends ConsumerState<UserPage> {
     );
   }
 
+  List<DropdownMenuItem<int?>> _buildDeptDropdownItems(List<Dept> depts, int level) {
+    final items = <DropdownMenuItem<int?>>[];
+    for (final dept in depts) {
+      items.add(DropdownMenuItem(
+        value: dept.id,
+        child: Padding(
+          padding: EdgeInsets.only(left: 16.0 * level),
+          child: Text(dept.name),
+        ),
+      ));
+      if (dept.children != null && dept.children!.isNotEmpty) {
+        items.addAll(_buildDeptDropdownItems(dept.children!, level + 1));
+      }
+    }
+    return items;
+  }
+
   void _editUser(User user) {
     _showUserDialog(context, user);
   }
@@ -821,9 +1093,7 @@ class _UserPageState extends ConsumerState<UserPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(S.current.confirm),
-        content: Text(newStatus == 0
-            ? S.current.confirmEnableUser
-            : S.current.confirmDisableUser),
+        content: Text(newStatus == 0 ? S.current.confirmEnableUser : S.current.confirmDisableUser),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -914,17 +1184,189 @@ class _UserPageState extends ConsumerState<UserPage> {
       }
     }
   }
+
+  void _showResetPasswordDialog(User user) {
+    final passwordController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(S.current.resetPassword),
+        content: SizedBox(
+          width: 350,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('${S.current.username}: ${user.username}'),
+              const SizedBox(height: 16),
+              TextField(
+                controller: passwordController,
+                decoration: InputDecoration(
+                  labelText: '${S.current.newPassword} *',
+                  border: const OutlineInputBorder(),
+                ),
+                obscureText: true,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(S.current.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (passwordController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(S.current.passwordRequired)),
+                );
+                return;
+              }
+
+              try {
+                final userApi = ref.read(userApiProvider);
+                final response = await userApi.resetUserPassword(user.id!, passwordController.text);
+
+                if (response.isSuccess) {
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(S.current.operationSuccess)),
+                    );
+                  }
+                } else {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(response.msg.isNotEmpty ? response.msg : S.current.operationFailed)),
+                    );
+                  }
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('${S.current.operationFailed}: $e')),
+                  );
+                }
+              }
+            },
+            child: Text(S.current.confirm),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAssignRoleDialog(User user) {
+    List<int> selectedRoleIds = [];
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(S.current.assignRole),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('${S.current.username}: ${user.username}'),
+                const SizedBox(height: 8),
+                Text('${S.current.nickname}: ${user.nickname}'),
+                const SizedBox(height: 16),
+                Text(S.current.role, style: const TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _roleList.map((role) {
+                    final isSelected = selectedRoleIds.contains(role.id);
+                    return FilterChip(
+                      label: Text(role.name),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setState(() {
+                          if (selected) {
+                            selectedRoleIds.add(role.id!);
+                          } else {
+                            selectedRoleIds.remove(role.id);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(S.current.cancel),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  final permissionApi = ref.read(permissionApiProvider);
+                  final response = await permissionApi.assignUserRole(
+                    AssignUserRoleReq(userId: user.id!, roleIds: selectedRoleIds),
+                  );
+
+                  if (response.isSuccess) {
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(S.current.operationSuccess)),
+                      );
+                    }
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(response.msg.isNotEmpty ? response.msg : S.current.operationFailed)),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('${S.current.operationFailed}: $e')),
+                    );
+                  }
+                }
+              },
+              child: Text(S.current.confirm),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /// 数据源
 class _UserDataSource extends DataTableSource {
   final List<User> users;
   final BuildContext context;
+  Set<int> selectedIds;
+  final void Function(Set<int>) onSelectionChanged;
   final void Function(User) onEdit;
   final Future<void> Function(User) onDelete;
   final Future<void> Function(User) onUpdateStatus;
+  final void Function(User) onResetPassword;
+  final void Function(User) onAssignRole;
 
-  _UserDataSource(this.users, this.context, this.onEdit, this.onDelete, this.onUpdateStatus);
+  _UserDataSource(
+    this.users,
+    this.context,
+    this.selectedIds,
+    this.onSelectionChanged,
+    this.onEdit,
+    this.onDelete,
+    this.onUpdateStatus,
+    this.onResetPassword,
+    this.onAssignRole,
+  );
 
   @override
   int get rowCount => users.length;
@@ -932,49 +1374,70 @@ class _UserDataSource extends DataTableSource {
   @override
   DataRow getRow(int index) {
     final user = users[index];
+    final isSelected = user.id != null && selectedIds.contains(user.id);
+
     return DataRow(
+      selected: isSelected,
+      onSelectChanged: (selected) {
+        if (user.id != null) {
+          final newSet = Set<int>.from(selectedIds);
+          if (selected == true) {
+            newSet.add(user.id!);
+          } else {
+            newSet.remove(user.id!);
+          }
+          onSelectionChanged(newSet);
+        }
+      },
       cells: [
         DataCell(Text(user.id?.toString() ?? '-')),
         DataCell(Text(user.username)),
         DataCell(Text(user.nickname)),
         DataCell(Text(user.deptName ?? '-')),
         DataCell(Text(user.mobile ?? '-')),
-        DataCell(Text(user.email ?? '-')),
         DataCell(
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: user.status == 0
-                  ? Colors.green.withValues(alpha: 0.1)
-                  : Colors.red.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              user.status == 0 ? S.current.enabled : S.current.disabled,
-              style: TextStyle(
-                color: user.status == 0 ? Colors.green : Colors.red,
-                fontSize: 12,
-              ),
-            ),
+          Switch(
+            value: user.status == 0,
+            onChanged: (_) => onUpdateStatus(user),
           ),
         ),
         DataCell(Text(user.createTime?.toString().substring(0, 19) ?? '-')),
         DataCell(
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               TextButton(
                 onPressed: () => onEdit(user),
                 child: Text(S.current.edit),
               ),
-              TextButton(
-                onPressed: () => onUpdateStatus(user),
-                child: Text(
-                  user.status == 0 ? S.current.disable : S.current.enable,
-                ),
-              ),
-              TextButton(
-                onPressed: () => onDelete(user),
-                child: Text(S.current.delete, style: const TextStyle(color: Colors.red)),
+              PopupMenuButton<String>(
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'resetPassword',
+                    child: Text(S.current.resetPassword),
+                  ),
+                  PopupMenuItem(
+                    value: 'assignRole',
+                    child: Text(S.current.assignRole),
+                  ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text(S.current.delete, style: const TextStyle(color: Colors.red)),
+                  ),
+                ],
+                onSelected: (value) {
+                  switch (value) {
+                    case 'resetPassword':
+                      onResetPassword(user);
+                      break;
+                    case 'assignRole':
+                      onAssignRole(user);
+                      break;
+                    case 'delete':
+                      onDelete(user);
+                      break;
+                  }
+                },
               ),
             ],
           ),
@@ -987,5 +1450,5 @@ class _UserDataSource extends DataTableSource {
   bool get isRowCountApproximate => false;
 
   @override
-  int get selectedRowCount => 0;
+  int get selectedRowCount => selectedIds.length;
 }

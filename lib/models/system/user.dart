@@ -145,6 +145,7 @@ class UserPageParam extends PageParam {
   final int? status;
   final int? deptId;
   final DateTime? createTime;
+  final DateTime? createTimeEnd;
 
   const UserPageParam({
     super.pageNum = 1,
@@ -154,6 +155,7 @@ class UserPageParam extends PageParam {
     this.status,
     this.deptId,
     this.createTime,
+    this.createTimeEnd,
   });
 
   @override
@@ -172,7 +174,7 @@ class UserPageParam extends PageParam {
       json['deptId'] = deptId;
     }
     if (createTime != null) {
-      json['createTime'] = createTime!.toIso8601String();
+      json['createTime'] = [createTime!.toIso8601String(), (createTimeEnd ?? createTime!).toIso8601String()];
     }
     return json;
   }

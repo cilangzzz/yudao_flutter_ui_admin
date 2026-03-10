@@ -351,7 +351,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: Routes.system,
             name: 'system',
-            redirect: (context, state) => Routes.user,
+            redirect: (context, state) {
+              // 只在访问精确的 /system 路径时重定向到用户管理
+              // 如果已经有子路径（如 /system/dept），则不重定向
+              if (state.matchedLocation == Routes.system) {
+                return Routes.user;
+              }
+              return null;
+            },
             routes: [
               // ==================== 系统管理 - 用户管理 ====================
               GoRoute(

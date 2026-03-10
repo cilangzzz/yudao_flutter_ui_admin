@@ -632,6 +632,20 @@ abstract class S {
   String get typeAnnouncement;
   String get typeUnknown;
 
+  // 用户管理扩展
+  String get resetPassword;
+  String get assignRole;
+  String get deleteBatch;
+  String get pleaseSelectData;
+  String get passwordRequired;
+  String get confirmDeleteSelected;
+  String get exportSuccess;
+  String get exportFailed;
+  String get sex;
+  String get male;
+  String get female;
+  // String get mobile;
+
   // 通用扩展
   String get common_close;
   String get common_success;
@@ -1862,6 +1876,31 @@ class _AppLocalizations extends S {
   String get typeAnnouncement => _get('typeAnnouncement', 'Announcement');
   @override
   String get typeUnknown => _get('typeUnknown', 'Unknown');
+
+  // 用户管理扩展
+  @override
+  String get resetPassword => _get('resetPassword', 'Reset Password');
+  @override
+  String get assignRole => _get('assignRole', 'Assign Role');
+  @override
+  String get deleteBatch => _get('deleteBatch', 'Batch Delete');
+  @override
+  String get pleaseSelectData => _get('pleaseSelectData', 'Please select data');
+  @override
+  String get passwordRequired => _get('passwordRequired', 'Password is required');
+  @override
+  String get confirmDeleteSelected => _get('confirmDeleteSelected', 'Are you sure to delete selected items?');
+  @override
+  String get exportSuccess => _get('exportSuccess', 'Export Success');
+  @override
+  String get exportFailed => _get('exportFailed', 'Export Failed');
+  @override
+  String get sex => _get('sex', 'Sex');
+  @override
+  String get male => _get('male', 'Male');
+  @override
+  String get female => _get('female', 'Female');
+
 
   // 通用扩展
   @override

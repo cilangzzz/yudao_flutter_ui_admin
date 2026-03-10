@@ -407,5 +407,19 @@
   "common_search": "搜索",
   "common_reset": "重置",
   "common_detail": "详情",
-  "common_operation": "操作"
+  "common_operation": "操作",
+
+  "resetPassword": "重置密码",
+  "assignRole": "分配角色",
+  "deleteBatch": "批量删除",
+  "pleaseSelectData": "请选择数据",
+  "passwordRequired": "密码必填",
+  "confirmDeleteSelected": "确定要删除选中的数据吗",
+  "exportSuccess": "导出成功",
+  "exportFailed": "导出失败",
+  "sex": "性别",
+  "male": "男",
+  "female": "女",
+  "mobile": "手机号",
+  "remark": "备注"
 }
