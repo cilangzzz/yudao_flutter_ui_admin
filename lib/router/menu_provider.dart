@@ -151,14 +151,32 @@ IconData? _getIcon(String? iconName, {bool selected = false}) {
 }
 
 /// 将 MenuItem 转换为 NavigationItem
-NavigationItem _convertMenuItem(MenuItem menu) {
+/// [parentPath] 父级路径，用于拼接完整路径
+NavigationItem _convertMenuItem(MenuItem menu, {String? parentPath}) {
+  // 构建完整路径
+  String fullPath = menu.path;
+
+  // 如果路径不是以 / 开头，或者父路径存在且子路径不以父路径开头，需要拼接
+  if (parentPath != null && parentPath.isNotEmpty) {
+    // 如果子路径以 / 开头但不是完整路径（不包含父路径），需要拼接
+    if (menu.path.startsWith('/')) {
+      // 检查是否已经是完整路径（包含父路径）
+      if (!menu.path.startsWith(parentPath)) {
+        fullPath = '$parentPath${menu.path}';
+      }
+    } else {
+      // 相对路径，直接拼接
+      fullPath = '$parentPath/${menu.path}';
+    }
+  }
+
   return NavigationItem(
     id: menu.id,
     label: menu.name,
-    path: menu.path,
+    path: fullPath,
     icon: _getIcon(menu.icon, selected: false),
     selectedIcon: _getIcon(menu.icon, selected: true),
-    children: menu.children.map(_convertMenuItem).toList(),
+    children: menu.children.map((child) => _convertMenuItem(child, parentPath: fullPath)).toList(),
   );
 }
 
@@ -218,7 +236,7 @@ class MenuNotifier extends Notifier<MenuState> {
 
   /// 构建导航项列表
   List<NavigationItem> _buildNavigationItems(List<MenuItem> menus) {
-    return menus.map(_convertMenuItem).toList();
+    return menus.map((menu) => _convertMenuItem(menu)).toList();
   }
 
   /// 切换菜单展开状态

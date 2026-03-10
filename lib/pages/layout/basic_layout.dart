@@ -39,9 +39,6 @@ class BasicLayout extends ConsumerStatefulWidget {
 class _BasicLayoutState extends ConsumerState<BasicLayout> {
   bool _extended = true;
 
-  /// 页面缓存，用于保持页面状态
-  final Map<String, Widget> _pageCache = {};
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -69,11 +66,6 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
     );
 
     tabNotifier.addTab(tabItem);
-
-    // 缓存当前页面
-    if (!_pageCache.containsKey(path)) {
-      _pageCache[path] = widget.child;
-    }
   }
 
   void _handleNavigation(String path) {
@@ -193,12 +185,10 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
                 case 'closeOther':
                   if (tabState.activePath != null) {
                     ref.read(tabProvider.notifier).closeOtherTabs(tabState.activePath!);
-                    _removeClosedTabsFromCache(tabState.activePath!);
                   }
                   break;
                 case 'closeAll':
                   ref.read(tabProvider.notifier).closeAllTabs();
-                  _clearNonAffixTabsFromCache();
                   // 导航到第一个固定 Tab
                   final newTabState = ref.read(tabProvider);
                   if (newTabState.activePath != null) {
@@ -302,7 +292,6 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
     final wasActive = tabState.activePath == tab.path;
 
     ref.read(tabProvider.notifier).closeTab(tab.path);
-    _pageCache.remove(tab.path);
 
     if (wasActive) {
       // 导航到新的激活 Tab
@@ -313,52 +302,11 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
     }
   }
 
-  /// 移除关闭的 Tab 从缓存（保留指定的）
-  void _removeClosedTabsFromCache(String keepPath) {
-    final tabState = ref.read(tabProvider);
-    final pathsToKeep = tabState.tabs.map((t) => t.path).toSet();
-    _pageCache.removeWhere((path, _) => !pathsToKeep.contains(path));
-  }
-
-  /// 清除非固定 Tab 的缓存
-  void _clearNonAffixTabsFromCache() {
-    final tabState = ref.read(tabProvider);
-    final affixPaths = tabState.tabs.where((t) => t.affix).map((t) => t.path).toSet();
-    _pageCache.removeWhere((path, _) => !affixPaths.contains(path));
-  }
-
-  /// 构建主内容区（使用 IndexedStack 保持页面状态）
+  /// 构建主内容区
   Widget _buildContent() {
-    final tabState = ref.watch(tabProvider);
-    final visibleTabs = tabState.visibleTabs;
-    final currentPath = GoRouterState.of(context).matchedLocation;
-
-    if (visibleTabs.isEmpty) {
-      return widget.child;
-    }
-
-    // 更新当前页面缓存
-    _pageCache[currentPath] = widget.child;
-
-    // 找到激活的 Tab 索引
-    final activeIndex = visibleTabs.indexWhere((t) => t.path == tabState.activePath);
-
-    // 构建 IndexedStack 的子组件
-    // 注意：必须确保每个 child 是不同的 Widget 实例
-    // 使用 Offstage 包装来保持页面状态
-    return IndexedStack(
-      index: activeIndex >= 0 ? activeIndex : 0,
-      children: visibleTabs.map((tab) {
-        // 对于当前路由，使用 widget.child
-        // 对于其他路由，使用缓存的 widget
-        // 但需要避免同一个 widget 实例出现多次
-        if (tab.path == tabState.activePath) {
-          return widget.child;
-        }
-        // 返回缓存的页面，如果没有则返回空容器
-        return _pageCache[tab.path] ?? const SizedBox.shrink();
-      }).toList(),
-    );
+    // 直接返回当前页面，不再使用 IndexedStack 缓存
+    // 避免 GlobalKey 冲突问题
+    return widget.child;
   }
 
   /// 构建侧边栏导航
