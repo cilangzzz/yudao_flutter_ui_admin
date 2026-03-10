@@ -22,13 +22,13 @@ class Area {
 
   factory Area.fromJson(Map<String, dynamic> json) {
     return Area(
-      id: json['id'] as int?,
-      name: json['name'] as String? ?? '',
-      code: json['code'] as String? ?? '',
-      parentId: json['parentId'] as int?,
-      sort: json['sort'] as int?,
-      status: json['status'] as int?,
-      createTime: json['createTime'] as String?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      name: json['name']?.toString() ?? '',
+      code: json['code']?.toString() ?? '',
+      parentId: json['parentId'] is int ? json['parentId'] : int.tryParse(json['parentId']?.toString() ?? ''),
+      sort: json['sort'] is int ? json['sort'] : int.tryParse(json['sort']?.toString() ?? ''),
+      status: json['status'] is int ? json['status'] : int.tryParse(json['status']?.toString() ?? ''),
+      createTime: json['createTime']?.toString(),
       children: (json['children'] as List<dynamic>?)
           ?.map((e) => Area.fromJson(e as Map<String, dynamic>))
           .toList(),

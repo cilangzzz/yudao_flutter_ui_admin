@@ -26,16 +26,16 @@ class SocialClient {
 
   factory SocialClient.fromJson(Map<String, dynamic> json) {
     return SocialClient(
-      id: json['id'] as int?,
-      name: json['name'] as String? ?? '',
-      socialType: json['socialType'] as int?,
-      userType: json['userType'] as int?,
-      clientId: json['clientId'] as String? ?? '',
-      clientSecret: json['clientSecret'] as String?,
-      agentId: json['agentId'] as String?,
-      publicKey: json['publicKey'] as String?,
-      status: json['status'] as int?,
-      createTime: json['createTime'] as String?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      name: json['name']?.toString() ?? '',
+      socialType: json['socialType'] is int ? json['socialType'] : int.tryParse(json['socialType']?.toString() ?? ''),
+      userType: json['userType'] is int ? json['userType'] : int.tryParse(json['userType']?.toString() ?? ''),
+      clientId: json['clientId']?.toString() ?? '',
+      clientSecret: json['clientSecret']?.toString(),
+      agentId: json['agentId']?.toString(),
+      publicKey: json['publicKey']?.toString(),
+      status: json['status'] is int ? json['status'] : int.tryParse(json['status']?.toString() ?? ''),
+      createTime: json['createTime']?.toString(),
     );
   }
 
