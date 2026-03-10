@@ -352,9 +352,9 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: Routes.system,
             name: 'system',
             redirect: (context, state) {
+              // 使用 state.uri.path 获取实际请求的完整路径
               // 只在访问精确的 /system 路径时重定向到用户管理
-              // 如果已经有子路径（如 /system/dept），则不重定向
-              if (state.matchedLocation == Routes.system) {
+              if (state.uri.path == Routes.system) {
                 return Routes.user;
               }
               return null;

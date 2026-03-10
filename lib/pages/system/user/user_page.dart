@@ -62,22 +62,32 @@ class _UserPageState extends ConsumerState<UserPage> {
       final response = await deptApi.getDeptList();
       if (response.isSuccess && response.data != null) {
         setState(() {
-          _deptTree = _buildDeptTree(response.data!, null);
+          _deptTree = _buildDeptTree(response.data!);
         });
       }
     } catch (e) {
       // 部门列表加载失败不影响用户列表
+      debugPrint('加载部门树失败: $e');
     }
   }
 
   /// 构建部门树结构
-  List<Dept> _buildDeptTree(List<Dept> allDepts, int? parentId) {
-    return allDepts
-        .where((dept) => dept.parentId == parentId)
-        .map((dept) => dept.copyWith(
-              children: _buildDeptTree(allDepts, dept.id),
-            ))
-        .toList();
+  List<Dept> _buildDeptTree(List<Dept> allDepts) {
+    // 找出根节点（parentId 为 0 或 null 的部门）
+    final rootDepts = allDepts.where((dept) => dept.parentId == null || dept.parentId == 0).toList();
+
+    List<Dept> buildChildren(int parentId) {
+      return allDepts
+          .where((dept) => dept.parentId == parentId)
+          .map((dept) => dept.copyWith(
+                children: buildChildren(dept.id!),
+              ))
+          .toList();
+    }
+
+    return rootDepts.map((dept) => dept.copyWith(
+      children: buildChildren(dept.id!),
+    )).toList();
   }
 
   Future<void> _loadRoleList() async {
