@@ -1,57 +1,64 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../stores/access_store.dart';
-import '../pages/auth/login_page.dart';
-import '../pages/layout/basic_layout.dart';
-import '../pages/dashboard/dashboard_page.dart';
-import '../pages/system/user/user_page.dart';
-import '../pages/system/role/role_page.dart';
-import '../pages/system/menu/menu_page.dart';
-import '../pages/system/dept/dept_page.dart';
-import '../pages/system/dict/dict_page.dart';
-import '../pages/system/dict/dict_type_page.dart';
-import '../pages/system/dict/dict_data_page.dart';
-import '../pages/system/area/area_page.dart';
-import '../pages/system/loginlog/login_log_page.dart';
-import '../pages/system/oauth2/oauth2_client/oauth2_client_page.dart';
-import '../pages/system/oauth2/oauth2_token/oauth2_token_page.dart';
-import '../pages/system/operatelog/operate_log_page.dart';
-import '../pages/system/social_client/social_client_page.dart';
-import '../pages/system/social_user/social_user_page.dart';
-import '../pages/system/message/notice/notice_page.dart';
-import '../pages/system/post/post_page.dart';
-import '../pages/system/tenant/tenant_page.dart';
-import '../pages/system/tenant_package/tenant_package_page.dart';
-import '../pages/system/message/notify/notify_message/notify_message_page.dart';
-import '../pages/system/message/notify/notify_template/notify_template_page.dart';
-import '../pages/system/message/mail/account/mail_account_page.dart';
-import '../pages/system/message/mail/log/mail_log_page.dart';
-import '../pages/system/message/mail/template/mail_template_page.dart';
-import '../pages/system/message/sms/channel/sms_channel_page.dart';
-import '../pages/system/message/sms/log/sms_log_page.dart';
-import '../pages/system/message/sms/template/sms_template_page.dart';
+import 'package:yudao_flutter_ui_admin/stores/access_store.dart';
+import 'package:yudao_flutter_ui_admin/pages/auth/login_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/layout/basic_layout.dart';
+import 'package:yudao_flutter_ui_admin/pages/dashboard/dashboard_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/user/user_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/role/role_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/menu/menu_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/dept/dept_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/dict/dict_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/dict/dict_type_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/dict/dict_data_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/area/area_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/loginlog/login_log_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/oauth2/oauth2_client/oauth2_client_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/oauth2/oauth2_token/oauth2_token_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/operatelog/operate_log_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/social_client/social_client_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/social_user/social_user_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/message/notice/notice_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/post/post_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/tenant/tenant_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/tenant_package/tenant_package_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/message/notify/notify_message/notify_message_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/message/notify/notify_template/notify_template_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/message/mail/account/mail_account_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/message/mail/log/mail_log_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/message/mail/template/mail_template_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/message/sms/channel/sms_channel_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/message/sms/log/sms_log_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/message/sms/template/sms_template_page.dart';
 
 // Infra 页面导入
-import '../pages/infra/api_access_log/api_access_log_page.dart';
-import '../pages/infra/api_error_log/api_error_log_page.dart';
-import '../pages/infra/config/config_page.dart';
-import '../pages/infra/data_source_config/data_source_config_page.dart';
-import '../pages/infra/file/file_page.dart';
-import '../pages/infra/file_config/file_config_page.dart';
-import '../pages/infra/job/job_page.dart';
-import '../pages/infra/job/job_log_page.dart';
-import '../pages/infra/codegen/codegen_page.dart';
-import '../pages/infra/redis/redis_page.dart';
-import '../pages/infra/server/server_page.dart';
-import '../pages/infra/swagger/swagger_page.dart';
-import '../pages/infra/websocket/websocket_page.dart';
-import '../pages/infra/druid/druid_page.dart';
-import '../pages/infra/skywalking/skywalking_page.dart';
-import '../pages/infra/build/build_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/log/api_access_log/api_access_log_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/log/api_error_log/api_error_log_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/config/config_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/data_source_config/data_source_config_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/file/file_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/file_config/file_config_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/job/job_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/job/job_log_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/codegen/codegen_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/monitors/redis/redis_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/monitors/server/server_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/swagger/swagger_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/websocket/websocket_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/monitors/druid/druid_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/monitors/skywalking/skywalking_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/build/build_page.dart';
 
-import 'route_registry.dart';
-import 'page_routes.dart';
+// Demo 页面导入
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo01-contact/demo01_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo02-category/demo02_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo03-normal/demo03_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo03-erp/demo03_erp_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo03-inner/demo03_inner_page.dart';
+
+import 'package:yudao_flutter_ui_admin/router/route_registry.dart';
+import 'package:yudao_flutter_ui_admin/router/page_routes.dart';
 
 // ==================== 路由初始化 ====================
 
@@ -148,45 +155,47 @@ class Routes {
   // ==================== 基础设施管理 ====================
   static const String infra = '/infra';
 
-  // API 日志
-  static const String apiAccessLog = '/infra/api-access-log';
-  static const String apiErrorLog = '/infra/api-error-log';
+  // ==================== 日志管理（三级） ====================
+  static const String infraLog = '/infra/log';
+  static const String apiAccessLog = '/infra/log/api-access-log';
+  static const String apiErrorLog = '/infra/log/api-error-log';
 
-  // 配置管理
+  // 配置管理（二级）
   static const String config = '/infra/config';
   static const String dataSourceConfig = '/infra/data-source-config';
 
-  // 文件管理
-  static const String file = '/infra/file';
-  static const String fileConfig = '/infra/file-config';
+  // ==================== 文件管理（三级） ====================
+  static const String infraFile = '/infra/file';
+  static const String fileConfig = '/infra/file/file-config';
+  static const String file = '/infra/file/file';
 
-  // 定时任务
-  static const String job = '/infra/job';
-  static const String jobLog = '/infra/job-log';
+  // ==================== 定时任务（三级） ====================
+  static const String infraJob = '/infra/job';
+  static const String job = '/infra/job/list';
+  static const String jobLog = '/infra/job/log';
 
-  // 代码生成
+  // 代码生成（二级）
   static const String codegen = '/infra/codegen';
 
-  // Redis
-  static const String redis = '/infra/redis';
+  // ==================== 监控管理（三级） ====================
+  static const String infraMonitors = '/infra/monitors';
+  static const String druid = '/infra/monitors/druid';
+  static const String redis = '/infra/monitors/redis';
+  static const String server = '/infra/monitors/admin-server';
+  static const String skywalking = '/infra/monitors/skywalking';
 
-  // 服务器监控
-  static const String server = '/infra/server';
-
-  // Swagger
+  // 其他（二级）
   static const String swagger = '/infra/swagger';
-
-  // WebSocket
   static const String websocket = '/infra/websocket';
-
-  // Druid
-  static const String druid = '/infra/druid';
-
-  // Skywalking
-  static const String skywalking = '/infra/skywalking';
-
-  // 表单构建
   static const String build = '/infra/build';
+
+  // ==================== 示例模块（三级） ====================
+  static const String demo = '/infra/demo';
+  static const String demo01Contact = '/infra/demo/demo01-contact';
+  static const String demo02Category = '/infra/demo/demo02-category';
+  static const String demo03Normal = '/infra/demo/demo03-normal';
+  static const String demo03Erp = '/infra/demo/demo03-erp';
+  static const String demo03Inner = '/infra/demo/demo03-inner';
 
   // ==================== 路由名称 ====================
   static const String loginName = 'Login';
@@ -331,22 +340,48 @@ final Map<String, RouteMeta> routeMetaMap = {
 
   // ==================== 基础设施管理 ====================
   Routes.infra: const RouteMeta(title: '基础设施', icon: 'ant-design:tool-outlined', hideInMenu: true),
+
+  // 日志管理（三级）
+  Routes.infraLog: const RouteMeta(title: '日志管理', icon: 'ant-design:file-text-outlined', hideInMenu: true),
   Routes.apiAccessLog: const RouteMeta(title: 'API访问日志', icon: 'ant-design:audit-outlined'),
   Routes.apiErrorLog: const RouteMeta(title: 'API错误日志', icon: 'ant-design:warning-outlined'),
+
+  // 配置管理（二级）
   Routes.config: const RouteMeta(title: '参数配置', icon: 'ant-design:setting-outlined'),
   Routes.dataSourceConfig: const RouteMeta(title: '数据源配置', icon: 'ant-design:database-outlined'),
-  Routes.file: const RouteMeta(title: '文件管理', icon: 'ant-design:folder-outlined'),
+
+  // 文件管理（三级）
+  Routes.infraFile: const RouteMeta(title: '文件管理', icon: 'ant-design:folder-outlined', hideInMenu: true),
   Routes.fileConfig: const RouteMeta(title: '文件配置', icon: 'ant-design:folder-settings-outlined'),
+  Routes.file: const RouteMeta(title: '文件管理', icon: 'ant-design:folder-outlined'),
+
+  // 定时任务（三级）
+  Routes.infraJob: const RouteMeta(title: '定时任务', icon: 'ant-design:schedule-outlined', hideInMenu: true),
   Routes.job: const RouteMeta(title: '定时任务', icon: 'ant-design:schedule-outlined'),
   Routes.jobLog: const RouteMeta(title: '任务日志', icon: 'ant-design:file-sync-outlined'),
+
+  // 代码生成（二级）
   Routes.codegen: const RouteMeta(title: '代码生成', icon: 'ant-design:code-outlined'),
+
+  // 监控管理（三级）
+  Routes.infraMonitors: const RouteMeta(title: '监控管理', icon: 'ant-design:monitor-outlined', hideInMenu: true),
+  Routes.druid: const RouteMeta(title: 'Druid监控', icon: 'ant-design:monitor-outlined'),
   Routes.redis: const RouteMeta(title: 'Redis监控', icon: 'ant-design:database-filled'),
   Routes.server: const RouteMeta(title: '服务器监控', icon: 'ant-design:desktop-outlined'),
+  Routes.skywalking: const RouteMeta(title: 'Skywalking', icon: 'ant-design:radar-chart-outlined'),
+
+  // 其他（二级）
   Routes.swagger: const RouteMeta(title: 'API文档', icon: 'ant-design:book-outlined'),
   Routes.websocket: const RouteMeta(title: 'WebSocket', icon: 'ant-design:api-outlined'),
-  Routes.druid: const RouteMeta(title: 'Druid监控', icon: 'ant-design:monitor-outlined'),
-  Routes.skywalking: const RouteMeta(title: 'Skywalking', icon: 'ant-design:radar-chart-outlined'),
   Routes.build: const RouteMeta(title: '表单构建', icon: 'ant-design:build-outlined'),
+
+  // 示例模块（三级）
+  Routes.demo: const RouteMeta(title: '示例模块', icon: 'ant-design:experiment-outlined', hideInMenu: true),
+  Routes.demo01Contact: const RouteMeta(title: '示例联系人', icon: 'ant-design:contacts-outlined'),
+  Routes.demo02Category: const RouteMeta(title: '示例分类', icon: 'ant-design:folder-outlined'),
+  Routes.demo03Normal: const RouteMeta(title: '学生管理（普通）', icon: 'ant-design:team-outlined'),
+  Routes.demo03Erp: const RouteMeta(title: '学生管理（ERP）', icon: 'ant-design:cluster-outlined'),
+  Routes.demo03Inner: const RouteMeta(title: '学生管理（内嵌）', icon: 'ant-design:appstore-outlined'),
 };
 
 // ==================== 权限映射 ====================
@@ -396,22 +431,42 @@ final Map<String, String> routePermissionMap = {
   Routes.smsLog: 'system:sms-log:list',
 
   // ==================== 基础设施管理 ====================
+  // 日志管理
   Routes.apiAccessLog: 'infra:api-access-log:list',
   Routes.apiErrorLog: 'infra:api-error-log:list',
+
+  // 配置管理
   Routes.config: 'infra:config:list',
   Routes.dataSourceConfig: 'infra:data-source-config:list',
+
+  // 文件管理
   Routes.file: 'infra:file:list',
   Routes.fileConfig: 'infra:file-config:list',
+
+  // 定时任务
   Routes.job: 'infra:job:list',
   Routes.jobLog: 'infra:job-log:list',
+
+  // 代码生成
   Routes.codegen: 'infra:codegen:list',
+
+  // 监控管理
+  Routes.druid: 'infra:druid:list',
   Routes.redis: 'infra:redis:list',
   Routes.server: 'infra:server:list',
+  Routes.skywalking: 'infra:skywalking:list',
+
+  // 其他
   Routes.swagger: 'infra:swagger:list',
   Routes.websocket: 'infra:websocket:list',
-  Routes.druid: 'infra:druid:list',
-  Routes.skywalking: 'infra:skywalking:list',
   Routes.build: 'infra:build:list',
+
+  // 示例模块
+  Routes.demo01Contact: 'infra:demo01-contact:list',
+  Routes.demo02Category: 'infra:demo02-category:list',
+  Routes.demo03Normal: 'infra:demo03-student:list',
+  Routes.demo03Erp: 'infra:demo03-student:list',
+  Routes.demo03Inner: 'infra:demo03-student:list',
 };
 
 // ==================== GoRouter 刷新流 ====================
@@ -664,62 +719,107 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'infra',
             redirect: (context, state) {
               if (state.uri.path == Routes.infra) {
-                return Routes.apiAccessLog;
+                return Routes.config;
               }
               return null;
             },
             routes: [
-              // API 日志
-              GoRoute(path: 'api-access-log', name: 'apiAccessLog', builder: (context, state) => const ApiAccessLogPage()),
-              GoRoute(path: 'api-error-log', name: 'apiErrorLog', builder: (context, state) => const ApiErrorLogPage()),
-
-              // 配置管理
+              // ==================== 配置管理（二级） ====================
               GoRoute(path: 'config', name: 'infraConfig', builder: (context, state) => const ConfigPage()),
               GoRoute(path: 'data-source-config', name: 'dataSourceConfig', builder: (context, state) => const DataSourceConfigPage()),
 
-              // 文件管理
-              GoRoute(path: 'file', name: 'file', builder: (context, state) => const FilePage()),
-              GoRoute(path: 'file-config', name: 'fileConfig', builder: (context, state) => const FileConfigPage()),
+              // ==================== 日志管理（三级） ====================
+              GoRoute(
+                path: 'log',
+                name: 'infraLog',
+                redirect: (context, state) {
+                  if (state.uri.path == Routes.infraLog) {
+                    return Routes.apiAccessLog;
+                  }
+                  return null;
+                },
+                routes: [
+                  GoRoute(path: 'api-access-log', name: 'apiAccessLog', builder: (context, state) => const ApiAccessLogPage()),
+                  GoRoute(path: 'api-error-log', name: 'apiErrorLog', builder: (context, state) => const ApiErrorLogPage()),
+                ],
+              ),
 
-              // 定时任务
+              // ==================== 文件管理（三级） ====================
+              GoRoute(
+                path: 'file',
+                name: 'infraFile',
+                redirect: (context, state) {
+                  if (state.uri.path == Routes.infraFile) {
+                    return Routes.fileConfig;
+                  }
+                  return null;
+                },
+                routes: [
+                  GoRoute(path: 'file-config', name: 'fileConfig', builder: (context, state) => const FileConfigPage()),
+                  GoRoute(path: 'file', name: 'file', builder: (context, state) => const FilePage()),
+                ],
+              ),
+
+              // ==================== 定时任务（三级） ====================
               GoRoute(
                 path: 'job',
-                name: 'job',
+                name: 'infraJob',
                 redirect: (context, state) {
-                  if (state.uri.path == Routes.job) {
+                  if (state.uri.path == Routes.infraJob) {
                     return Routes.job;
                   }
                   return null;
                 },
                 routes: [
-                  GoRoute(path: 'list', name: 'jobList', builder: (context, state) => const JobPage()),
+                  GoRoute(path: 'list', name: 'job', builder: (context, state) => const JobPage()),
                   GoRoute(path: 'log', name: 'jobLog', builder: (context, state) => const JobLogPage()),
                 ],
               ),
 
-              // 代码生成
+              // ==================== 代码生成（二级） ====================
               GoRoute(path: 'codegen', name: 'codegen', builder: (context, state) => const CodegenPage()),
 
-              // Redis 监控
-              GoRoute(path: 'redis', name: 'redis', builder: (context, state) => const RedisPage()),
+              // ==================== 监控管理（三级） ====================
+              GoRoute(
+                path: 'monitors',
+                name: 'infraMonitors',
+                redirect: (context, state) {
+                  if (state.uri.path == Routes.infraMonitors) {
+                    return Routes.druid;
+                  }
+                  return null;
+                },
+                routes: [
+                  GoRoute(path: 'druid', name: 'druid', builder: (context, state) => const DruidPage()),
+                  GoRoute(path: 'redis', name: 'redis', builder: (context, state) => const RedisPage()),
+                  GoRoute(path: 'admin-server', name: 'server', builder: (context, state) => const ServerPage()),
+                  GoRoute(path: 'skywalking', name: 'skywalking', builder: (context, state) => const SkywalkingPage()),
+                ],
+              ),
 
-              // 服务器监控
-              GoRoute(path: 'server', name: 'server', builder: (context, state) => const ServerPage()),
-
-              // API 文档
+              // ==================== 其他（二级） ====================
               GoRoute(path: 'swagger', name: 'swagger', builder: (context, state) => const SwaggerPage()),
-
-              // WebSocket
               GoRoute(path: 'websocket', name: 'websocket', builder: (context, state) => const WebSocketPage()),
-
-              // Druid 监控
-              GoRoute(path: 'druid', name: 'druid', builder: (context, state) => const DruidPage()),
-
-              // Skywalking
-              GoRoute(path: 'skywalking', name: 'skywalking', builder: (context, state) => const SkywalkingPage()),
-
-              // 表单构建
               GoRoute(path: 'build', name: 'build', builder: (context, state) => const BuildPage()),
+
+              // ==================== 示例模块（三级） ====================
+              GoRoute(
+                path: 'demo',
+                name: 'demo',
+                redirect: (context, state) {
+                  if (state.uri.path == Routes.demo) {
+                    return Routes.demo01Contact;
+                  }
+                  return null;
+                },
+                routes: [
+                  GoRoute(path: 'demo01-contact', name: 'demo01Contact', builder: (context, state) => const Demo01Page()),
+                  GoRoute(path: 'demo02-category', name: 'demo02Category', builder: (context, state) => const Demo02Page()),
+                  GoRoute(path: 'demo03-normal', name: 'demo03Normal', builder: (context, state) => const Demo03Page()),
+                  GoRoute(path: 'demo03-erp', name: 'demo03Erp', builder: (context, state) => const Demo03ErpPage()),
+                  GoRoute(path: 'demo03-inner', name: 'demo03Inner', builder: (context, state) => const Demo03InnerPage()),
+                ],
+              ),
             ],
           ),
         ],

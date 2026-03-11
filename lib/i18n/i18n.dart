@@ -1030,6 +1030,28 @@ abstract class S {
   String get regionHint;
   String get customDomain;
 
+  // 示例模块 - Demo
+  String get demo01Contact;
+  String get demo02Category;
+  String get student;
+  String get birthday;
+  String get description;
+  String get avatarUrl;
+  String get selectDate;
+  String get parentCategory;
+  String get topLevel;
+  String get addSub;
+  String get cannotDeleteWithChildren;
+  String get courseList;
+  String get courseName;
+  String get score;
+  String get gradeInfo;
+  String get gradeName;
+  String get teacher;
+  String get pleaseFillGradeInfo;
+  String get confirmDeleteItem;
+  String get parentId;
+
   // 带参数的方法
   // String common_totalCount(int count);
 }
@@ -3009,6 +3031,48 @@ class _AppLocalizations extends S {
   String get regionHint => _get('regionHint', 'Enter region, usually only required for AWS');
   @override
   String get customDomain => _get('customDomain', 'Custom Domain');
+
+  // 示例模块 - Demo
+  @override
+  String get demo01Contact => _get('demo01Contact', 'Demo Contact');
+  @override
+  String get demo02Category => _get('demo02Category', 'Demo Category');
+  @override
+  String get student => _get('student', 'Student');
+  @override
+  String get birthday => _get('birthday', 'Birthday');
+  @override
+  String get description => _get('description', 'Description');
+  @override
+  String get avatarUrl => _get('avatarUrl', 'Avatar URL');
+  @override
+  String get selectDate => _get('selectDate', 'Select Date');
+  @override
+  String get parentCategory => _get('parentCategory', 'Parent Category');
+  @override
+  String get topLevel => _get('topLevel', 'Top Level');
+  @override
+  String get addSub => _get('addSub', 'Add Sub');
+  @override
+  String get cannotDeleteWithChildren => _get('cannotDeleteWithChildren', 'Cannot delete item with children');
+  @override
+  String get courseList => _get('courseList', 'Course List');
+  @override
+  String get courseName => _get('courseName', 'Course Name');
+  @override
+  String get score => _get('score', 'Score');
+  @override
+  String get gradeInfo => _get('gradeInfo', 'Grade Info');
+  @override
+  String get gradeName => _get('gradeName', 'Grade Name');
+  @override
+  String get teacher => _get('teacher', 'Teacher');
+  @override
+  String get pleaseFillGradeInfo => _get('pleaseFillGradeInfo', 'Please fill in grade information');
+  @override
+  String get confirmDeleteItem => _get('confirmDeleteItem', 'Confirm delete this item?');
+  @override
+  String get parentId => _get('parentId', 'Parent ID');
 
   // 带参数的方法
   @override

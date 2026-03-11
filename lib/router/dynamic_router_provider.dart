@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../stores/access_store.dart';
-import '../pages/layout/basic_layout.dart';
-import 'route_registry.dart';
-import 'app_router.dart' show Routes, RouteMeta;
+import 'package:yudao_flutter_ui_admin/stores/access_store.dart';
+import 'package:yudao_flutter_ui_admin/pages/layout/basic_layout.dart';
+import 'package:yudao_flutter_ui_admin/router/route_registry.dart';
+import 'package:yudao_flutter_ui_admin/router/app_router.dart' show Routes, RouteMeta;
 
 /// 动态路由状态
 class DynamicRouterState {
