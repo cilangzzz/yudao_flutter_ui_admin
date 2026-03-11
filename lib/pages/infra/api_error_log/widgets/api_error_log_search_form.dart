@@ -86,9 +86,9 @@ class ApiErrorLogSearchForm extends StatelessWidget {
           ),
           // 异常时间范围选择
           DateRangePicker(
-            dateRange: dateRange,
+            initialDateRange: dateRange,
             hintText: S.current.exceptionTime,
-            onChanged: onDateRangeChanged,
+            onDateRangeChanged: onDateRangeChanged,
           ),
           // 处理状态筛选
           SizedBox(

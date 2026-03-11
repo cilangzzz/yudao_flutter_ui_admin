@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../models/infra/redis.dart';
-import '../../../i18n/i18n.dart';
+import '../../../../models/infra/redis.dart';
+import '../../../../i18n/i18n.dart';
 
 /// Redis 内存卡片组件
 class RedisMemoryCard extends StatelessWidget {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
 
 /// iframe 占位页面组件
 /// 用于显示需要嵌入外部网页的监控页面

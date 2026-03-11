@@ -86,9 +86,9 @@ class ApiAccessLogSearchForm extends StatelessWidget {
           ),
           // 请求时间范围选择
           DateRangePicker(
-            dateRange: dateRange,
+            initialDateRange: dateRange,
             hintText: S.current.requestTime,
-            onChanged: onDateRangeChanged,
+            onDateRangeChanged: onDateRangeChanged,
           ),
           // 执行时长搜索
           SizedBox(

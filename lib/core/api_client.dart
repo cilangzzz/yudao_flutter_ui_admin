@@ -111,6 +111,30 @@ class ApiClient {
     return _handleResponse<T>(response, fromJsonT);
   }
 
+  /// 下载文件
+  Future<ApiResponse<void>> download(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    String? savePath,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    try {
+      final response = await _dio.get<dynamic>(
+        path,
+        queryParameters: queryParameters,
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {'Content-Type': 'application/json'},
+        ),
+        onReceiveProgress: onReceiveProgress,
+      );
+      // 下载成功返回空响应
+      return ApiResponse(code: 0, msg: 'success', data: response.data);
+    } catch (e) {
+      return ApiResponse(code: -1, msg: e.toString());
+    }
+  }
+
   /// 处理响应
   ApiResponse<T> _handleResponse<T>(
     Response<dynamic> response,

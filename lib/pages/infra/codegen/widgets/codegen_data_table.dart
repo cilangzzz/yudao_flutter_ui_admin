@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:data_table_2/data_table_2.dart';
-import '../../../models/infra/codegen.dart';
-import '../../../i18n/i18n.dart';
+import '../../../../models/infra/codegen.dart';
+import '../../../../i18n/i18n.dart';
 
 /// 代码生成数据表格组件
 class CodegenDataTable extends StatelessWidget {

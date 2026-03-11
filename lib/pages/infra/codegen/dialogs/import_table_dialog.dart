@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../api/infra/codegen_api.dart';
-import '../../../models/infra/codegen.dart';
-import '../../../i18n/i18n.dart';
+import '../../../../api/infra/codegen_api.dart';
+import '../../../../models/infra/codegen.dart';
+import '../../../../i18n/i18n.dart';
 
 /// 导入表对话框
 class ImportTableDialog extends StatefulWidget {

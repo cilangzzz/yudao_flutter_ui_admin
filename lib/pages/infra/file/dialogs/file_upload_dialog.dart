@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:dio/dio.dart';
 import 'package:yudao_flutter_ui_admin/core/api_client.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
@@ -29,19 +29,18 @@ class _FileUploadDialogState extends State<FileUploadDialog> {
 
   Future<void> _pickFile() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx'],
+      const XTypeGroup typeGroup = XTypeGroup(
+        label: 'files',
+        extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx'],
       );
 
-      if (result != null && result.files.isNotEmpty) {
-        final platformFile = result.files.first;
-        if (platformFile.path != null) {
-          setState(() {
-            _selectedFile = File(platformFile.path!);
-            _fileName = platformFile.name;
-          });
-        }
+      final XFile? result = await openFile(acceptedTypeGroups: [typeGroup]);
+
+      if (result != null) {
+        setState(() {
+          _selectedFile = File(result.path);
+          _fileName = result.name;
+        });
       }
     } catch (e) {
       if (mounted) {

@@ -676,6 +676,50 @@ abstract class S {
   String get jobLogStatusFailure;
   String get result;
 
+  // API 访问日志
+  String get apiAccessLogList;
+  String get apiAccessLogDetail;
+  String get traceId;
+  String get applicationName;
+  String get userIp;
+  String get userAgent;
+  String get requestInfo;
+  String get requestParams;
+  String get responseBody;
+  String get requestTime;
+  String get resultCode;
+  String get operateModule;
+  String get operateName;
+  String get operateType;
+  String get operateTypeOther;
+  String get operateTypeCreate;
+  String get operateTypeUpdate;
+  String get operateTypeDelete;
+  String get requestMethod;
+  String get requestUrl;
+  String get beginTime;
+
+  // API 错误日志
+  String get apiErrorLogList;
+  String get apiErrorLogDetail;
+  String get exceptionInfo;
+  String get exceptionTime;
+  String get exceptionName;
+  String get exceptionMessage;
+  String get exceptionRootCauseMessage;
+  String get processInfo;
+  String get processStatus;
+  String get processUserId;
+  String get processTime;
+  String get confirmProcessDone;
+  String get confirmProcessIgnore;
+  String get processStatusIgnored;
+  String get processStatusProcessed;
+  String get exceptionStackTrace;
+  String get processStatusInit;
+  String get processStatusDone;
+  String get processStatusIgnore;
+
   // 字典管理
   String get dictName;
   String get addDictType;
@@ -710,7 +754,6 @@ abstract class S {
   // 代码生成
   String get codegenList;
   String get importTable;
-  String get preview;
   String get generateCode;
   String get sync;
   String get syncSuccess;
@@ -754,7 +797,6 @@ abstract class S {
   String get htmlType;
   String get selectDictType;
   String get example;
-  String get templateType;
   String get templateTypeSingle;
   String get templateTypeTree;
   String get templateTypeMasterSub;
@@ -853,7 +895,6 @@ abstract class S {
   String get resetPassword;
   String get assignRole;
   String get deleteBatch;
-  String get pleaseSelectData;
   String get passwordRequired;
   String get confirmDeleteSelected;
   String get exportSuccess;
@@ -937,11 +978,9 @@ abstract class S {
   String get uploadFile;
   String get confirmDeleteFile;
   String get copyUrl;
-  String get copySuccess;
   String get copyFailed;
   String get clickOrDragToUpload;
   String get supportFileFormats;
-  String get pleaseSelectFile;
   String get selectFileFailed;
   String get uploading;
   String get uploadSuccess;
@@ -964,7 +1003,6 @@ abstract class S {
   String get test;
 
   // 存储配置
-  String get basicInfo;
   String get storageConfig;
   String get commonConfig;
   String get basePath;
@@ -2297,6 +2335,90 @@ class _AppLocalizations extends S {
   @override
   String get result => _get('result', 'Result');
 
+  // API 访问日志
+  @override
+  String get apiAccessLogList => _get('apiAccessLogList', 'API Access Log List');
+  @override
+  String get apiAccessLogDetail => _get('apiAccessLogDetail', 'API Access Log Detail');
+  @override
+  String get traceId => _get('traceId', 'Trace ID');
+  @override
+  String get applicationName => _get('applicationName', 'Application Name');
+  @override
+  String get userIp => _get('userIp', 'User IP');
+  @override
+  String get userAgent => _get('userAgent', 'User Agent');
+  @override
+  String get requestInfo => _get('requestInfo', 'Request Info');
+  @override
+  String get requestParams => _get('requestParams', 'Request Params');
+  @override
+  String get responseBody => _get('responseBody', 'Response Body');
+  @override
+  String get requestTime => _get('requestTime', 'Request Time');
+  @override
+  String get resultCode => _get('resultCode', 'Result Code');
+  @override
+  String get operateModule => _get('operateModule', 'Operate Module');
+  @override
+  String get operateName => _get('operateName', 'Operate Name');
+  @override
+  String get operateType => _get('operateType', 'Operate Type');
+  @override
+  String get operateTypeOther => _get('operateTypeOther', 'Other');
+  @override
+  String get operateTypeCreate => _get('operateTypeCreate', 'Create');
+  @override
+  String get operateTypeUpdate => _get('operateTypeUpdate', 'Update');
+  @override
+  String get operateTypeDelete => _get('operateTypeDelete', 'Delete');
+  @override
+  String get requestMethod => _get('requestMethod', 'Request Method');
+  @override
+  String get requestUrl => _get('requestUrl', 'Request URL');
+  @override
+  String get beginTime => _get('beginTime', 'Begin Time');
+
+  // API 错误日志
+  @override
+  String get apiErrorLogList => _get('apiErrorLogList', 'API Error Log List');
+  @override
+  String get apiErrorLogDetail => _get('apiErrorLogDetail', 'API Error Log Detail');
+  @override
+  String get exceptionInfo => _get('exceptionInfo', 'Exception Info');
+  @override
+  String get exceptionTime => _get('exceptionTime', 'Exception Time');
+  @override
+  String get exceptionName => _get('exceptionName', 'Exception Name');
+  @override
+  String get exceptionMessage => _get('exceptionMessage', 'Exception Message');
+  @override
+  String get exceptionRootCauseMessage => _get('exceptionRootCauseMessage', 'Root Cause');
+  @override
+  String get processInfo => _get('processInfo', 'Process Info');
+  @override
+  String get processStatus => _get('processStatus', 'Process Status');
+  @override
+  String get processUserId => _get('processUserId', 'Process User ID');
+  @override
+  String get processTime => _get('processTime', 'Process Time');
+  @override
+  String get confirmProcessDone => _get('confirmProcessDone', 'Confirm process as done?');
+  @override
+  String get confirmProcessIgnore => _get('confirmProcessIgnore', 'Confirm to ignore this error?');
+  @override
+  String get processStatusIgnored => _get('processStatusIgnored', 'Ignored');
+  @override
+  String get processStatusProcessed => _get('processStatusProcessed', 'Processed');
+  @override
+  String get exceptionStackTrace => _get('exceptionStackTrace', 'Stack Trace');
+  @override
+  String get processStatusInit => _get('processStatusInit', 'Pending');
+  @override
+  String get processStatusDone => _get('processStatusDone', 'Processed');
+  @override
+  String get processStatusIgnore => _get('processStatusIgnore', 'Ignore');
+
   // 字典管理
   @override
   String get dictName => _get('dictName', 'Dict Name');
@@ -2515,8 +2637,6 @@ class _AppLocalizations extends S {
   @override
   String get importTable => _get('importTable', 'Import Table');
   @override
-  String get preview => _get('preview', 'Preview');
-  @override
   String get generateCode => _get('generateCode', 'Generate Code');
   @override
   String get sync => _get('sync', 'Sync');
@@ -2603,8 +2723,6 @@ class _AppLocalizations extends S {
   @override
   String get example => _get('example', 'Example');
   @override
-  String get templateType => _get('templateType', 'Template Type');
-  @override
   String get templateTypeSingle => _get('templateTypeSingle', 'Single Table');
   @override
   String get templateTypeTree => _get('templateTypeTree', 'Tree Table');
@@ -2678,8 +2796,6 @@ class _AppLocalizations extends S {
   String get htmlTypeFileUpload => _get('htmlTypeFileUpload', 'File Upload');
   @override
   String get htmlTypeEditor => _get('htmlTypeEditor', 'Editor');
-  @override
-  String get pleaseSelectData => _get('pleaseSelectData', 'Please select data');
 
   // Redis 管理
   @override
@@ -2795,15 +2911,11 @@ class _AppLocalizations extends S {
   @override
   String get copyUrl => _get('copyUrl', 'Copy URL');
   @override
-  String get copySuccess => _get('copySuccess', 'Copy Success');
-  @override
   String get copyFailed => _get('copyFailed', 'Copy Failed');
   @override
   String get clickOrDragToUpload => _get('clickOrDragToUpload', 'Click or drag files to this area to upload');
   @override
   String get supportFileFormats => _get('supportFileFormats', 'Support common image and document formats');
-  @override
-  String get pleaseSelectFile => _get('pleaseSelectFile', 'Please select a file');
   @override
   String get selectFileFailed => _get('selectFileFailed', 'Select file failed');
   @override
@@ -2844,8 +2956,6 @@ class _AppLocalizations extends S {
   String get test => _get('test', 'Test');
 
   // 存储配置
-  @override
-  String get basicInfo => _get('basicInfo', 'Basic Info');
   @override
   String get storageConfig => _get('storageConfig', 'Storage Config');
   @override
