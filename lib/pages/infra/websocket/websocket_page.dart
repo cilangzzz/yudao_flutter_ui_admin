@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../api/system/user_api.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../i18n/i18n.dart';
-import '../../../models/system/user.dart' show SimpleUser;
+import 'package:yudao_flutter_ui_admin/api/system/user_api.dart';
+import 'package:yudao_flutter_ui_admin/core/constants/app_constants.dart';
+import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/models/system/user.dart' show SimpleUser;
 
 /// WebSocket 消息类型
 enum MessageType {

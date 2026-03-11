@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../api/infra/infra_config_api.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../i18n/i18n.dart';
-import '../common/widgets/iframe_placeholder.dart';
+import 'package:yudao_flutter_ui_admin/api/infra/infra_config_api.dart';
+import 'package:yudao_flutter_ui_admin/core/constants/app_constants.dart';
+import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/common/widgets/iframe_placeholder.dart';
 
 /// Druid 监控页面
 class DruidPage extends ConsumerWidget {

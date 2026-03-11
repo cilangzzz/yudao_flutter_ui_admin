@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/api_client.dart';
-import '../../models/common/api_response.dart';
-import '../../models/infra/redis.dart';
+import 'package:yudao_flutter_ui_admin/core/api_client.dart';
+import 'package:yudao_flutter_ui_admin/models/common/api_response.dart';
+import 'package:yudao_flutter_ui_admin/models/infra/redis.dart';
 
 /// Redis 管理 API
 class RedisApi {

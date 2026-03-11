@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/api_client.dart';
-import '../../models/common/api_response.dart';
-import '../../models/infra/data_source_config.dart';
+import 'package:yudao_flutter_ui_admin/core/api_client.dart';
+import 'package:yudao_flutter_ui_admin/models/common/api_response.dart';
+import 'package:yudao_flutter_ui_admin/models/infra/data_source_config.dart';
 
 /// 数据源配置管理 API
 class DataSourceConfigApi {

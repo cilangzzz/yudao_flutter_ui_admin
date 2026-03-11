@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../api/infra/file_api.dart';
-import '../../../models/infra/file.dart';
-import '../../../i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/api/infra/file_api.dart';
+import 'package:yudao_flutter_ui_admin/models/infra/file.dart';
+import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
 import 'widgets/file_search_form.dart';
 import 'widgets/file_action_buttons.dart';
 import 'widgets/file_data_table.dart';

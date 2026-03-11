@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../api/infra/redis_api.dart';
-import '../../../models/infra/redis.dart';
-import '../../../i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/api/infra/redis_api.dart';
+import 'package:yudao_flutter_ui_admin/models/infra/redis.dart';
+import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
 import 'widgets/redis_info_card.dart';
 import 'widgets/redis_memory_card.dart';
 import 'widgets/redis_commands_card.dart';

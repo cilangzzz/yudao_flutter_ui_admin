@@ -58,7 +58,15 @@
       "Bash(flutter analyze lib/pages/system/dept/)",
       "Bash(flutter analyze lib/pages/system/dict/ lib/pages/system/post/ lib/pages/system/loginlog/ lib/pages/system/operatelog/)",
       "Bash(ls -la \"C:\\\\Users\\\\sysadmin\\\\.claude\\\\tasks\\\\infra-migration\"\" 2>/dev/null || echo \"No task files found \")",
-      "Read(//c/Users/sysadmin/.claude/tasks/infra-migration/**)"
+      "Read(//c/Users/sysadmin/.claude/tasks/infra-migration/**)",
+      "Bash(for file in lib/pages/infra/druid/druid_page.dart lib/pages/infra/server/server_page.dart lib/pages/infra/skywalking/skywalking_page.dart lib/pages/infra/swagger/swagger_page.dart lib/pages/infra/build/build_page.dart lib/pages/infra/file_config/file_config_page.dart lib/pages/infra/data_source_config/data_source_config_page.dart lib/pages/infra/codegen/codegen_page.dart lib/pages/infra/file/file_page.dart lib/pages/infra/config/config_page.dart lib/pages/infra/api_access_log/api_access_log_page.dart lib/pages/infra/api_error_log/api_error_log_page.dart lib/pages/infra/redis/redis_page.dart lib/pages/infra/job/job_page.dart lib/pages/infra/job/job_log_page.dart lib/pages/infra/websocket/websocket_page.dart)",
+      "Bash(do sed -i \"s|import ''../../../api/|import ''package:yudao_flutter_ui_admin/api/|g\" \"$file\")",
+      "Bash(do sed -i \"s|import ''../../../models/|import ''package:yudao_flutter_ui_admin/models/|g\" \"$file\")",
+      "Bash(do sed -i \"s|import ''../../../i18n/|import ''package:yudao_flutter_ui_admin/i18n/|g\" \"$file\")",
+      "Bash(do sed -i \"s|import ''../../../core/|import ''package:yudao_flutter_ui_admin/core/|g\" \"$file\")",
+      "Bash(for file in lib/pages/infra/codegen/widgets/codegen_search_form.dart lib/pages/infra/codegen/widgets/codegen_data_table.dart lib/pages/infra/codegen/widgets/codegen_action_buttons.dart lib/pages/infra/redis/widgets/redis_info_card.dart lib/pages/infra/redis/widgets/redis_memory_card.dart lib/pages/infra/redis/widgets/redis_commands_card.dart lib/pages/infra/file/widgets/file_search_form.dart lib/pages/infra/file_config/widgets/file_config_search_form.dart)",
+      "Bash(do sed -i \"s|import ''../../../../|import ''package:yudao_flutter_ui_admin/|g\" \"$file\")",
+      "Bash(for file in lib/pages/infra/codegen/dialogs/codegen_edit_dialog.dart lib/pages/infra/codegen/dialogs/import_table_dialog.dart lib/pages/infra/codegen/dialogs/preview_code_dialog.dart lib/pages/infra/job/dialogs/job_detail_dialog.dart)"
     ],
     "additionalDirectories": [
       "h:\\Documents\\toly_ui\\.claude\\skills",

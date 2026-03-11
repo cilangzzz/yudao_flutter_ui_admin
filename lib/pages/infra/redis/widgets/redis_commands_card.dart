@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../models/infra/redis.dart';
-import '../../../../i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/models/infra/redis.dart';
+import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
 
 /// Redis 命令统计卡片组件
 class RedisCommandsCard extends StatelessWidget {

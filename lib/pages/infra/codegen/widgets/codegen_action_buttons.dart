@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
 
 /// 代码生成操作按钮组件
 class CodegenActionButtons extends StatelessWidget {

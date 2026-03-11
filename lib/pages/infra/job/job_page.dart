@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../api/infra/job_api.dart';
-import '../../../models/infra/job.dart';
-import '../../../i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/api/infra/job_api.dart';
+import 'package:yudao_flutter_ui_admin/models/infra/job.dart';
+import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
 import 'widgets/job_search_form.dart';
 import 'widgets/job_action_buttons.dart';
 import 'widgets/job_data_table.dart';

@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/api_client.dart';
-import '../../models/common/api_response.dart';
-import '../../models/common/page_result.dart';
-import '../../models/infra/file.dart';
+import 'package:yudao_flutter_ui_admin/core/api_client.dart';
+import 'package:yudao_flutter_ui_admin/models/common/api_response.dart';
+import 'package:yudao_flutter_ui_admin/models/common/page_result.dart';
+import 'package:yudao_flutter_ui_admin/models/infra/file.dart';
 
 /// 文件管理 API
 class FileApi {

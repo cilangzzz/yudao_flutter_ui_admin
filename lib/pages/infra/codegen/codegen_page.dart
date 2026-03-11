@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../api/infra/codegen_api.dart';
-import '../../../models/infra/codegen.dart';
-import '../../../i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/api/infra/codegen_api.dart';
+import 'package:yudao_flutter_ui_admin/models/infra/codegen.dart';
+import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
 import 'widgets/codegen_search_form.dart';
 import 'widgets/codegen_action_buttons.dart';
 import 'widgets/codegen_data_table.dart';

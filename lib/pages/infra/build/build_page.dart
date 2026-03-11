@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import '../../../i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
 
 /// 表单构建器页面
 /// Flutter 简化实现，原 Vue 版本使用 form-create 设计器

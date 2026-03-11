@@ -4,7 +4,7 @@ import 'package:yudao_flutter_ui_admin/api/infra/job_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/job.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
 
-import '../../../../models/common/api_response.dart';
+import 'package:yudao_flutter_ui_admin/models/common/api_response.dart';
 
 /// 定时任务详情对话框
 class JobDetailDialog extends StatefulWidget {

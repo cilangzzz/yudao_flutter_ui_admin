@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
-import '../../../system/common/widgets/date_range_picker.dart';
+import 'package:yudao_flutter_ui_admin/pages/system/common/widgets/date_range_picker.dart';
 
 
 /// 文件搜索表单组件
