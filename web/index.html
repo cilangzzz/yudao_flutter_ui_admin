@@ -27,7 +27,7 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" href="favicon.png" />
 
   <title>yudao_flutter_ui_admin</title>
   <link rel="manifest" href="manifest.json">
@@ -35,7 +35,8 @@
   <!-- 启动优化样式 -->
   <style>
     /* 隐藏 Flutter 默认加载指示器 */
-    flutter-loader, .flutter-loader {
+    flutter-loader,
+    .flutter-loader {
       display: none !important;
     }
 
@@ -64,9 +65,18 @@
       #flutter-loading {
         background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1117 100%);
       }
-      .loading-text { color: #e6f4ff; }
-      .loading-hint { color: #8b949e; }
-      .loading-bar-track { background: rgba(24, 144, 255, 0.2); }
+
+      .loading-text {
+        color: #e6f4ff;
+      }
+
+      .loading-hint {
+        color: #8b949e;
+      }
+
+      .loading-bar-track {
+        background: rgba(24, 144, 255, 0.2);
+      }
     }
 
     #flutter-loading.fade-out {
@@ -96,8 +106,17 @@
     }
 
     @keyframes pulse_glow {
-      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
-      50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.3; }
+
+      0%,
+      100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.6;
+      }
+
+      50% {
+        transform: translate(-50%, -50%) scale(1.3);
+        opacity: 0.3;
+      }
     }
 
     /* Logo 文字 */
@@ -163,8 +182,13 @@
     }
 
     @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
     }
 
     /* 加载文字 */
@@ -212,9 +236,19 @@
     }
 
     @keyframes loading_bar {
-      0% { left: -30%; width: 30%; }
-      50% { width: 50%; }
-      100% { left: 100%; width: 30%; }
+      0% {
+        left: -30%;
+        width: 30%;
+      }
+
+      50% {
+        width: 50%;
+      }
+
+      100% {
+        left: 100%;
+        width: 30%;
+      }
     }
 
     /* 加载提示文字 */
@@ -227,8 +261,15 @@
     }
 
     @keyframes hint_fade {
-      0%, 100% { opacity: 0.5; }
-      50% { opacity: 1; }
+
+      0%,
+      100% {
+        opacity: 0.5;
+      }
+
+      50% {
+        opacity: 1;
+      }
     }
 
     /* 装饰粒子 */
@@ -250,28 +291,223 @@
       animation: particle_float 8s ease-in-out infinite;
     }
 
-    .particle:nth-child(1) { left: 10%; animation-delay: 0s; animation-duration: 6s; }
-    .particle:nth-child(2) { left: 20%; animation-delay: 1s; animation-duration: 8s; }
-    .particle:nth-child(3) { left: 30%; animation-delay: 2s; animation-duration: 7s; }
-    .particle:nth-child(4) { left: 40%; animation-delay: 0.5s; animation-duration: 9s; }
-    .particle:nth-child(5) { left: 50%; animation-delay: 1.5s; animation-duration: 6s; }
-    .particle:nth-child(6) { left: 60%; animation-delay: 2.5s; animation-duration: 8s; }
-    .particle:nth-child(7) { left: 70%; animation-delay: 0.8s; animation-duration: 7s; }
-    .particle:nth-child(8) { left: 80%; animation-delay: 1.8s; animation-duration: 9s; }
-    .particle:nth-child(9) { left: 90%; animation-delay: 2.8s; animation-duration: 6s; }
+    .particle:nth-child(1) {
+      left: 5%;
+      animation-delay: 0s;
+      animation-duration: 6s;
+      width: 6px;
+      height: 6px;
+    }
+
+    .particle:nth-child(2) {
+      left: 12%;
+      animation-delay: 1s;
+      animation-duration: 8s;
+      width: 4px;
+      height: 4px;
+    }
+
+    .particle:nth-child(3) {
+      left: 18%;
+      animation-delay: 2s;
+      animation-duration: 7s;
+      width: 5px;
+      height: 5px;
+    }
+
+    .particle:nth-child(4) {
+      left: 25%;
+      animation-delay: 0.5s;
+      animation-duration: 9s;
+      width: 3px;
+      height: 3px;
+    }
+
+    .particle:nth-child(5) {
+      left: 32%;
+      animation-delay: 1.5s;
+      animation-duration: 6s;
+      width: 4px;
+      height: 4px;
+    }
+
+    .particle:nth-child(6) {
+      left: 38%;
+      animation-delay: 2.5s;
+      animation-duration: 8s;
+      width: 6px;
+      height: 6px;
+    }
+
+    .particle:nth-child(7) {
+      left: 45%;
+      animation-delay: 0.8s;
+      animation-duration: 7s;
+      width: 4px;
+      height: 4px;
+    }
+
+    .particle:nth-child(8) {
+      left: 52%;
+      animation-delay: 1.8s;
+      animation-duration: 9s;
+      width: 5px;
+      height: 5px;
+    }
+
+    .particle:nth-child(9) {
+      left: 58%;
+      animation-delay: 2.8s;
+      animation-duration: 6s;
+      width: 3px;
+      height: 3px;
+    }
+
+    .particle:nth-child(10) {
+      left: 65%;
+      animation-delay: 0.3s;
+      animation-duration: 7.5s;
+      width: 6px;
+      height: 6px;
+    }
+
+    .particle:nth-child(11) {
+      left: 72%;
+      animation-delay: 1.2s;
+      animation-duration: 8.5s;
+      width: 4px;
+      height: 4px;
+    }
+
+    .particle:nth-child(12) {
+      left: 78%;
+      animation-delay: 2.2s;
+      animation-duration: 6.5s;
+      width: 5px;
+      height: 5px;
+    }
+
+    .particle:nth-child(13) {
+      left: 85%;
+      animation-delay: 0.6s;
+      animation-duration: 9.5s;
+      width: 3px;
+      height: 3px;
+    }
+
+    .particle:nth-child(14) {
+      left: 92%;
+      animation-delay: 1.6s;
+      animation-duration: 7s;
+      width: 4px;
+      height: 4px;
+    }
+
+    .particle:nth-child(15) {
+      left: 8%;
+      animation-delay: 3s;
+      animation-duration: 10s;
+      width: 5px;
+      height: 5px;
+    }
+
+    .particle:nth-child(16) {
+      left: 22%;
+      animation-delay: 3.5s;
+      animation-duration: 8s;
+      width: 4px;
+      height: 4px;
+    }
+
+    .particle:nth-child(17) {
+      left: 35%;
+      animation-delay: 4s;
+      animation-duration: 9s;
+      width: 6px;
+      height: 6px;
+    }
+
+    .particle:nth-child(18) {
+      left: 48%;
+      animation-delay: 4.5s;
+      animation-duration: 7s;
+      width: 3px;
+      height: 3px;
+    }
+
+    .particle:nth-child(19) {
+      left: 62%;
+      animation-delay: 5s;
+      animation-duration: 8.5s;
+      width: 5px;
+      height: 5px;
+    }
+
+    .particle:nth-child(20) {
+      left: 75%;
+      animation-delay: 5.5s;
+      animation-duration: 6.5s;
+      width: 4px;
+      height: 4px;
+    }
+
+    .particle:nth-child(21) {
+      left: 88%;
+      animation-delay: 6s;
+      animation-duration: 9.5s;
+      width: 6px;
+      height: 6px;
+    }
+
+    .particle:nth-child(22) {
+      left: 15%;
+      animation-delay: 6.5s;
+      animation-duration: 7.5s;
+      width: 3px;
+      height: 3px;
+    }
+
+    .particle:nth-child(23) {
+      left: 42%;
+      animation-delay: 7s;
+      animation-duration: 8s;
+      width: 5px;
+      height: 5px;
+    }
+
+    .particle:nth-child(24) {
+      left: 68%;
+      animation-delay: 7.5s;
+      animation-duration: 9s;
+      width: 4px;
+      height: 4px;
+    }
+
+    .particle:nth-child(25) {
+      left: 95%;
+      animation-delay: 8s;
+      animation-duration: 7s;
+      width: 6px;
+      height: 6px;
+    }
 
     @keyframes particle_float {
-      0%, 100% {
+
+      0%,
+      100% {
         transform: translateY(100vh) scale(0);
         opacity: 0;
       }
+
       10% {
         opacity: 0.3;
         transform: translateY(90vh) scale(1);
       }
+
       90% {
         opacity: 0.3;
       }
+
       100% {
         transform: translateY(-10vh) scale(0);
         opacity: 0;
@@ -285,11 +521,28 @@
     }
   </style>
 </head>
+
 <body>
   <!-- Flutter 加载界面 -->
   <div id="flutter-loading">
     <!-- 装饰粒子 -->
     <div class="particles">
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
       <div class="particle"></div>
       <div class="particle"></div>
       <div class="particle"></div>
@@ -330,11 +583,12 @@
   <!-- 启动优化脚本 -->
   <script>
     // 监听 Flutter 引擎准备就绪
-    window.addEventListener('flutter-first-frame', function() {
+    window.addEventListener('flutter-first-frame', function () {
       const loading = document.getElementById('flutter-loading');
-      loading.classList.add('fade-out');
+      //loading.classList.add('fade-out');
       setTimeout(() => loading.remove(), 500);
     });
   </script>
 </body>
+
 </html>

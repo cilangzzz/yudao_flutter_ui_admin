@@ -31,7 +31,9 @@
       "Bash(powershell -Command \"$env:LOCALAPPDATA\")",
       "Bash(powershell -Command \"Get-ChildItem -Path ''C:\\\\Users\\\\sysadmin\\\\AppData\\\\Local'' -Recurse -Filter ''*flutter_secure*'' -ErrorAction SilentlyContinue | Select-Object FullName\")",
       "Bash(powershell -Command \"Get-ChildItem -Path ''C:\\\\Users\\\\sysadmin\\\\AppData\\\\Roaming'' -Recurse -Filter ''*flutter_secure*'' -ErrorAction SilentlyContinue | Select-Object FullName\")",
-      "Read(//c/Users/sysadmin/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_secure_storage_windows-3.1.2/lib/**)"
+      "Read(//c/Users/sysadmin/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_secure_storage_windows-3.1.2/lib/**)",
+      "Bash(flutter doctor -v)",
+      "Bash(winget search \"Visual Studio\" --source winget)"
     ],
     "additionalDirectories": [
       "h:\\Documents\\toly_ui\\.claude\\skills",
