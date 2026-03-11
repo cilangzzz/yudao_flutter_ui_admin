@@ -721,6 +721,19 @@ class _RolePageState extends ConsumerState<RolePage> {
   }
 }
 
+/// 扁平化的菜单数据，用于展示
+class _FlatMenuItem {
+  final SimpleMenu menu;
+  final int level;
+  final bool hasChildren;
+
+  const _FlatMenuItem({
+    required this.menu,
+    required this.level,
+    required this.hasChildren,
+  });
+}
+
 /// 分配菜单权限弹窗
 class _AssignMenuDialog extends StatefulWidget {
   final Role role;
@@ -739,9 +752,13 @@ class _AssignMenuDialog extends StatefulWidget {
 
 class _AssignMenuDialogState extends State<_AssignMenuDialog> {
   List<SimpleMenu> _menuList = [];
+  List<SimpleMenu> _menuTree = [];
   Set<int> _selectedMenuIds = {};
   bool _isLoading = true;
-  bool _isExpanded = false;
+  bool _isAllExpanded = false;
+
+  // 每个节点的展开状态
+  final Map<int, bool> _expandedMap = {};
 
   @override
   void initState() {
@@ -761,6 +778,7 @@ class _AssignMenuDialogState extends State<_AssignMenuDialog> {
       if (menuResponse.isSuccess && menuResponse.data != null) {
         setState(() {
           _menuList = menuResponse.data!;
+          _menuTree = _buildMenuTree(_menuList);
           if (menuIdsResponse.isSuccess && menuIdsResponse.data != null) {
             _selectedMenuIds = menuIdsResponse.data!.toSet();
           }
@@ -779,8 +797,50 @@ class _AssignMenuDialogState extends State<_AssignMenuDialog> {
     }
   }
 
-  List<SimpleMenu> _buildMenuTree(int? parentId) {
-    return _menuList.where((menu) => menu.parentId == parentId).toList();
+  /// 构建菜单树结构
+  List<SimpleMenu> _buildMenuTree(List<SimpleMenu> allMenus) {
+    final rootMenus = allMenus.where((menu) => menu.parentId == null || menu.parentId == 0).toList();
+
+    List<SimpleMenu> buildChildren(int parentId) {
+      return allMenus
+          .where((menu) => menu.parentId == parentId)
+          .map((menu) => menu.copyWith(children: buildChildren(menu.id)))
+          .toList();
+    }
+
+    return rootMenus.map((menu) => menu.copyWith(children: buildChildren(menu.id))).toList();
+  }
+
+  /// 将树形数据扁平化为带层级的列表（参考menu_page.dart优化）
+  List<_FlatMenuItem> _flattenMenuTree(List<SimpleMenu> menus, int level) {
+    final result = <_FlatMenuItem>[];
+    for (final menu in menus) {
+      final hasChildren = menu.children != null && menu.children!.isNotEmpty;
+      final isExpanded = _expandedMap[menu.id] ?? false;
+      result.add(_FlatMenuItem(menu: menu, level: level, hasChildren: hasChildren));
+
+      if (hasChildren && isExpanded) {
+        result.addAll(_flattenMenuTree(menu.children!, level + 1));
+      }
+    }
+    return result;
+  }
+
+  /// 切换单个节点展开状态
+  void _toggleExpand(int menuId) {
+    setState(() {
+      _expandedMap[menuId] = !(_expandedMap[menuId] ?? false);
+    });
+  }
+
+  /// 切换全部展开/折叠
+  void _toggleAllExpanded() {
+    setState(() {
+      _isAllExpanded = !_isAllExpanded;
+      for (final menu in _menuList) {
+        _expandedMap[menu.id] = _isAllExpanded;
+      }
+    });
   }
 
   List<int> _getAllMenuIds() {
@@ -793,6 +853,21 @@ class _AssignMenuDialogState extends State<_AssignMenuDialog> {
         _selectedMenuIds.clear();
       } else {
         _selectedMenuIds = _getAllMenuIds().toSet();
+      }
+    });
+  }
+
+  /// 选择/取消选择菜单（含级联处理）
+  void _toggleMenuSelection(SimpleMenu menu, bool isSelected) {
+    setState(() {
+      if (isSelected) {
+        _selectedMenuIds.add(menu.id);
+        // 添加父菜单
+        _addParentMenuIds(menu.parentId);
+      } else {
+        _selectedMenuIds.remove(menu.id);
+        // 移除子菜单
+        _removeChildrenMenuIds(menu.id);
       }
     });
   }
@@ -834,9 +909,9 @@ class _AssignMenuDialogState extends State<_AssignMenuDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Assign Menu Permission'),
+      title: Text(S.current.assignMenuPermission),
       content: SizedBox(
-        width: 450,
+        width: 500,
         height: 500,
         child: Column(
           children: [
@@ -871,27 +946,25 @@ class _AssignMenuDialogState extends State<_AssignMenuDialog> {
                 TextButton.icon(
                   onPressed: _toggleSelectAll,
                   icon: Icon(
-                    _selectedMenuIds.length == _menuList.length
+                    _selectedMenuIds.length == _menuList.length && _menuList.isNotEmpty
                         ? Icons.check_box
                         : Icons.check_box_outline_blank,
                   ),
                   label: Text(S.current.selectAll),
                 ),
                 TextButton.icon(
-                  onPressed: () => setState(() => _isExpanded = !_isExpanded),
-                  icon: Icon(_isExpanded ? Icons.unfold_less : Icons.unfold_more),
-                  label: Text(_isExpanded ? S.current.collapse : S.current.expand),
+                  onPressed: _toggleAllExpanded,
+                  icon: Icon(_isAllExpanded ? Icons.unfold_less : Icons.unfold_more),
+                  label: Text(_isAllExpanded ? S.current.collapseAll : S.current.expandAll),
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            // 菜单树
+            // 菜单树 - 使用ListView.builder优化性能
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
-                  : SingleChildScrollView(
-                      child: _buildMenuTreeWidget(null, 0),
-                    ),
+                  : _buildMenuList(),
             ),
           ],
         ),
@@ -909,60 +982,59 @@ class _AssignMenuDialogState extends State<_AssignMenuDialog> {
     );
   }
 
-  Widget _buildMenuTreeWidget(int? parentId, int level) {
-    final children = _buildMenuTree(parentId);
-    if (children.isEmpty) return const SizedBox.shrink();
+  /// 构建菜单列表（扁平化渲染，优化大数据量性能）
+  Widget _buildMenuList() {
+    final flatMenus = _flattenMenuTree(_menuTree, 0);
 
-    return Column(
-      children: children.map((menu) {
+    if (flatMenus.isEmpty) {
+      return Center(child: Text(S.current.noData));
+    }
+
+    return ListView.builder(
+      itemCount: flatMenus.length,
+      itemBuilder: (context, index) {
+        final item = flatMenus[index];
+        final menu = item.menu;
+        final level = item.level;
+        final hasChildren = item.hasChildren;
         final isSelected = _selectedMenuIds.contains(menu.id);
-        final hasChildren = _menuList.any((m) => m.parentId == menu.id);
+        final isExpanded = _expandedMap[menu.id] ?? false;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            InkWell(
-              onTap: () {
-                setState(() {
-                  if (isSelected) {
-                    _selectedMenuIds.remove(menu.id);
-                    // 移除子菜单
-                    _removeChildrenMenuIds(menu.id);
-                  } else {
-                    _selectedMenuIds.add(menu.id);
-                    // 添加父菜单
-                    _addParentMenuIds(menu.parentId);
-                  }
-                });
-              },
-              child: Padding(
-                padding: EdgeInsets.only(left: level * 24.0, top: 8, bottom: 8),
-                child: Row(
-                  children: [
-                    Icon(
-                      isSelected ? Icons.check_box : Icons.check_box_outline_blank,
-                      size: 20,
-                      color: isSelected ? Theme.of(context).primaryColor : null,
+        return InkWell(
+          onTap: () => _toggleMenuSelection(menu, !isSelected),
+          child: Padding(
+            padding: EdgeInsets.only(left: level * 20.0, top: 6, bottom: 6),
+            child: Row(
+              children: [
+                // 展开/折叠按钮
+                if (hasChildren)
+                  InkWell(
+                    onTap: () => _toggleExpand(menu.id),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Icon(
+                        isExpanded ? Icons.expand_more : Icons.chevron_right,
+                        size: 18,
+                        color: Colors.grey,
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    if (hasChildren)
-                      Icon(
-                        _isExpanded ? Icons.expand_less : Icons.expand_more,
-                        size: 20,
-                      )
-                    else
-                      const SizedBox(width: 20),
-                    const SizedBox(width: 4),
-                    Expanded(child: Text(menu.name)),
-                  ],
+                  )
+                else
+                  const SizedBox(width: 26),
+                // 复选框
+                Icon(
+                  isSelected ? Icons.check_box : Icons.check_box_outline_blank,
+                  size: 20,
+                  color: isSelected ? Theme.of(context).primaryColor : null,
                 ),
-              ),
+                const SizedBox(width: 8),
+                // 菜单名称
+                Expanded(child: Text(menu.name)),
+              ],
             ),
-            if (_isExpanded || level == 0)
-              _buildMenuTreeWidget(menu.id, level + 1),
-          ],
+          ),
         );
-      }).toList(),
+      },
     );
   }
 
@@ -975,16 +1047,29 @@ class _AssignMenuDialogState extends State<_AssignMenuDialog> {
   }
 
   void _addParentMenuIds(int? parentId) {
-    if (parentId == null) return;
+    if (parentId == null || parentId == 0) return;
     _selectedMenuIds.add(parentId);
     final parent = _menuList.firstWhere(
       (m) => m.id == parentId,
-      orElse: () => SimpleMenu(id: -1, name: ''),
+      orElse: () => SimpleMenu(id: -1, name: '', parentId: null),
     );
     if (parent.id != -1) {
       _addParentMenuIds(parent.parentId);
     }
   }
+}
+
+/// 扁平化的部门数据，用于展示
+class _FlatDeptItem {
+  final SimpleDept dept;
+  final int level;
+  final bool hasChildren;
+
+  const _FlatDeptItem({
+    required this.dept,
+    required this.level,
+    required this.hasChildren,
+  });
 }
 
 /// 分配数据权限弹窗
@@ -1005,18 +1090,22 @@ class _AssignDataScopeDialog extends StatefulWidget {
 
 class _AssignDataScopeDialogState extends State<_AssignDataScopeDialog> {
   List<SimpleDept> _deptList = [];
+  List<SimpleDept> _deptTree = [];
   Set<int> _selectedDeptIds = {};
   int _dataScope = 1; // 默认全部数据权限
   bool _isLoading = true;
-  bool _isExpanded = false;
+  bool _isAllExpanded = false;
+
+  // 每个节点的展开状态
+  final Map<int, bool> _expandedMap = {};
 
   // 数据权限范围选项
-  static const List<Map<String, dynamic>> _dataScopeOptions = [
-    {'value': 1, 'label': 'All Data'},
-    {'value': 2, 'label': 'Custom Department'},
-    {'value': 3, 'label': 'Department Only'},
-    {'value': 4, 'label': 'Department and Below'},
-    {'value': 5, 'label': 'Self Only'},
+  List<String> get _dataScopeLabels => [
+    S.current.dataScopeAll,
+    S.current.dataScopeCustom,
+    S.current.dataScopeDeptOnly,
+    S.current.dataScopeDeptBelow,
+    S.current.dataScopeSelfOnly,
   ];
 
   @override
@@ -1035,6 +1124,7 @@ class _AssignDataScopeDialogState extends State<_AssignDataScopeDialog> {
       if (response.isSuccess && response.data != null) {
         setState(() {
           _deptList = response.data!;
+          _deptTree = _buildDeptTree(_deptList);
           _isLoading = false;
         });
       } else {
@@ -1050,8 +1140,50 @@ class _AssignDataScopeDialogState extends State<_AssignDataScopeDialog> {
     }
   }
 
-  List<SimpleDept> _buildDeptTree(int? parentId) {
-    return _deptList.where((dept) => dept.parentId == parentId).toList();
+  /// 构建部门树结构
+  List<SimpleDept> _buildDeptTree(List<SimpleDept> allDepts) {
+    final rootDepts = allDepts.where((dept) => dept.parentId == null || dept.parentId == 0).toList();
+
+    List<SimpleDept> buildChildren(int parentId) {
+      return allDepts
+          .where((dept) => dept.parentId == parentId)
+          .map((dept) => dept.copyWith(children: buildChildren(dept.id)))
+          .toList();
+    }
+
+    return rootDepts.map((dept) => dept.copyWith(children: buildChildren(dept.id))).toList();
+  }
+
+  /// 将树形数据扁平化为带层级的列表（参考menu_page.dart优化）
+  List<_FlatDeptItem> _flattenDeptTree(List<SimpleDept> depts, int level) {
+    final result = <_FlatDeptItem>[];
+    for (final dept in depts) {
+      final hasChildren = dept.children != null && dept.children!.isNotEmpty;
+      final isExpanded = _expandedMap[dept.id] ?? false;
+      result.add(_FlatDeptItem(dept: dept, level: level, hasChildren: hasChildren));
+
+      if (hasChildren && isExpanded) {
+        result.addAll(_flattenDeptTree(dept.children!, level + 1));
+      }
+    }
+    return result;
+  }
+
+  /// 切换单个节点展开状态
+  void _toggleExpand(int deptId) {
+    setState(() {
+      _expandedMap[deptId] = !(_expandedMap[deptId] ?? false);
+    });
+  }
+
+  /// 切换全部展开/折叠
+  void _toggleAllExpanded() {
+    setState(() {
+      _isAllExpanded = !_isAllExpanded;
+      for (final dept in _deptList) {
+        _expandedMap[dept.id] = _isAllExpanded;
+      }
+    });
   }
 
   List<int> _getAllDeptIds() {
@@ -1064,6 +1196,21 @@ class _AssignDataScopeDialogState extends State<_AssignDataScopeDialog> {
         _selectedDeptIds.clear();
       } else {
         _selectedDeptIds = _getAllDeptIds().toSet();
+      }
+    });
+  }
+
+  /// 选择/取消选择部门（含级联处理）
+  void _toggleDeptSelection(SimpleDept dept, bool isSelected) {
+    setState(() {
+      if (isSelected) {
+        _selectedDeptIds.add(dept.id);
+        // 添加父部门
+        _addParentDeptIds(dept.parentId);
+      } else {
+        _selectedDeptIds.remove(dept.id);
+        // 移除子部门
+        _removeChildrenDeptIds(dept.id);
       }
     });
   }
@@ -1106,9 +1253,9 @@ class _AssignDataScopeDialogState extends State<_AssignDataScopeDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Assign Data Permission'),
+      title: Text(S.current.assignDataPermission),
       content: SizedBox(
-        width: 450,
+        width: 500,
         height: 550,
         child: Column(
           children: [
@@ -1138,16 +1285,16 @@ class _AssignDataScopeDialogState extends State<_AssignDataScopeDialog> {
             // 数据权限范围选择
             DropdownButtonFormField<int>(
               value: _dataScope,
-              decoration: const InputDecoration(
-                labelText: 'Data Scope',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: S.current.dataScope,
+                border: const OutlineInputBorder(),
               ),
-              items: _dataScopeOptions.map((option) {
+              items: List.generate(5, (index) {
                 return DropdownMenuItem(
-                  value: option['value'] as int,
-                  child: Text(option['label'] as String),
+                  value: index + 1,
+                  child: Text(_dataScopeLabels[index]),
                 );
-              }).toList(),
+              }),
               onChanged: (value) {
                 if (value != null) {
                   setState(() => _dataScope = value);
@@ -1164,16 +1311,16 @@ class _AssignDataScopeDialogState extends State<_AssignDataScopeDialog> {
                   TextButton.icon(
                     onPressed: _toggleSelectAll,
                     icon: Icon(
-                      _selectedDeptIds.length == _deptList.length
+                      _selectedDeptIds.length == _deptList.length && _deptList.isNotEmpty
                           ? Icons.check_box
                           : Icons.check_box_outline_blank,
                     ),
                     label: Text(S.current.selectAll),
                   ),
                   TextButton.icon(
-                    onPressed: () => setState(() => _isExpanded = !_isExpanded),
-                    icon: Icon(_isExpanded ? Icons.unfold_less : Icons.unfold_more),
-                    label: Text(_isExpanded ? S.current.collapse : S.current.expand),
+                    onPressed: _toggleAllExpanded,
+                    icon: Icon(_isAllExpanded ? Icons.unfold_less : Icons.unfold_more),
+                    label: Text(_isAllExpanded ? S.current.collapseAll : S.current.expandAll),
                   ),
                 ],
               ),
@@ -1181,15 +1328,13 @@ class _AssignDataScopeDialogState extends State<_AssignDataScopeDialog> {
               Expanded(
                 child: _isLoading
                     ? const Center(child: CircularProgressIndicator())
-                    : SingleChildScrollView(
-                        child: _buildDeptTreeWidget(null, 0),
-                      ),
+                    : _buildDeptList(),
               ),
             ] else ...[
               Expanded(
                 child: Center(
                   child: Text(
-                    'Department selection is only available for custom department scope',
+                    S.current.customDeptHint,
                     style: TextStyle(color: Colors.grey[600]),
                   ),
                 ),
@@ -1211,58 +1356,59 @@ class _AssignDataScopeDialogState extends State<_AssignDataScopeDialog> {
     );
   }
 
-  Widget _buildDeptTreeWidget(int? parentId, int level) {
-    final children = _buildDeptTree(parentId);
-    if (children.isEmpty) return const SizedBox.shrink();
+  /// 构建部门列表（扁平化渲染，优化大数据量性能）
+  Widget _buildDeptList() {
+    final flatDepts = _flattenDeptTree(_deptTree, 0);
 
-    return Column(
-      children: children.map((dept) {
+    if (flatDepts.isEmpty) {
+      return Center(child: Text(S.current.noData));
+    }
+
+    return ListView.builder(
+      itemCount: flatDepts.length,
+      itemBuilder: (context, index) {
+        final item = flatDepts[index];
+        final dept = item.dept;
+        final level = item.level;
+        final hasChildren = item.hasChildren;
         final isSelected = _selectedDeptIds.contains(dept.id);
-        final hasChildren = _deptList.any((d) => d.parentId == dept.id);
+        final isExpanded = _expandedMap[dept.id] ?? false;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            InkWell(
-              onTap: () {
-                setState(() {
-                  if (isSelected) {
-                    _selectedDeptIds.remove(dept.id);
-                    _removeChildrenDeptIds(dept.id);
-                  } else {
-                    _selectedDeptIds.add(dept.id);
-                    _addParentDeptIds(dept.parentId);
-                  }
-                });
-              },
-              child: Padding(
-                padding: EdgeInsets.only(left: level * 24.0, top: 8, bottom: 8),
-                child: Row(
-                  children: [
-                    Icon(
-                      isSelected ? Icons.check_box : Icons.check_box_outline_blank,
-                      size: 20,
-                      color: isSelected ? Theme.of(context).primaryColor : null,
+        return InkWell(
+          onTap: () => _toggleDeptSelection(dept, !isSelected),
+          child: Padding(
+            padding: EdgeInsets.only(left: level * 20.0, top: 6, bottom: 6),
+            child: Row(
+              children: [
+                // 展开/折叠按钮
+                if (hasChildren)
+                  InkWell(
+                    onTap: () => _toggleExpand(dept.id),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Icon(
+                        isExpanded ? Icons.expand_more : Icons.chevron_right,
+                        size: 18,
+                        color: Colors.grey,
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    if (hasChildren)
-                      Icon(
-                        _isExpanded ? Icons.expand_less : Icons.expand_more,
-                        size: 20,
-                      )
-                    else
-                      const SizedBox(width: 20),
-                    const SizedBox(width: 4),
-                    Expanded(child: Text(dept.name)),
-                  ],
+                  )
+                else
+                  const SizedBox(width: 26),
+                // 复选框
+                Icon(
+                  isSelected ? Icons.check_box : Icons.check_box_outline_blank,
+                  size: 20,
+                  color: isSelected ? Theme.of(context).primaryColor : null,
                 ),
-              ),
+                const SizedBox(width: 8),
+                // 部门名称
+                Expanded(child: Text(dept.name)),
+              ],
             ),
-            if (_isExpanded || level == 0)
-              _buildDeptTreeWidget(dept.id, level + 1),
-          ],
+          ),
         );
-      }).toList(),
+      },
     );
   }
 
@@ -1275,11 +1421,11 @@ class _AssignDataScopeDialogState extends State<_AssignDataScopeDialog> {
   }
 
   void _addParentDeptIds(int? parentId) {
-    if (parentId == null) return;
+    if (parentId == null || parentId == 0) return;
     _selectedDeptIds.add(parentId);
     final parent = _deptList.firstWhere(
       (d) => d.id == parentId,
-      orElse: () => SimpleDept(id: -1, name: ''),
+      orElse: () => SimpleDept(id: -1, name: '', parentId: null),
     );
     if (parent.id != -1) {
       _addParentDeptIds(parent.parentId);

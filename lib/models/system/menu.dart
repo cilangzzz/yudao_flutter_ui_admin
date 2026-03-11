@@ -128,11 +128,13 @@ class SimpleMenu {
   final int id;
   final String name;
   final int? parentId;
+  final List<SimpleMenu>? children;
 
   const SimpleMenu({
     required this.id,
     required this.name,
     this.parentId,
+    this.children,
   });
 
   factory SimpleMenu.fromJson(Map<String, dynamic> json) {
@@ -140,6 +142,25 @@ class SimpleMenu {
       id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? '') ?? 0,
       name: json['name']?.toString() ?? '',
       parentId: json['parentId'] is int ? json['parentId'] : int.tryParse(json['parentId']?.toString() ?? ''),
+      children: json['children'] != null
+          ? (json['children'] as List<dynamic>)
+              .map((e) => SimpleMenu.fromJson(e as Map<String, dynamic>))
+              .toList()
+          : null,
+    );
+  }
+
+  SimpleMenu copyWith({
+    int? id,
+    String? name,
+    int? parentId,
+    List<SimpleMenu>? children,
+  }) {
+    return SimpleMenu(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      parentId: parentId ?? this.parentId,
+      children: children ?? this.children,
     );
   }
 }

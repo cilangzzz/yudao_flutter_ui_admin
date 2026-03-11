@@ -225,6 +225,15 @@ abstract class S {
   String get roleCode;
   String get menuPermission;
   String get dataPermission;
+  String get assignMenuPermission;
+  String get assignDataPermission;
+  String get dataScope;
+  String get dataScopeAll;
+  String get dataScopeCustom;
+  String get dataScopeDeptOnly;
+  String get dataScopeDeptBelow;
+  String get dataScopeSelfOnly;
+  String get customDeptHint;
 
   // 菜单管理
   String get menuManagement;
@@ -1165,6 +1174,24 @@ class _AppLocalizations extends S {
   String get menuPermission => _get('menuPermission', 'Menu Permission');
   @override
   String get dataPermission => _get('dataPermission', 'Data Permission');
+  @override
+  String get assignMenuPermission => _get('assignMenuPermission', 'Assign Menu Permission');
+  @override
+  String get assignDataPermission => _get('assignDataPermission', 'Assign Data Permission');
+  @override
+  String get dataScope => _get('dataScope', 'Data Scope');
+  @override
+  String get dataScopeAll => _get('dataScopeAll', 'All Data');
+  @override
+  String get dataScopeCustom => _get('dataScopeCustom', 'Custom Department');
+  @override
+  String get dataScopeDeptOnly => _get('dataScopeDeptOnly', 'Department Only');
+  @override
+  String get dataScopeDeptBelow => _get('dataScopeDeptBelow', 'Department and Below');
+  @override
+  String get dataScopeSelfOnly => _get('dataScopeSelfOnly', 'Self Only');
+  @override
+  String get customDeptHint => _get('customDeptHint', 'Department selection is only available for custom department scope');
 
   // 菜单管理
   @override

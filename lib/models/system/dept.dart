@@ -91,11 +91,13 @@ class SimpleDept {
   final int id;
   final String name;
   final int? parentId;
+  final List<SimpleDept>? children;
 
   const SimpleDept({
     required this.id,
     required this.name,
     this.parentId,
+    this.children,
   });
 
   factory SimpleDept.fromJson(Map<String, dynamic> json) {
@@ -103,6 +105,25 @@ class SimpleDept {
       id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? '') ?? 0,
       name: json['name']?.toString() ?? '',
       parentId: json['parentId'] is int ? json['parentId'] : int.tryParse(json['parentId']?.toString() ?? ''),
+      children: json['children'] != null
+          ? (json['children'] as List<dynamic>)
+              .map((e) => SimpleDept.fromJson(e as Map<String, dynamic>))
+              .toList()
+          : null,
+    );
+  }
+
+  SimpleDept copyWith({
+    int? id,
+    String? name,
+    int? parentId,
+    List<SimpleDept>? children,
+  }) {
+    return SimpleDept(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      parentId: parentId ?? this.parentId,
+      children: children ?? this.children,
     );
   }
 }
