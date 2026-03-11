@@ -33,6 +33,24 @@ import '../pages/system/message/sms/channel/sms_channel_page.dart' show SmsChann
 import '../pages/system/message/sms/log/sms_log_page.dart' show SmsLogPage;
 import '../pages/system/message/sms/template/sms_template_page.dart' show SmsTemplatePage;
 
+// Infra 页面导入
+import '../pages/infra/api_access_log/api_access_log_page.dart' show ApiAccessLogPage;
+import '../pages/infra/api_error_log/api_error_log_page.dart' show ApiErrorLogPage;
+import '../pages/infra/config/config_page.dart' show ConfigPage;
+import '../pages/infra/data_source_config/data_source_config_page.dart' show DataSourceConfigPage;
+import '../pages/infra/file/file_page.dart' show FilePage;
+import '../pages/infra/file_config/file_config_page.dart' show FileConfigPage;
+import '../pages/infra/job/job_page.dart' show JobPage;
+import '../pages/infra/job/job_log_page.dart' show JobLogPage;
+import '../pages/infra/codegen/codegen_page.dart' show CodegenPage;
+import '../pages/infra/redis/redis_page.dart' show RedisPage;
+import '../pages/infra/server/server_page.dart' show ServerPage;
+import '../pages/infra/swagger/swagger_page.dart' show SwaggerPage;
+import '../pages/infra/websocket/websocket_page.dart' show WebSocketPage;
+import '../pages/infra/druid/druid_page.dart' show DruidPage;
+import '../pages/infra/skywalking/skywalking_page.dart' show SkywalkingPage;
+import '../pages/infra/build/build_page.dart' show BuildPage;
+
 /// 注册所有页面路由
 ///
 /// 在应用启动时调用此函数，将所有页面路由注册到 RouteRegistry。
@@ -282,6 +300,136 @@ void registerAllPageRoutes() {
       icon: 'ant-design:file-text-outlined',
       permission: 'system:sms-template:list',
       builder: (context) => const SmsTemplatePage(),
+    ),
+
+    // ==================== 基础设施管理 ====================
+    PageRouteMeta(
+      path: Routes.apiAccessLog,
+      name: 'apiAccessLog',
+      title: 'API访问日志',
+      icon: 'ant-design:audit-outlined',
+      permission: 'infra:api-access-log:list',
+      builder: (context) => const ApiAccessLogPage(),
+    ),
+    PageRouteMeta(
+      path: Routes.apiErrorLog,
+      name: 'apiErrorLog',
+      title: 'API错误日志',
+      icon: 'ant-design:warning-outlined',
+      permission: 'infra:api-error-log:list',
+      builder: (context) => const ApiErrorLogPage(),
+    ),
+    PageRouteMeta(
+      path: Routes.config,
+      name: 'infraConfig',
+      title: '参数配置',
+      icon: 'ant-design:setting-outlined',
+      permission: 'infra:config:list',
+      builder: (context) => const ConfigPage(),
+    ),
+    PageRouteMeta(
+      path: Routes.dataSourceConfig,
+      name: 'dataSourceConfig',
+      title: '数据源配置',
+      icon: 'ant-design:database-outlined',
+      permission: 'infra:data-source-config:list',
+      builder: (context) => const DataSourceConfigPage(),
+    ),
+    PageRouteMeta(
+      path: Routes.file,
+      name: 'file',
+      title: '文件管理',
+      icon: 'ant-design:folder-outlined',
+      permission: 'infra:file:list',
+      builder: (context) => const FilePage(),
+    ),
+    PageRouteMeta(
+      path: Routes.fileConfig,
+      name: 'fileConfig',
+      title: '文件配置',
+      icon: 'ant-design:folder-settings-outlined',
+      permission: 'infra:file-config:list',
+      builder: (context) => const FileConfigPage(),
+    ),
+    PageRouteMeta(
+      path: Routes.job,
+      name: 'job',
+      title: '定时任务',
+      icon: 'ant-design:schedule-outlined',
+      permission: 'infra:job:list',
+      builder: (context) => const JobPage(),
+    ),
+    PageRouteMeta(
+      path: Routes.jobLog,
+      name: 'jobLog',
+      title: '任务日志',
+      icon: 'ant-design:file-sync-outlined',
+      permission: 'infra:job-log:list',
+      builder: (context) => const JobLogPage(),
+    ),
+    PageRouteMeta(
+      path: Routes.codegen,
+      name: 'codegen',
+      title: '代码生成',
+      icon: 'ant-design:code-outlined',
+      permission: 'infra:codegen:list',
+      builder: (context) => const CodegenPage(),
+    ),
+    PageRouteMeta(
+      path: Routes.redis,
+      name: 'redis',
+      title: 'Redis监控',
+      icon: 'ant-design:database-filled',
+      permission: 'infra:redis:list',
+      builder: (context) => const RedisPage(),
+    ),
+    PageRouteMeta(
+      path: Routes.server,
+      name: 'server',
+      title: '服务器监控',
+      icon: 'ant-design:desktop-outlined',
+      permission: 'infra:server:list',
+      builder: (context) => const ServerPage(),
+    ),
+    PageRouteMeta(
+      path: Routes.swagger,
+      name: 'swagger',
+      title: 'API文档',
+      icon: 'ant-design:book-outlined',
+      permission: 'infra:swagger:list',
+      builder: (context) => const SwaggerPage(),
+    ),
+    PageRouteMeta(
+      path: Routes.websocket,
+      name: 'websocket',
+      title: 'WebSocket',
+      icon: 'ant-design:api-outlined',
+      permission: 'infra:websocket:list',
+      builder: (context) => const WebSocketPage(),
+    ),
+    PageRouteMeta(
+      path: Routes.druid,
+      name: 'druid',
+      title: 'Druid监控',
+      icon: 'ant-design:monitor-outlined',
+      permission: 'infra:druid:list',
+      builder: (context) => const DruidPage(),
+    ),
+    PageRouteMeta(
+      path: Routes.skywalking,
+      name: 'skywalking',
+      title: 'Skywalking',
+      icon: 'ant-design:radar-chart-outlined',
+      permission: 'infra:skywalking:list',
+      builder: (context) => const SkywalkingPage(),
+    ),
+    PageRouteMeta(
+      path: Routes.build,
+      name: 'build',
+      title: '表单构建',
+      icon: 'ant-design:build-outlined',
+      permission: 'infra:build:list',
+      builder: (context) => const BuildPage(),
     ),
   ]);
 }

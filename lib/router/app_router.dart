@@ -31,6 +31,25 @@ import '../pages/system/message/mail/template/mail_template_page.dart';
 import '../pages/system/message/sms/channel/sms_channel_page.dart';
 import '../pages/system/message/sms/log/sms_log_page.dart';
 import '../pages/system/message/sms/template/sms_template_page.dart';
+
+// Infra 页面导入
+import '../pages/infra/api_access_log/api_access_log_page.dart';
+import '../pages/infra/api_error_log/api_error_log_page.dart';
+import '../pages/infra/config/config_page.dart';
+import '../pages/infra/data_source_config/data_source_config_page.dart';
+import '../pages/infra/file/file_page.dart';
+import '../pages/infra/file_config/file_config_page.dart';
+import '../pages/infra/job/job_page.dart';
+import '../pages/infra/job/job_log_page.dart';
+import '../pages/infra/codegen/codegen_page.dart';
+import '../pages/infra/redis/redis_page.dart';
+import '../pages/infra/server/server_page.dart';
+import '../pages/infra/swagger/swagger_page.dart';
+import '../pages/infra/websocket/websocket_page.dart';
+import '../pages/infra/druid/druid_page.dart';
+import '../pages/infra/skywalking/skywalking_page.dart';
+import '../pages/infra/build/build_page.dart';
+
 import 'route_registry.dart';
 import 'page_routes.dart';
 
@@ -125,6 +144,49 @@ class Routes {
 
   // ==================== BPM流程路由 ====================
   static const String bpmMobileFormPreview = '/bpm/mobile/form-preview';
+
+  // ==================== 基础设施管理 ====================
+  static const String infra = '/infra';
+
+  // API 日志
+  static const String apiAccessLog = '/infra/api-access-log';
+  static const String apiErrorLog = '/infra/api-error-log';
+
+  // 配置管理
+  static const String config = '/infra/config';
+  static const String dataSourceConfig = '/infra/data-source-config';
+
+  // 文件管理
+  static const String file = '/infra/file';
+  static const String fileConfig = '/infra/file-config';
+
+  // 定时任务
+  static const String job = '/infra/job';
+  static const String jobLog = '/infra/job-log';
+
+  // 代码生成
+  static const String codegen = '/infra/codegen';
+
+  // Redis
+  static const String redis = '/infra/redis';
+
+  // 服务器监控
+  static const String server = '/infra/server';
+
+  // Swagger
+  static const String swagger = '/infra/swagger';
+
+  // WebSocket
+  static const String websocket = '/infra/websocket';
+
+  // Druid
+  static const String druid = '/infra/druid';
+
+  // Skywalking
+  static const String skywalking = '/infra/skywalking';
+
+  // 表单构建
+  static const String build = '/infra/build';
 
   // ==================== 路由名称 ====================
   static const String loginName = 'Login';
@@ -266,6 +328,25 @@ final Map<String, RouteMeta> routeMetaMap = {
     hideInBreadcrumb: true,
     ignoreAccess: true,
   ),
+
+  // ==================== 基础设施管理 ====================
+  Routes.infra: const RouteMeta(title: '基础设施', icon: 'ant-design:tool-outlined', hideInMenu: true),
+  Routes.apiAccessLog: const RouteMeta(title: 'API访问日志', icon: 'ant-design:audit-outlined'),
+  Routes.apiErrorLog: const RouteMeta(title: 'API错误日志', icon: 'ant-design:warning-outlined'),
+  Routes.config: const RouteMeta(title: '参数配置', icon: 'ant-design:setting-outlined'),
+  Routes.dataSourceConfig: const RouteMeta(title: '数据源配置', icon: 'ant-design:database-outlined'),
+  Routes.file: const RouteMeta(title: '文件管理', icon: 'ant-design:folder-outlined'),
+  Routes.fileConfig: const RouteMeta(title: '文件配置', icon: 'ant-design:folder-settings-outlined'),
+  Routes.job: const RouteMeta(title: '定时任务', icon: 'ant-design:schedule-outlined'),
+  Routes.jobLog: const RouteMeta(title: '任务日志', icon: 'ant-design:file-sync-outlined'),
+  Routes.codegen: const RouteMeta(title: '代码生成', icon: 'ant-design:code-outlined'),
+  Routes.redis: const RouteMeta(title: 'Redis监控', icon: 'ant-design:database-filled'),
+  Routes.server: const RouteMeta(title: '服务器监控', icon: 'ant-design:desktop-outlined'),
+  Routes.swagger: const RouteMeta(title: 'API文档', icon: 'ant-design:book-outlined'),
+  Routes.websocket: const RouteMeta(title: 'WebSocket', icon: 'ant-design:api-outlined'),
+  Routes.druid: const RouteMeta(title: 'Druid监控', icon: 'ant-design:monitor-outlined'),
+  Routes.skywalking: const RouteMeta(title: 'Skywalking', icon: 'ant-design:radar-chart-outlined'),
+  Routes.build: const RouteMeta(title: '表单构建', icon: 'ant-design:build-outlined'),
 };
 
 // ==================== 权限映射 ====================
@@ -313,6 +394,24 @@ final Map<String, String> routePermissionMap = {
   Routes.smsChannel: 'system:sms-channel:list',
   Routes.smsTemplate: 'system:sms-template:list',
   Routes.smsLog: 'system:sms-log:list',
+
+  // ==================== 基础设施管理 ====================
+  Routes.apiAccessLog: 'infra:api-access-log:list',
+  Routes.apiErrorLog: 'infra:api-error-log:list',
+  Routes.config: 'infra:config:list',
+  Routes.dataSourceConfig: 'infra:data-source-config:list',
+  Routes.file: 'infra:file:list',
+  Routes.fileConfig: 'infra:file-config:list',
+  Routes.job: 'infra:job:list',
+  Routes.jobLog: 'infra:job-log:list',
+  Routes.codegen: 'infra:codegen:list',
+  Routes.redis: 'infra:redis:list',
+  Routes.server: 'infra:server:list',
+  Routes.swagger: 'infra:swagger:list',
+  Routes.websocket: 'infra:websocket:list',
+  Routes.druid: 'infra:druid:list',
+  Routes.skywalking: 'infra:skywalking:list',
+  Routes.build: 'infra:build:list',
 };
 
 // ==================== GoRouter 刷新流 ====================
@@ -556,6 +655,71 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ),
                 ],
               ),
+            ],
+          ),
+
+          // ==================== 基础设施管理 ====================
+          GoRoute(
+            path: Routes.infra,
+            name: 'infra',
+            redirect: (context, state) {
+              if (state.uri.path == Routes.infra) {
+                return Routes.apiAccessLog;
+              }
+              return null;
+            },
+            routes: [
+              // API 日志
+              GoRoute(path: 'api-access-log', name: 'apiAccessLog', builder: (context, state) => const ApiAccessLogPage()),
+              GoRoute(path: 'api-error-log', name: 'apiErrorLog', builder: (context, state) => const ApiErrorLogPage()),
+
+              // 配置管理
+              GoRoute(path: 'config', name: 'infraConfig', builder: (context, state) => const ConfigPage()),
+              GoRoute(path: 'data-source-config', name: 'dataSourceConfig', builder: (context, state) => const DataSourceConfigPage()),
+
+              // 文件管理
+              GoRoute(path: 'file', name: 'file', builder: (context, state) => const FilePage()),
+              GoRoute(path: 'file-config', name: 'fileConfig', builder: (context, state) => const FileConfigPage()),
+
+              // 定时任务
+              GoRoute(
+                path: 'job',
+                name: 'job',
+                redirect: (context, state) {
+                  if (state.uri.path == Routes.job) {
+                    return Routes.job;
+                  }
+                  return null;
+                },
+                routes: [
+                  GoRoute(path: 'list', name: 'jobList', builder: (context, state) => const JobPage()),
+                  GoRoute(path: 'log', name: 'jobLog', builder: (context, state) => const JobLogPage()),
+                ],
+              ),
+
+              // 代码生成
+              GoRoute(path: 'codegen', name: 'codegen', builder: (context, state) => const CodegenPage()),
+
+              // Redis 监控
+              GoRoute(path: 'redis', name: 'redis', builder: (context, state) => const RedisPage()),
+
+              // 服务器监控
+              GoRoute(path: 'server', name: 'server', builder: (context, state) => const ServerPage()),
+
+              // API 文档
+              GoRoute(path: 'swagger', name: 'swagger', builder: (context, state) => const SwaggerPage()),
+
+              // WebSocket
+              GoRoute(path: 'websocket', name: 'websocket', builder: (context, state) => const WebSocketPage()),
+
+              // Druid 监控
+              GoRoute(path: 'druid', name: 'druid', builder: (context, state) => const DruidPage()),
+
+              // Skywalking
+              GoRoute(path: 'skywalking', name: 'skywalking', builder: (context, state) => const SkywalkingPage()),
+
+              // 表单构建
+              GoRoute(path: 'build', name: 'build', builder: (context, state) => const BuildPage()),
             ],
           ),
         ],
