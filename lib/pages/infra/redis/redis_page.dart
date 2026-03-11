@@ -120,7 +120,7 @@ class _RedisPageState extends ConsumerState<RedisPage> {
                         ),
                         const Spacer(),
                         Text(
-                          S.current.redisVersion(_redisData?.info?.redisVersion ?? '-'),
+                          S.current.redisVersion.replaceAll('%s', _redisData?.info?.redisVersion ?? '-'),
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],

@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../api/system/user_api.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../i18n/i18n.dart';
-import '../../../models/system/user.dart';
+import '../../../models/system/user.dart' show SimpleUser;
 
 /// WebSocket 消息类型
 enum MessageType {
@@ -42,7 +42,7 @@ class _WebSocketPageState extends ConsumerState<WebSocketPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final List<WebSocketMessage> _messages = [];
-  List<User> _userList = [];
+  List<SimpleUser> _userList = [];
 
   bool _isConnected = false;
   bool _isConnecting = false;

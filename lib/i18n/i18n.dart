@@ -791,6 +791,7 @@ abstract class S {
   String get javaType;
   String get javaField;
   String get insert;
+  String get list;
   String get query;
   String get queryType;
   String get nullable;
@@ -2710,6 +2711,8 @@ class _AppLocalizations extends S {
   String get javaField => _get('javaField', 'Java Field');
   @override
   String get insert => _get('insert', 'Insert');
+  @override
+  String get list => _get('list', 'List');
   @override
   String get query => _get('query', 'Query');
   @override

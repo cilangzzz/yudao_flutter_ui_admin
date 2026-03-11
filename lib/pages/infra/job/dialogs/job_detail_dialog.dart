@@ -4,6 +4,8 @@ import 'package:yudao_flutter_ui_admin/api/infra/job_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/job.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
 
+import '../../../../models/common/api_response.dart';
+
 /// 定时任务详情对话框
 class JobDetailDialog extends StatefulWidget {
   final int jobId;
@@ -42,9 +44,11 @@ class _JobDetailDialogState extends State<JobDetailDialog> {
       ]);
 
       if (mounted) {
+        final jobResponse = results[0] as ApiResponse<Job>;
+        final nextTimesResponse = results[1] as ApiResponse<List<String>>;
         setState(() {
-          _job = results[0].data;
-          _nextTimes = results[1].data;
+          _job = jobResponse.data;
+          _nextTimes = nextTimesResponse.data;
           _isLoading = false;
         });
       }

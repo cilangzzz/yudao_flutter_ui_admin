@@ -48,7 +48,7 @@ class RedisCommandsCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                S.current.totalCommands(totalCalls.toString()),
+                S.current.totalCommands.replaceAll('%s', totalCalls.toString()),
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
