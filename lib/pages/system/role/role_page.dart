@@ -862,6 +862,8 @@ class _AssignMenuDialogState extends State<_AssignMenuDialog> {
     setState(() {
       if (isSelected) {
         _selectedMenuIds.add(menu.id);
+        // 添加所有子菜单
+        _addChildrenMenuIds(menu.id);
         // 添加父菜单
         _addParentMenuIds(menu.parentId);
       } else {
@@ -1038,6 +1040,14 @@ class _AssignMenuDialogState extends State<_AssignMenuDialog> {
     );
   }
 
+  void _addChildrenMenuIds(int parentId) {
+    final children = _menuList.where((m) => m.parentId == parentId);
+    for (final child in children) {
+      _selectedMenuIds.add(child.id);
+      _addChildrenMenuIds(child.id);
+    }
+  }
+
   void _removeChildrenMenuIds(int parentId) {
     final children = _menuList.where((m) => m.parentId == parentId);
     for (final child in children) {
@@ -1205,6 +1215,8 @@ class _AssignDataScopeDialogState extends State<_AssignDataScopeDialog> {
     setState(() {
       if (isSelected) {
         _selectedDeptIds.add(dept.id);
+        // 添加所有子部门
+        _addChildrenDeptIds(dept.id);
         // 添加父部门
         _addParentDeptIds(dept.parentId);
       } else {
@@ -1410,6 +1422,14 @@ class _AssignDataScopeDialogState extends State<_AssignDataScopeDialog> {
         );
       },
     );
+  }
+
+  void _addChildrenDeptIds(int parentId) {
+    final children = _deptList.where((d) => d.parentId == parentId);
+    for (final child in children) {
+      _selectedDeptIds.add(child.id);
+      _addChildrenDeptIds(child.id);
+    }
   }
 
   void _removeChildrenDeptIds(int parentId) {

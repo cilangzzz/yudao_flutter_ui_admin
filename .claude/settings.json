@@ -37,7 +37,11 @@
       "Bash(flutter analyze lib/pages/system/user/user_page.dart)",
       "Bash(flutter analyze lib/pages/system/notice/notice_page.dart lib/pages/system/notify_template/notify_template_page.dart lib/pages/system/notify_message/notify_message_page.dart)",
       "Bash(flutter analyze lib/pages/system/role/role_page.dart lib/models/system/menu.dart lib/models/system/dept.dart)",
-      "Bash(flutter build windows --debug)"
+      "Bash(flutter build windows --debug)",
+      "Bash(dart analyze lib/pages/system/role/role_page.dart)",
+      "Bash(git config --global --get-all safe.directory)",
+      "Bash(git config --global --unset-all safe.directory)",
+      "Bash(git config --global --add safe.directory '*')"
     ],
     "additionalDirectories": [
       "h:\\Documents\\toly_ui\\.claude\\skills",
