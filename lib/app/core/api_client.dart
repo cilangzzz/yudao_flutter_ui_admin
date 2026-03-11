@@ -5,7 +5,7 @@ import 'constants/app_constants.dart';
 import 'interceptors/auth_interceptor.dart';
 import 'interceptors/error_interceptor.dart';
 import 'interceptors/log_interceptor.dart';
-import '../models/common/api_response.dart';
+import '../../models/common/api_response.dart';
 
 /// Dio 客户端提供者
 final dioProvider = Provider<Dio>((ref) {

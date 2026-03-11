@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import '../constants/app_constants.dart';
-import '../../models/common/api_response.dart';
+import '../../../models/common/api_response.dart';
 
 /// 错误拦截器
 class ErrorInterceptor extends Interceptor {

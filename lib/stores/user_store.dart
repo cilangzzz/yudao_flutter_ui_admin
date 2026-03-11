@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'package:yudao_flutter_ui_admin/core/constants/app_constants.dart';
+import 'package:yudao_flutter_ui_admin/app/core/constants/app_constants.dart';
 
 /// 用户信息模型
 class UserInfoStore {

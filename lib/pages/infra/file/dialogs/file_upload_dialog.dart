@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:dio/dio.dart';
-import 'package:yudao_flutter_ui_admin/core/api_client.dart';
+import 'package:yudao_flutter_ui_admin/app/core/api_client.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
 
 /// 文件上传对话框

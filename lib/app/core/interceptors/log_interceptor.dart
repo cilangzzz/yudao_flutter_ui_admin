@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
-import '../utils/app_log.dart';
+import '../constants/app_constants.dart';
+import '../../../utils/app_log.dart';
 
 /// 日志拦截器
 class ApiLogInterceptor extends Interceptor {

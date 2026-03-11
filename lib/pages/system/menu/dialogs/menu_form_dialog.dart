@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:yudao_flutter_ui_admin/models/system/menu.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
-import 'package:yudao_flutter_ui_admin/core/utils/menu_icon_helper.dart';
+import 'package:yudao_flutter_ui_admin/utils/menu_icon_helper.dart';
 
 /// 菜单表单对话框
 /// 用于新增/编辑菜单

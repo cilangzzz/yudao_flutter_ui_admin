@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/api_client.dart';
-import '../../models/common/api_response.dart';
-import '../../models/system/dept.dart';
+import 'package:yudao_flutter_ui_admin/app/core/api_client.dart';
+import 'package:yudao_flutter_ui_admin/models/common/api_response.dart';
+import 'package:yudao_flutter_ui_admin/models/system/dept.dart';
 
 /// 部门管理 API
 class DeptApi {

@@ -126,21 +126,38 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Container(
-          width: 400,
-          padding: const EdgeInsets.all(32),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          // 响应式布局计算
+          final isMobile = constraints.maxWidth < 600;
+          final containerWidth = isMobile
+              ? constraints.maxWidth * 0.9
+              : constraints.maxWidth < 800
+                  ? 400.0
+                  : 450.0;
+          final padding = isMobile ? 24.0 : 32.0;
+          final iconSize = isMobile ? 48.0 : 64.0;
+          final titleSize = isMobile ? 24.0 : 28.0;
+
+          return Center(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(isMobile ? 16 : 24),
+              child: Container(
+                width: containerWidth,
+                padding: EdgeInsets.all(padding),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
+                  boxShadow: isMobile
+                      ? null
+                      : [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                ),
           child: Form(
             key: _formKey,
             child: Column(
@@ -149,7 +166,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 // Logo
                 Icon(
                   Icons.admin_panel_settings,
-                  size: 64,
+                  size: iconSize,
                   color: Theme.of(context).colorScheme.primary,
                 ),
                 const SizedBox(height: 16),
@@ -157,6 +174,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   S.current.appName,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
+                        fontSize: titleSize,
                       ),
                 ),
                 const SizedBox(height: 8),
@@ -244,6 +262,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         ),
       ),
     );
+    },
+  );
   }
 
   /// 将 MenuInfo 转换为 MenuItem

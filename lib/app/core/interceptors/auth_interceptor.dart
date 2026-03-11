@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../constants/app_constants.dart';
-import '../../stores/access_store.dart';
-import '../../api/core/auth_api.dart';
-import '../../core/api_client.dart';
+import '../../../stores/access_store.dart';
+import '../../../api/core/auth_api.dart';
+import '../api_client.dart';
 
 /// 认证拦截器
 class AuthInterceptor extends Interceptor {

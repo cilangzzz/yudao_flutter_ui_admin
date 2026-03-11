@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/api_client.dart';
-import '../../models/common/api_response.dart';
-import '../../models/core/auth_models.dart';
+import 'package:yudao_flutter_ui_admin/app/core/api_client.dart';
+import 'package:yudao_flutter_ui_admin/models/common/api_response.dart';
+import 'package:yudao_flutter_ui_admin/models/core/auth_models.dart';
 
 /// 认证 API
 class AuthApi {

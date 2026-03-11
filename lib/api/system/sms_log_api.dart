@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/api_client.dart';
-import '../../models/common/api_response.dart';
-import '../../models/common/page_result.dart';
-import '../../models/system/sms_log.dart';
+import 'package:yudao_flutter_ui_admin/app/core/api_client.dart';
+import 'package:yudao_flutter_ui_admin/models/common/api_response.dart';
+import 'package:yudao_flutter_ui_admin/models/common/page_result.dart';
+import 'package:yudao_flutter_ui_admin/models/system/sms_log.dart';
 
 /// 短信日志 API
 class SmsLogApi {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:yudao_flutter_ui_admin/models/system/menu.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
-import 'package:yudao_flutter_ui_admin/core/utils/menu_icon_helper.dart';
+import 'package:yudao_flutter_ui_admin/utils/menu_icon_helper.dart';
 import 'menu_action_buttons.dart';
 
 /// 菜单类型枚举

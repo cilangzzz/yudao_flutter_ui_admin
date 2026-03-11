@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:yudao_flutter_ui_admin/api/infra/demo03_student_inner_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/demo03_student.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
 
 /// 可展开的行内容 - Inner模式
-class Demo03ExpandableRow extends StatefulWidget {
+class Demo03ExpandableRow extends ConsumerStatefulWidget {
   final Demo03Student student;
 
   const Demo03ExpandableRow({
@@ -12,23 +14,78 @@ class Demo03ExpandableRow extends StatefulWidget {
   });
 
   @override
-  State<Demo03ExpandableRow> createState() => _Demo03ExpandableRowState();
+  ConsumerState<Demo03ExpandableRow> createState() => _Demo03ExpandableRowState();
 }
 
-class _Demo03ExpandableRowState extends State<Demo03ExpandableRow>
+class _Demo03ExpandableRowState extends ConsumerState<Demo03ExpandableRow>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+
+  List<Demo03Course> _courses = [];
+  Demo03Grade? _grade;
+  bool _isLoadingCourses = false;
+  bool _isLoadingGrade = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _loadData();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadData() async {
+    _loadCourses();
+    _loadGrade();
+  }
+
+  Future<void> _loadCourses() async {
+    if (widget.student.id == null) return;
+
+    setState(() => _isLoadingCourses = true);
+
+    try {
+      final studentApi = ref.read(demo03StudentInnerApiProvider);
+      final response = await studentApi.getDemo03CourseListByStudentId(widget.student.id!);
+
+      if (response.isSuccess && response.data != null) {
+        setState(() {
+          _courses = response.data!;
+          _isLoadingCourses = false;
+        });
+      } else {
+        setState(() => _isLoadingCourses = false);
+      }
+    } catch (e) {
+      setState(() => _isLoadingCourses = false);
+    }
+  }
+
+  Future<void> _loadGrade() async {
+    if (widget.student.id == null) return;
+
+    setState(() => _isLoadingGrade = true);
+
+    try {
+      final studentApi = ref.read(demo03StudentInnerApiProvider);
+      final response = await studentApi.getDemo03GradeByStudentId(widget.student.id!);
+
+      if (response.isSuccess) {
+        setState(() {
+          _grade = response.data;
+          _isLoadingGrade = false;
+        });
+      } else {
+        setState(() => _isLoadingGrade = false);
+      }
+    } catch (e) {
+      setState(() => _isLoadingGrade = false);
+    }
   }
 
   @override
@@ -84,10 +141,11 @@ class _Demo03ExpandableRowState extends State<Demo03ExpandableRow>
   }
 
   Widget _buildCourseList() {
-    // TODO: 加载实际的课程数据
-    final courses = widget.student.demo03Courses ?? [];
+    if (_isLoadingCourses) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-    if (courses.isEmpty) {
+    if (_courses.isEmpty) {
       return Center(
         child: Text(S.current.noData),
       );
@@ -95,9 +153,9 @@ class _Demo03ExpandableRowState extends State<Demo03ExpandableRow>
 
     return ListView.builder(
       padding: const EdgeInsets.all(8),
-      itemCount: courses.length,
+      itemCount: _courses.length,
       itemBuilder: (context, index) {
-        final course = courses[index];
+        final course = _courses[index];
         return Card(
           margin: const EdgeInsets.symmetric(vertical: 4),
           child: ListTile(
@@ -127,10 +185,11 @@ class _Demo03ExpandableRowState extends State<Demo03ExpandableRow>
   }
 
   Widget _buildGradeInfo() {
-    // TODO: 加载实际的班级数据
-    final grade = widget.student.demo03Grade;
+    if (_isLoadingGrade) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-    if (grade == null) {
+    if (_grade == null) {
       return Center(
         child: Text(S.current.noData),
       );
@@ -154,7 +213,7 @@ class _Demo03ExpandableRowState extends State<Demo03ExpandableRow>
                           '${S.current.gradeName}:',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        Text(grade.name),
+                        Text(_grade!.name),
                       ],
                     ),
                   ),
@@ -166,7 +225,7 @@ class _Demo03ExpandableRowState extends State<Demo03ExpandableRow>
                           '${S.current.teacher}:',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        Text(grade.teacher),
+                        Text(_grade!.teacher),
                       ],
                     ),
                   ),

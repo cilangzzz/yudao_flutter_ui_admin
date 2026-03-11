@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/api_client.dart';
-import '../../models/common/api_response.dart';
-import '../../models/common/page_param.dart';
-import '../../models/common/page_result.dart';
-import '../../models/system/dict_type.dart';
+import 'package:yudao_flutter_ui_admin/app/core/api_client.dart';
+import 'package:yudao_flutter_ui_admin/models/common/api_response.dart';
+import 'package:yudao_flutter_ui_admin/models/common/page_param.dart';
+import 'package:yudao_flutter_ui_admin/models/common/page_result.dart';
+import 'package:yudao_flutter_ui_admin/models/system/dict_type.dart';
 
 /// 字典类型管理 API
 class DictTypeApi {
