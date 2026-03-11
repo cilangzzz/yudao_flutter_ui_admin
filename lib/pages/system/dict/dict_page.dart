@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:data_table_2/data_table_2.dart';
 import '../../../api/system/dict_type_api.dart';
 import '../../../api/system/dict_data_api.dart';
 import '../../../models/system/dict_type.dart';
 import '../../../models/system/dict_data.dart';
 import '../../../models/common/page_param.dart';
 import '../../../i18n/i18n.dart';
+import 'widgets/dict_type_search_form.dart';
+import 'widgets/dict_type_action_buttons.dart';
+import 'widgets/dict_type_table.dart';
+import 'widgets/dict_data_search_form.dart';
+import 'widgets/dict_data_action_buttons.dart';
+import 'widgets/dict_data_table.dart';
+import 'dialogs/dict_type_form_dialog.dart';
+import 'dialogs/dict_data_form_dialog.dart';
 
 /// 字典管理主页面
 /// 左侧显示字典类型列表，右侧显示字典数据列表
@@ -93,7 +100,7 @@ class _DictPageState extends ConsumerState<DictPage> {
   }
 
   void _searchDictType() {
-    _typeCurrentPage = 1;
+    setState(() => _typeCurrentPage = 1);
     _loadDictTypeList();
   }
 
@@ -101,8 +108,8 @@ class _DictPageState extends ConsumerState<DictPage> {
     _typeSearchController.clear();
     setState(() {
       _typeStatusFilter = null;
+      _typeCurrentPage = 1;
     });
-    _typeCurrentPage = 1;
     _loadDictTypeList();
   }
 
@@ -219,137 +226,6 @@ class _DictPageState extends ConsumerState<DictPage> {
     }
   }
 
-  void _showDictTypeDialog([DictType? dictType]) {
-    final nameController = TextEditingController(text: dictType?.name ?? '');
-    final typeController = TextEditingController(text: dictType?.type ?? '');
-    final remarkController = TextEditingController(text: dictType?.remark ?? '');
-    int status = dictType?.status ?? 0;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(dictType == null ? S.current.addDictType : S.current.editDictType),
-          content: SizedBox(
-            width: 400,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: nameController,
-                    decoration: InputDecoration(
-                      labelText: '${S.current.dictName} *',
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: typeController,
-                    enabled: dictType == null, // 编辑时不可修改类型
-                    decoration: InputDecoration(
-                      labelText: '${S.current.dictType} *',
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Text('${S.current.status}: '),
-                      Radio<int>(
-                        value: 0,
-                        groupValue: status,
-                        onChanged: (value) {
-                          setState(() {
-                            status = value!;
-                          });
-                        },
-                      ),
-                      Text(S.current.enabled),
-                      Radio<int>(
-                        value: 1,
-                        groupValue: status,
-                        onChanged: (value) {
-                          setState(() {
-                            status = value!;
-                          });
-                        },
-                      ),
-                      Text(S.current.disabled),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: remarkController,
-                    decoration: InputDecoration(
-                      labelText: S.current.remark,
-                      border: const OutlineInputBorder(),
-                    ),
-                    maxLines: 3,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(S.current.cancel),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (nameController.text.isEmpty || typeController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(S.current.pleaseFillRequired)),
-                  );
-                  return;
-                }
-
-                final data = DictType(
-                  id: dictType?.id,
-                  name: nameController.text,
-                  type: typeController.text,
-                  status: status,
-                  remark: remarkController.text.isEmpty ? null : remarkController.text,
-                );
-
-                try {
-                  final api = ref.read(dictTypeApiProvider);
-                  final response = dictType == null
-                      ? await api.createDictType(data)
-                      : await api.updateDictType(data);
-
-                  if (response.isSuccess) {
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(dictType == null ? S.current.addSuccess : S.current.editSuccess)),
-                      );
-                      _loadDictTypeList();
-                    }
-                  } else {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(response.msg.isNotEmpty ? response.msg : S.current.operationFailed)),
-                      );
-                    }
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('${S.current.operationFailed}: $e')),
-                    );
-                  }
-                }
-              },
-              child: Text(S.current.confirm),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   // ==================== 字典数据相关方法 ====================
 
   Future<void> _loadDictDataList() async {
@@ -400,7 +276,7 @@ class _DictPageState extends ConsumerState<DictPage> {
   }
 
   void _searchDictData() {
-    _dataCurrentPage = 1;
+    setState(() => _dataCurrentPage = 1);
     _loadDictDataList();
   }
 
@@ -408,8 +284,8 @@ class _DictPageState extends ConsumerState<DictPage> {
     _dataSearchController.clear();
     setState(() {
       _dataStatusFilter = null;
+      _dataCurrentPage = 1;
     });
-    _dataCurrentPage = 1;
     _loadDictDataList();
   }
 
@@ -518,212 +394,6 @@ class _DictPageState extends ConsumerState<DictPage> {
     }
   }
 
-  void _showDictDataDialog([DictData? dictData]) {
-    final labelController = TextEditingController(text: dictData?.label ?? '');
-    final valueController = TextEditingController(text: dictData?.value ?? '');
-    final sortController = TextEditingController(text: (dictData?.sort ?? 0).toString());
-    final cssClassController = TextEditingController(text: dictData?.cssClass ?? '');
-    final remarkController = TextEditingController(text: dictData?.remark ?? '');
-    String colorType = dictData?.colorType ?? '';
-    int status = dictData?.status ?? 0;
-
-    final colorOptions = [
-      {'value': '', 'label': S.current.none, 'color': Colors.grey},
-      {'value': 'processing', 'label': S.current.colorPrimary, 'color': Colors.blue},
-      {'value': 'success', 'label': S.current.colorSuccess, 'color': Colors.green},
-      {'value': 'warning', 'label': S.current.colorWarning, 'color': Colors.orange},
-      {'value': 'danger', 'label': S.current.colorDanger, 'color': Colors.red},
-      {'value': 'info', 'label': S.current.colorInfo, 'color': Colors.cyan},
-    ];
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(dictData == null ? S.current.addDictData : S.current.editDictData),
-          content: SizedBox(
-            width: 400,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 字典类型显示
-                  TextField(
-                    enabled: false,
-                    controller: TextEditingController(text: _selectedDictType ?? ''),
-                    decoration: InputDecoration(
-                      labelText: S.current.dictType,
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: labelController,
-                    decoration: InputDecoration(
-                      labelText: '${S.current.dataLabel} *',
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: valueController,
-                    decoration: InputDecoration(
-                      labelText: '${S.current.dataValue} *',
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: sortController,
-                    decoration: InputDecoration(
-                      labelText: S.current.sort,
-                      border: const OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    value: colorType,
-                    decoration: InputDecoration(
-                      labelText: S.current.colorType,
-                      border: const OutlineInputBorder(),
-                    ),
-                    items: colorOptions.map((opt) {
-                      return DropdownMenuItem(
-                        value: opt['value'] as String,
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 16,
-                              height: 16,
-                              decoration: BoxDecoration(
-                                color: opt['color'] as Color,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(opt['label'] as String),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        colorType = value ?? '';
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: cssClassController,
-                    decoration: InputDecoration(
-                      labelText: S.current.cssClass,
-                      border: const OutlineInputBorder(),
-                      hintText: S.current.cssClassHint,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Text('${S.current.status}: '),
-                      Radio<int>(
-                        value: 0,
-                        groupValue: status,
-                        onChanged: (value) {
-                          setState(() {
-                            status = value!;
-                          });
-                        },
-                      ),
-                      Text(S.current.enabled),
-                      Radio<int>(
-                        value: 1,
-                        groupValue: status,
-                        onChanged: (value) {
-                          setState(() {
-                            status = value!;
-                          });
-                        },
-                      ),
-                      Text(S.current.disabled),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: remarkController,
-                    decoration: InputDecoration(
-                      labelText: S.current.remark,
-                      border: const OutlineInputBorder(),
-                    ),
-                    maxLines: 2,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(S.current.cancel),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (labelController.text.isEmpty || valueController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(S.current.pleaseFillRequired)),
-                  );
-                  return;
-                }
-
-                final data = DictData(
-                  id: dictData?.id,
-                  label: labelController.text,
-                  value: valueController.text,
-                  dictType: _selectedDictType,
-                  sort: int.tryParse(sortController.text) ?? 0,
-                  colorType: colorType.isEmpty ? null : colorType,
-                  cssClass: cssClassController.text.isEmpty ? null : cssClassController.text,
-                  status: status,
-                  remark: remarkController.text.isEmpty ? null : remarkController.text,
-                );
-
-                try {
-                  final api = ref.read(dictDataApiProvider);
-                  final response = dictData == null
-                      ? await api.createDictData(data)
-                      : await api.updateDictData(data);
-
-                  if (response.isSuccess) {
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(dictData == null ? S.current.addSuccess : S.current.editSuccess)),
-                      );
-                      _loadDictDataList();
-                    }
-                  } else {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(response.msg.isNotEmpty ? response.msg : S.current.operationFailed)),
-                      );
-                    }
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('${S.current.operationFailed}: $e')),
-                    );
-                  }
-                }
-              },
-              child: Text(S.current.confirm),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   // ==================== UI 构建方法 ====================
 
   @override
@@ -749,13 +419,59 @@ class _DictPageState extends ConsumerState<DictPage> {
             child: Column(
               children: [
                 // 搜索栏
-                _buildTypeSearchBar(context),
+                DictTypeSearchForm(
+                  searchController: _typeSearchController,
+                  selectedStatus: _typeStatusFilter,
+                  onStatusChanged: (value) => setState(() => _typeStatusFilter = value),
+                  onSearch: _searchDictType,
+                  onReset: _resetDictTypeSearch,
+                ),
                 const Divider(height: 1),
                 // 工具栏
-                _buildTypeToolbar(context),
+                DictTypeActionButtons(
+                  onAdd: () => showDictTypeFormDialog(
+                    context,
+                    ref: ref,
+                    onSuccess: _loadDictTypeList,
+                  ),
+                  onDeleteSelected: _deleteSelectedDictTypes,
+                  hasSelection: _selectedTypeIds.isNotEmpty,
+                  totalCount: _typeTotalCount,
+                ),
                 const Divider(height: 1),
                 // 数据表格
-                Expanded(child: _buildTypeDataTable(context)),
+                Expanded(
+                  child: DictTypeTable(
+                    dictTypeList: _dictTypeList,
+                    selectedIds: _selectedTypeIds,
+                    totalCount: _typeTotalCount,
+                    currentPage: _typeCurrentPage,
+                    pageSize: _typePageSize,
+                    isLoading: _typeIsLoading,
+                    error: _typeError,
+                    onReload: _loadDictTypeList,
+                    onPageSizeChanged: (value) {
+                      setState(() {
+                        _typePageSize = value;
+                        _typeCurrentPage = 1;
+                      });
+                      _loadDictTypeList();
+                    },
+                    onPageChanged: (page) {
+                      setState(() => _typeCurrentPage = page);
+                      _loadDictTypeList();
+                    },
+                    onSelectionChanged: (ids) => setState(() => _selectedTypeIds = ids),
+                    onEdit: (dictType) => showDictTypeFormDialog(
+                      context,
+                      dictType: dictType,
+                      ref: ref,
+                      onSuccess: _loadDictTypeList,
+                    ),
+                    onDelete: _deleteDictType,
+                    onSelect: _handleDictTypeSelect,
+                  ),
+                ),
               ],
             ),
           ),
@@ -768,13 +484,63 @@ class _DictPageState extends ConsumerState<DictPage> {
             child: Column(
               children: [
                 // 搜索栏
-                _buildDataSearchBar(context),
+                DictDataSearchForm(
+                  selectedDictType: _selectedDictType,
+                  searchController: _dataSearchController,
+                  selectedStatus: _dataStatusFilter,
+                  onStatusChanged: (value) => setState(() => _dataStatusFilter = value),
+                  onSearch: _searchDictData,
+                  onReset: _resetDictDataSearch,
+                ),
                 const Divider(height: 1),
                 // 工具栏
-                _buildDataToolbar(context),
+                DictDataActionButtons(
+                  onAdd: () => showDictDataFormDialog(
+                    context,
+                    dictType: _selectedDictType,
+                    ref: ref,
+                    onSuccess: _loadDictDataList,
+                  ),
+                  onDeleteSelected: _deleteSelectedDictData,
+                  hasSelection: _selectedDataIds.isNotEmpty,
+                  hasDictType: _selectedDictType != null,
+                  totalCount: _dataTotalCount,
+                ),
                 const Divider(height: 1),
                 // 数据表格
-                Expanded(child: _buildDataDataTable(context)),
+                Expanded(
+                  child: DictDataTable(
+                    dictDataList: _dictDataList,
+                    selectedIds: _selectedDataIds,
+                    totalCount: _dataTotalCount,
+                    currentPage: _dataCurrentPage,
+                    pageSize: _dataPageSize,
+                    isLoading: _dataIsLoading,
+                    error: _dataError,
+                    selectedDictType: _selectedDictType,
+                    onReload: _loadDictDataList,
+                    onPageSizeChanged: (value) {
+                      setState(() {
+                        _dataPageSize = value;
+                        _dataCurrentPage = 1;
+                      });
+                      _loadDictDataList();
+                    },
+                    onPageChanged: (page) {
+                      setState(() => _dataCurrentPage = page);
+                      _loadDictDataList();
+                    },
+                    onSelectionChanged: (ids) => setState(() => _selectedDataIds = ids),
+                    onEdit: (dictData) => showDictDataFormDialog(
+                      context,
+                      dictData: dictData,
+                      dictType: _selectedDictType,
+                      ref: ref,
+                      onSuccess: _loadDictDataList,
+                    ),
+                    onDelete: _deleteDictData,
+                  ),
+                ),
               ],
             ),
           ),
@@ -822,665 +588,40 @@ class _DictPageState extends ConsumerState<DictPage> {
         ),
         const Divider(height: 1),
         // 字典数据列表
-        Expanded(child: _buildDataDataTable(context)),
-      ],
-    );
-  }
-
-  // ==================== 字典类型 UI ====================
-
-  Widget _buildTypeSearchBar(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Wrap(
-        spacing: 12,
-        runSpacing: 8,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          SizedBox(
-            width: 200,
-            child: TextField(
-              controller: _typeSearchController,
-              decoration: InputDecoration(
-                hintText: S.current.searchDictNameOrType,
-                prefixIcon: const Icon(Icons.search, size: 20),
-                border: const OutlineInputBorder(),
-                isDense: true,
-              ),
-              onSubmitted: (_) => _searchDictType(),
+        Expanded(
+          child: DictDataTable(
+            dictDataList: _dictDataList,
+            selectedIds: _selectedDataIds,
+            totalCount: _dataTotalCount,
+            currentPage: _dataCurrentPage,
+            pageSize: _dataPageSize,
+            isLoading: _dataIsLoading,
+            error: _dataError,
+            selectedDictType: _selectedDictType,
+            onReload: _loadDictDataList,
+            onPageSizeChanged: (value) {
+              setState(() {
+                _dataPageSize = value;
+                _dataCurrentPage = 1;
+              });
+              _loadDictDataList();
+            },
+            onPageChanged: (page) {
+              setState(() => _dataCurrentPage = page);
+              _loadDictDataList();
+            },
+            onSelectionChanged: (ids) => setState(() => _selectedDataIds = ids),
+            onEdit: (dictData) => showDictDataFormDialog(
+              context,
+              dictData: dictData,
+              dictType: _selectedDictType,
+              ref: ref,
+              onSuccess: _loadDictDataList,
             ),
+            onDelete: _deleteDictData,
           ),
-          SizedBox(
-            width: 150,
-            child: DropdownButtonFormField<int?>(
-              value: _typeStatusFilter,
-              decoration: InputDecoration(
-                labelText: S.current.status,
-                border: const OutlineInputBorder(),
-                isDense: true,
-              ),
-              items: [
-                DropdownMenuItem(value: null, child: Text(S.current.all)),
-                DropdownMenuItem(value: 0, child: Text(S.current.enabled)),
-                DropdownMenuItem(value: 1, child: Text(S.current.disabled)),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _typeStatusFilter = value;
-                });
-                _searchDictType();
-              },
-            ),
-          ),
-          ElevatedButton.icon(
-            onPressed: _searchDictType,
-            icon: const Icon(Icons.search, size: 20),
-            label: Text(S.current.search),
-          ),
-          OutlinedButton.icon(
-            onPressed: _resetDictTypeSearch,
-            icon: const Icon(Icons.refresh, size: 20),
-            label: Text(S.current.reset),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTypeToolbar(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          ElevatedButton.icon(
-            onPressed: () => _showDictTypeDialog(),
-            icon: const Icon(Icons.add),
-            label: Text(S.current.addDictType),
-          ),
-          ElevatedButton.icon(
-            onPressed: _selectedTypeIds.isEmpty ? null : _deleteSelectedDictTypes,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            icon: const Icon(Icons.delete),
-            label: Text(S.current.deleteBatch),
-          ),
-          const SizedBox(width: 16),
-          Text('${S.current.total}: $_typeTotalCount'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTypeDataTable(BuildContext context) {
-    if (_typeIsLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_typeError != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('${S.current.loadFailed}: $_typeError', style: const TextStyle(color: Colors.red)),
-            const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadDictTypeList, child: Text(S.current.retry)),
-          ],
-        ),
-      );
-    }
-
-    if (_dictTypeList.isEmpty) {
-      return Center(child: Text(S.current.noData));
-    }
-
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          Expanded(
-            child: DataTable2(
-              columnSpacing: 12,
-              horizontalMargin: 12,
-              minWidth: 600,
-              smRatio: 0.75,
-              lmRatio: 1.5,
-              headingRowColor: WidgetStateProperty.resolveWith(
-                (states) => Theme.of(context).colorScheme.surfaceContainerHighest,
-              ),
-              headingTextStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-              columns: [
-                DataColumn2(
-                  label: Text('ID'),
-                  size: ColumnSize.S,
-                ),
-                DataColumn2(
-                  label: Text(S.current.dictName),
-                  size: ColumnSize.M,
-                ),
-                DataColumn2(
-                  label: Text(S.current.dictType),
-                  size: ColumnSize.M,
-                ),
-                DataColumn2(
-                  label: Text(S.current.status),
-                  size: ColumnSize.S,
-                ),
-                DataColumn2(
-                  label: Text(S.current.remark),
-                  size: ColumnSize.L,
-                ),
-                DataColumn2(
-                  label: Text(S.current.createTime),
-                  size: ColumnSize.L,
-                ),
-                DataColumn2(
-                  label: Text(S.current.operation),
-                  size: ColumnSize.M,
-                ),
-              ],
-              rows: _dictTypeList.map((dictType) {
-                final isSelected = dictType.id != null && _selectedTypeIds.contains(dictType.id);
-                return DataRow2(
-                  selected: isSelected,
-                  onSelectChanged: (selected) {
-                    if (dictType.id != null) {
-                      setState(() {
-                        if (selected == true) {
-                          _selectedTypeIds.add(dictType.id!);
-                        } else {
-                          _selectedTypeIds.remove(dictType.id!);
-                        }
-                      });
-                    }
-                  },
-                  onTap: () => _handleDictTypeSelect(dictType),
-                  cells: [
-                    DataCell(Text(dictType.id?.toString() ?? '-')),
-                    DataCell(
-                      InkWell(
-                        onTap: () => _handleDictTypeSelect(dictType),
-                        child: Text(
-                          dictType.name,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                            decoration: TextDecoration.underline,
-                          ),
-                        ),
-                      ),
-                    ),
-                    DataCell(Text(dictType.type)),
-                    DataCell(_buildStatusChip(dictType.status)),
-                    DataCell(Text(dictType.remark ?? '-')),
-                    DataCell(Text(
-                      dictType.createTime?.toString().substring(0, 19) ?? '-',
-                    )),
-                    DataCell(
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          TextButton(
-                            onPressed: () => _showDictTypeDialog(dictType),
-                            child: Text(S.current.edit),
-                          ),
-                          PopupMenuButton<String>(
-                            tooltip: S.current.more,
-                            itemBuilder: (context) => [
-                              PopupMenuItem(
-                                value: 'delete',
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.delete, size: 18, color: Colors.red),
-                                    const SizedBox(width: 8),
-                                    Text(S.current.delete, style: const TextStyle(color: Colors.red)),
-                                  ],
-                                ),
-                              ),
-                            ],
-                            onSelected: (value) {
-                              switch (value) {
-                                case 'delete':
-                                  _deleteDictType(dictType);
-                                  break;
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              }).toList(),
-            ),
-          ),
-          // 分页控件
-          const SizedBox(height: 8),
-          _buildTypePagination(context),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTypePagination(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Row(
-          children: [
-            Text('${S.current.pageSize}: '),
-            DropdownButton<int>(
-              value: _typePageSize,
-              items: [10, 20, 50, 100].map((value) {
-                return DropdownMenuItem(
-                  value: value,
-                  child: Text('$value'),
-                );
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _typePageSize = value;
-                    _typeCurrentPage = 1;
-                  });
-                  _loadDictTypeList();
-                }
-              },
-            ),
-          ],
-        ),
-        const SizedBox(width: 24),
-        Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.chevron_left),
-              onPressed: _typeCurrentPage > 1
-                  ? () {
-                      setState(() => _typeCurrentPage--);
-                      _loadDictTypeList();
-                    }
-                  : null,
-            ),
-            Text('$_typeCurrentPage / ${(_typeTotalCount / _typePageSize).ceil()}'),
-            IconButton(
-              icon: const Icon(Icons.chevron_right),
-              onPressed: _typeCurrentPage * _typePageSize < _typeTotalCount
-                  ? () {
-                      setState(() => _typeCurrentPage++);
-                      _loadDictTypeList();
-                    }
-                  : null,
-            ),
-          ],
         ),
       ],
-    );
-  }
-
-  // ==================== 字典数据 UI ====================
-
-  Widget _buildDataSearchBar(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Wrap(
-        spacing: 12,
-        runSpacing: 8,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          Text(
-            '${S.current.currentDictType}: ${_selectedDictType ?? S.current.pleaseSelectDictType}',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          SizedBox(
-            width: 180,
-            child: TextField(
-              controller: _dataSearchController,
-              decoration: InputDecoration(
-                hintText: S.current.dataLabel,
-                prefixIcon: const Icon(Icons.search, size: 20),
-                border: const OutlineInputBorder(),
-                isDense: true,
-              ),
-              onSubmitted: (_) => _searchDictData(),
-            ),
-          ),
-          SizedBox(
-            width: 120,
-            child: DropdownButtonFormField<int?>(
-              value: _dataStatusFilter,
-              decoration: InputDecoration(
-                labelText: S.current.status,
-                border: const OutlineInputBorder(),
-                isDense: true,
-              ),
-              items: [
-                DropdownMenuItem(value: null, child: Text(S.current.all)),
-                DropdownMenuItem(value: 0, child: Text(S.current.enabled)),
-                DropdownMenuItem(value: 1, child: Text(S.current.disabled)),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _dataStatusFilter = value;
-                });
-                _searchDictData();
-              },
-            ),
-          ),
-          ElevatedButton.icon(
-            onPressed: _selectedDictType == null ? null : _searchDictData,
-            icon: const Icon(Icons.search, size: 20),
-            label: Text(S.current.search),
-          ),
-          OutlinedButton.icon(
-            onPressed: _selectedDictType == null ? null : _resetDictDataSearch,
-            icon: const Icon(Icons.refresh, size: 20),
-            label: Text(S.current.reset),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDataToolbar(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          ElevatedButton.icon(
-            onPressed: _selectedDictType == null ? null : () => _showDictDataDialog(),
-            icon: const Icon(Icons.add),
-            label: Text(S.current.addDictData),
-          ),
-          ElevatedButton.icon(
-            onPressed: _selectedDataIds.isEmpty ? null : _deleteSelectedDictData,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            icon: const Icon(Icons.delete),
-            label: Text(S.current.deleteBatch),
-          ),
-          const SizedBox(width: 16),
-          Text('${S.current.total}: $_dataTotalCount'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDataDataTable(BuildContext context) {
-    if (_selectedDictType == null) {
-      return Center(
-        child: Text(S.current.pleaseSelectDictTypeLeft),
-      );
-    }
-
-    if (_dataIsLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_dataError != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('${S.current.loadFailed}: $_dataError', style: const TextStyle(color: Colors.red)),
-            const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadDictDataList, child: Text(S.current.retry)),
-          ],
-        ),
-      );
-    }
-
-    if (_dictDataList.isEmpty) {
-      return Center(child: Text(S.current.noData));
-    }
-
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          Expanded(
-            child: DataTable2(
-              columnSpacing: 12,
-              horizontalMargin: 12,
-              minWidth: 700,
-              smRatio: 0.75,
-              lmRatio: 1.5,
-              headingRowColor: WidgetStateProperty.resolveWith(
-                (states) => Theme.of(context).colorScheme.surfaceContainerHighest,
-              ),
-              headingTextStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-              columns: [
-                DataColumn2(
-                  label: Text('ID'),
-                  size: ColumnSize.S,
-                ),
-                DataColumn2(
-                  label: Text(S.current.dataLabel),
-                  size: ColumnSize.M,
-                ),
-                DataColumn2(
-                  label: Text(S.current.dataValue),
-                  size: ColumnSize.S,
-                ),
-                DataColumn2(
-                  label: Text(S.current.sort),
-                  size: ColumnSize.S,
-                ),
-                DataColumn2(
-                  label: Text(S.current.status),
-                  size: ColumnSize.S,
-                ),
-                DataColumn2(
-                  label: Text(S.current.colorType),
-                  size: ColumnSize.S,
-                ),
-                DataColumn2(
-                  label: Text(S.current.remark),
-                  size: ColumnSize.L,
-                ),
-                DataColumn2(
-                  label: Text(S.current.createTime),
-                  size: ColumnSize.L,
-                ),
-                DataColumn2(
-                  label: Text(S.current.operation),
-                  size: ColumnSize.M,
-                ),
-              ],
-              rows: _dictDataList.map((dictData) {
-                final isSelected = dictData.id != null && _selectedDataIds.contains(dictData.id);
-                return DataRow2(
-                  selected: isSelected,
-                  onSelectChanged: (selected) {
-                    if (dictData.id != null) {
-                      setState(() {
-                        if (selected == true) {
-                          _selectedDataIds.add(dictData.id!);
-                        } else {
-                          _selectedDataIds.remove(dictData.id!);
-                        }
-                      });
-                    }
-                  },
-                  cells: [
-                    DataCell(Text(dictData.id?.toString() ?? '-')),
-                    DataCell(Text(dictData.label)),
-                    DataCell(Text(dictData.value)),
-                    DataCell(Text(dictData.sort?.toString() ?? '0')),
-                    DataCell(_buildStatusChip(dictData.status)),
-                    DataCell(_buildColorChip(dictData.colorType)),
-                    DataCell(Text(dictData.remark ?? '-')),
-                    DataCell(Text(
-                      dictData.createTime?.toString().substring(0, 19) ?? '-',
-                    )),
-                    DataCell(
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          TextButton(
-                            onPressed: () => _showDictDataDialog(dictData),
-                            child: Text(S.current.edit),
-                          ),
-                          PopupMenuButton<String>(
-                            tooltip: S.current.more,
-                            itemBuilder: (context) => [
-                              PopupMenuItem(
-                                value: 'delete',
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.delete, size: 18, color: Colors.red),
-                                    const SizedBox(width: 8),
-                                    Text(S.current.delete, style: const TextStyle(color: Colors.red)),
-                                  ],
-                                ),
-                              ),
-                            ],
-                            onSelected: (value) {
-                              switch (value) {
-                                case 'delete':
-                                  _deleteDictData(dictData);
-                                  break;
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              }).toList(),
-            ),
-          ),
-          // 分页控件
-          const SizedBox(height: 8),
-          _buildDataPagination(context),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDataPagination(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Row(
-          children: [
-            Text('${S.current.pageSize}: '),
-            DropdownButton<int>(
-              value: _dataPageSize,
-              items: [10, 20, 50, 100].map((value) {
-                return DropdownMenuItem(
-                  value: value,
-                  child: Text('$value'),
-                );
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _dataPageSize = value;
-                    _dataCurrentPage = 1;
-                  });
-                  _loadDictDataList();
-                }
-              },
-            ),
-          ],
-        ),
-        const SizedBox(width: 24),
-        Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.chevron_left),
-              onPressed: _dataCurrentPage > 1
-                  ? () {
-                      setState(() => _dataCurrentPage--);
-                      _loadDictDataList();
-                    }
-                  : null,
-            ),
-            Text('$_dataCurrentPage / ${(_dataTotalCount / _dataPageSize).ceil()}'),
-            IconButton(
-              icon: const Icon(Icons.chevron_right),
-              onPressed: _dataCurrentPage * _dataPageSize < _dataTotalCount
-                  ? () {
-                      setState(() => _dataCurrentPage++);
-                      _loadDictDataList();
-                    }
-                  : null,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  // ==================== 辅助组件 ====================
-
-  Widget _buildStatusChip(int? status) {
-    final isEnabled = status == 0;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: isEnabled ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        isEnabled ? S.current.enabled : S.current.disabled,
-        style: TextStyle(
-          color: isEnabled ? Colors.green : Colors.red,
-          fontSize: 12,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildColorChip(String? colorType) {
-    if (colorType == null || colorType.isEmpty) {
-      return const Text('-');
-    }
-
-    Color color;
-    switch (colorType) {
-      case 'processing':
-        color = Colors.blue;
-        break;
-      case 'success':
-        color = Colors.green;
-        break;
-      case 'warning':
-        color = Colors.orange;
-        break;
-      case 'danger':
-        color = Colors.red;
-        break;
-      case 'info':
-        color = Colors.cyan;
-        break;
-      default:
-        color = Colors.grey;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        colorType,
-        style: TextStyle(color: color, fontSize: 12),
-      ),
     );
   }
 }

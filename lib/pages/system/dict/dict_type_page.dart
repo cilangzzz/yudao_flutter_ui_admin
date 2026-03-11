@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '/../../api/system/dict_type_api.dart';
-import '/../../models/system/dict_type.dart';
-import '/../../models/common/page_param.dart';
-import '/../../models/common/page_result.dart';
-import '/../../i18n/i18n.dart';
+import '../../../api/system/dict_type_api.dart';
+import '../../../models/system/dict_type.dart';
+import '../../../models/common/page_param.dart';
+import '../../../models/common/page_result.dart';
+import '../../../i18n/i18n.dart';
+import 'dialogs/dict_type_form_dialog.dart';
 
 /// 字典类型管理页面
 class DictTypePage extends ConsumerStatefulWidget {
@@ -18,7 +19,7 @@ class DictTypePage extends ConsumerStatefulWidget {
 
 class _DictTypePageState extends ConsumerState<DictTypePage> {
   final _searchController = TextEditingController();
-  String? _selectedStatus;
+  int? _selectedStatus;
   List<DictType> _dictTypes = [];
   bool _isLoading = false;
   int _currentPage = 1;
@@ -49,7 +50,7 @@ class _DictTypePageState extends ConsumerState<DictTypePage> {
           pageSize: _pageSize,
         ),
         name: _searchController.text.isNotEmpty ? _searchController.text : null,
-        status: _selectedStatus != null ? int.tryParse(_selectedStatus!) : null,
+        status: _selectedStatus,
       );
 
       if (response.isSuccess && response.data != null) {
@@ -119,102 +120,6 @@ class _DictTypePageState extends ConsumerState<DictTypePage> {
     }
   }
 
-  void _showDictTypeDialog([DictType? dictType]) {
-    final nameController = TextEditingController(text: dictType?.name ?? '');
-    final typeController = TextEditingController(text: dictType?.type ?? '');
-    final remarkController = TextEditingController(text: dictType?.remark ?? '');
-    int status = dictType?.status ?? 0;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(dictType == null ? S.current.addDictType : S.current.editDictType),
-        content: SizedBox(
-          width: 400,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    labelText: S.current.dictName,
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: typeController,
-                  decoration: InputDecoration(
-                    labelText: S.current.dictType,
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<int>(
-                  value: status,
-                  decoration: InputDecoration(
-                    labelText: S.current.status,
-                    border: OutlineInputBorder(),
-                  ),
-                  items: [
-                    DropdownMenuItem(value: 0, child: Text(S.current.normal)),
-                    DropdownMenuItem(value: 1, child: Text(S.current.stopped)),
-                  ],
-                  onChanged: (value) => status = value ?? 0,
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: remarkController,
-                  decoration: InputDecoration(
-                    labelText: S.current.remark,
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 3,
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(S.current.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final data = DictType(
-                id: dictType?.id,
-                name: nameController.text,
-                type: typeController.text,
-                status: status,
-                remark: remarkController.text.isEmpty ? null : remarkController.text,
-              );
-
-              try {
-                final api = ref.read(dictTypeApiProvider);
-                final response = dictType == null
-                    ? await api.createDictType(data)
-                    : await api.updateDictType(data);
-
-                if (response.isSuccess) {
-                  Navigator.pop(context);
-                  _showSuccess(dictType == null ? S.current.addSuccess : S.current.updateSuccess);
-                  _loadData();
-                } else {
-                  _showError(response.msg ?? S.current.operationFailed);
-                }
-              } catch (e) {
-                _showError('${S.current.operationFailed}: $e');
-              }
-            },
-            child: Text(S.current.confirm),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -258,7 +163,7 @@ class _DictTypePageState extends ConsumerState<DictTypePage> {
           ),
           SizedBox(
             width: 150,
-            child: DropdownButtonFormField<String>(
+            child: DropdownButtonFormField<int?>(
               value: _selectedStatus,
               decoration: InputDecoration(
                 labelText: S.current.status,
@@ -267,8 +172,8 @@ class _DictTypePageState extends ConsumerState<DictTypePage> {
               ),
               items: [
                 DropdownMenuItem(value: null, child: Text(S.current.all)),
-                DropdownMenuItem(value: '0', child: Text(S.current.normal)),
-                DropdownMenuItem(value: '1', child: Text(S.current.stopped)),
+                DropdownMenuItem(value: 0, child: Text(S.current.normal)),
+                DropdownMenuItem(value: 1, child: Text(S.current.stopped)),
               ],
               onChanged: (value) {
                 setState(() => _selectedStatus = value);
@@ -295,7 +200,11 @@ class _DictTypePageState extends ConsumerState<DictTypePage> {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           ElevatedButton.icon(
-            onPressed: () => _showDictTypeDialog(),
+            onPressed: () => showDictTypeFormDialog(
+              context,
+              ref: ref,
+              onSuccess: _loadData,
+            ),
             icon: const Icon(Icons.add),
             label: Text(S.current.addType),
           ),
@@ -343,7 +252,12 @@ class _DictTypePageState extends ConsumerState<DictTypePage> {
         source: _DictTypeDataSource(
           _dictTypes,
           context,
-          onEdit: _showDictTypeDialog,
+          onEdit: (dictType) => showDictTypeFormDialog(
+            context,
+            dictType: dictType,
+            ref: ref,
+            onSuccess: _loadData,
+          ),
           onDelete: _deleteDictType,
           onSelect: widget.onSelect,
         ),

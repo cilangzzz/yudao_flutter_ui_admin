@@ -4,6 +4,7 @@ import '../../../api/system/dict_data_api.dart';
 import '../../../models/system/dict_data.dart';
 import '../../../models/common/page_param.dart';
 import '../../../i18n/i18n.dart';
+import 'dialogs/dict_data_form_dialog.dart';
 
 /// 字典数据管理页面
 class DictDataPage extends ConsumerStatefulWidget {
@@ -17,7 +18,7 @@ class DictDataPage extends ConsumerStatefulWidget {
 
 class _DictDataPageState extends ConsumerState<DictDataPage> {
   final _searchController = TextEditingController();
-  String? _selectedStatus;
+  int? _selectedStatus;
   List<DictData> _dictDataList = [];
   bool _isLoading = false;
   int _currentPage = 1;
@@ -64,7 +65,7 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
           pageSize: _pageSize,
         ),
         dictType: widget.dictType,
-        status: _selectedStatus != null ? int.tryParse(_selectedStatus!) : null,
+        status: _selectedStatus,
       );
 
       if (response.isSuccess && response.data != null) {
@@ -134,153 +135,6 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
     }
   }
 
-  void _showDictDataDialog([DictData? dictData]) {
-    final labelController = TextEditingController(text: dictData?.label ?? '');
-    final valueController = TextEditingController(text: dictData?.value ?? '');
-    final sortController = TextEditingController(text: (dictData?.sort ?? 0).toString());
-    final remarkController = TextEditingController(text: dictData?.remark ?? '');
-    String colorType = dictData?.colorType ?? 'default';
-    int status = dictData?.status ?? 0;
-
-    final colorOptions = [
-      {'value': 'default', 'label': S.current.colorDefault, 'color': Colors.grey},
-      {'value': 'primary', 'label': S.current.colorPrimary, 'color': Colors.blue},
-      {'value': 'success', 'label': S.current.colorSuccess, 'color': Colors.green},
-      {'value': 'warning', 'label': S.current.colorWarning, 'color': Colors.orange},
-      {'value': 'danger', 'label': S.current.colorDanger, 'color': Colors.red},
-      {'value': 'info', 'label': S.current.colorInfo, 'color': Colors.cyan},
-    ];
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(dictData == null ? S.current.addDictData : S.current.editDictData),
-        content: SizedBox(
-          width: 400,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: labelController,
-                  decoration: InputDecoration(
-                    labelText: S.current.dataLabel,
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: valueController,
-                  decoration: InputDecoration(
-                    labelText: S.current.dataValue,
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: sortController,
-                  decoration: InputDecoration(
-                    labelText: S.current.sort,
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: colorType,
-                  decoration: InputDecoration(
-                    labelText: S.current.colorType,
-                    border: OutlineInputBorder(),
-                  ),
-                  items: colorOptions.map((opt) {
-                    return DropdownMenuItem(
-                      value: opt['value'] as String,
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 16,
-                            height: 16,
-                            decoration: BoxDecoration(
-                              color: opt['color'] as Color,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(opt['label'] as String),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (value) => colorType = value ?? 'default',
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<int>(
-                  value: status,
-                  decoration: InputDecoration(
-                    labelText: S.current.status,
-                    border: OutlineInputBorder(),
-                  ),
-                  items: [
-                    DropdownMenuItem(value: 0, child: Text(S.current.normal)),
-                    DropdownMenuItem(value: 1, child: Text(S.current.stopped)),
-                  ],
-                  onChanged: (value) => status = value ?? 0,
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: remarkController,
-                  decoration: InputDecoration(
-                    labelText: S.current.remark,
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 2,
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(S.current.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final data = DictData(
-                id: dictData?.id,
-                label: labelController.text,
-                value: valueController.text,
-                dictType: widget.dictType,
-                sort: int.tryParse(sortController.text) ?? 0,
-                colorType: colorType,
-                status: status,
-                remark: remarkController.text.isEmpty ? null : remarkController.text,
-              );
-
-              try {
-                final api = ref.read(dictDataApiProvider);
-                final response = dictData == null
-                    ? await api.createDictData(data)
-                    : await api.updateDictData(data);
-
-                if (response.isSuccess) {
-                  Navigator.pop(context);
-                  _showSuccess(dictData == null ? S.current.addSuccess : S.current.updateSuccess);
-                  _loadData();
-                } else {
-                  _showError(response.msg ?? S.current.operationFailed);
-                }
-              } catch (e) {
-                _showError('${S.current.operationFailed}: $e');
-              }
-            },
-            child: Text(S.current.confirm),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -317,7 +171,7 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
           ),
           SizedBox(
             width: 150,
-            child: DropdownButtonFormField<String>(
+            child: DropdownButtonFormField<int?>(
               value: _selectedStatus,
               decoration: InputDecoration(
                 labelText: S.current.status,
@@ -326,8 +180,8 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
               ),
               items: [
                 DropdownMenuItem(value: null, child: Text(S.current.all)),
-                DropdownMenuItem(value: '0', child: Text(S.current.normal)),
-                DropdownMenuItem(value: '1', child: Text(S.current.stopped)),
+                DropdownMenuItem(value: 0, child: Text(S.current.normal)),
+                DropdownMenuItem(value: 1, child: Text(S.current.stopped)),
               ],
               onChanged: (value) {
                 setState(() => _selectedStatus = value);
@@ -354,7 +208,14 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           ElevatedButton.icon(
-            onPressed: widget.dictType == null ? null : () => _showDictDataDialog(),
+            onPressed: widget.dictType == null
+                ? null
+                : () => showDictDataFormDialog(
+                    context,
+                    dictType: widget.dictType,
+                    ref: ref,
+                    onSuccess: _loadData,
+                  ),
             icon: const Icon(Icons.add),
             label: Text(S.current.addData),
           ),
@@ -416,7 +277,13 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
         source: _DictDataDataSource(
           _dictDataList,
           context,
-          onEdit: _showDictDataDialog,
+          onEdit: (dictData) => showDictDataFormDialog(
+            context,
+            dictData: dictData,
+            dictType: widget.dictType,
+            ref: ref,
+            onSuccess: _loadData,
+          ),
           onDelete: _deleteDictData,
         ),
       ),
