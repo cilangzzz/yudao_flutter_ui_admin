@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:data_table_2/data_table_2.dart';
-import '../../../api/system/notify_template_api.dart';
-import '../../../models/system/notify_template.dart';
-import '../../../i18n/i18n.dart';
+import '../../../../../api/system/notify_template_api.dart';
+import '../../../../../models/system/notify_template.dart';
+import '../../../../../i18n/i18n.dart';
 
 /// 站内信模板管理页面
 class NotifyTemplatePage extends ConsumerStatefulWidget {

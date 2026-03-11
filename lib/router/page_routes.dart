@@ -15,23 +15,23 @@ import '../pages/system/dict/dict_type_page.dart' show DictTypePage;
 import '../pages/system/dict/dict_data_page.dart' show DictDataPage;
 import '../pages/system/area/area_page.dart' show AreaPage;
 import '../pages/system/loginlog/login_log_page.dart' show LoginLogPage;
-import '../pages/system/oauth2_client/oauth2_client_page.dart' show OAuth2ClientPage;
-import '../pages/system/oauth2_token/oauth2_token_page.dart' show OAuth2TokenPage;
+import '../pages/system/oauth2/oauth2_client/oauth2_client_page.dart' show OAuth2ClientPage;
+import '../pages/system/oauth2/oauth2_token/oauth2_token_page.dart' show OAuth2TokenPage;
 import '../pages/system/operatelog/operate_log_page.dart' show OperateLogPage;
 import '../pages/system/social_client/social_client_page.dart' show SocialClientPage;
 import '../pages/system/social_user/social_user_page.dart' show SocialUserPage;
-import '../pages/system/notice/notice_page.dart' show NoticePage;
+import '../pages/system/message/notice/notice_page.dart' show NoticePage;
 import '../pages/system/post/post_page.dart' show PostPage;
 import '../pages/system/tenant/tenant_page.dart' show TenantPage;
 import '../pages/system/tenant_package/tenant_package_page.dart' show TenantPackagePage;
-import '../pages/system/notify_message/notify_message_page.dart' show NotifyMessagePage;
-import '../pages/system/notify_template/notify_template_page.dart' show NotifyTemplatePage;
-import '../pages/system/mail/account/mail_account_page.dart' show MailAccountPage;
-import '../pages/system/mail/log/mail_log_page.dart' show MailLogPage;
-import '../pages/system/mail/template/mail_template_page.dart' show MailTemplatePage;
-import '../pages/system/sms/channel/sms_channel_page.dart' show SmsChannelPage;
-import '../pages/system/sms/log/sms_log_page.dart' show SmsLogPage;
-import '../pages/system/sms/template/sms_template_page.dart' show SmsTemplatePage;
+import '../pages/system/message/notify/notify_message/notify_message_page.dart' show NotifyMessagePage;
+import '../pages/system/message/notify/notify_template/notify_template_page.dart' show NotifyTemplatePage;
+import '../pages/system/message/mail/account/mail_account_page.dart' show MailAccountPage;
+import '../pages/system/message/mail/log/mail_log_page.dart' show MailLogPage;
+import '../pages/system/message/mail/template/mail_template_page.dart' show MailTemplatePage;
+import '../pages/system/message/sms/channel/sms_channel_page.dart' show SmsChannelPage;
+import '../pages/system/message/sms/log/sms_log_page.dart' show SmsLogPage;
+import '../pages/system/message/sms/template/sms_template_page.dart' show SmsTemplatePage;
 
 /// 注册所有页面路由
 ///
