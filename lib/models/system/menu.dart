@@ -15,6 +15,7 @@ class Menu {
   final bool? keepAlive;
   final bool? alwaysShow;
   final DateTime? createTime;
+  final List<Menu>? children;
 
   const Menu({
     this.id,
@@ -32,26 +33,32 @@ class Menu {
     this.keepAlive,
     this.alwaysShow,
     this.createTime,
+    this.children,
   });
 
   factory Menu.fromJson(Map<String, dynamic> json) {
     return Menu(
-      id: json['id'] as int?,
-      name: json['name'] as String? ?? '',
-      permission: json['permission'] as String?,
-      type: json['type'] as int?,
-      sort: json['sort'] as int?,
-      parentId: json['parentId'] as int?,
-      path: json['path'] as String?,
-      icon: json['icon'] as String?,
-      component: json['component'] as String?,
-      componentName: json['componentName'] as String?,
-      status: json['status'] as int?,
-      visible: json['visible'] as bool?,
-      keepAlive: json['keepAlive'] as bool?,
-      alwaysShow: json['alwaysShow'] as bool?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      name: json['name']?.toString() ?? '',
+      permission: json['permission']?.toString(),
+      type: json['type'] is int ? json['type'] : int.tryParse(json['type']?.toString() ?? ''),
+      sort: json['sort'] is int ? json['sort'] : int.tryParse(json['sort']?.toString() ?? ''),
+      parentId: json['parentId'] is int ? json['parentId'] : int.tryParse(json['parentId']?.toString() ?? ''),
+      path: json['path']?.toString(),
+      icon: json['icon']?.toString(),
+      component: json['component']?.toString(),
+      componentName: json['componentName']?.toString(),
+      status: json['status'] is int ? json['status'] : int.tryParse(json['status']?.toString() ?? ''),
+      visible: json['visible'] is bool ? json['visible'] : bool.tryParse(json['visible']?.toString() ?? ''),
+      keepAlive: json['keepAlive'] is bool ? json['keepAlive'] : bool.tryParse(json['keepAlive']?.toString() ?? ''),
+      alwaysShow: json['alwaysShow'] is bool ? json['alwaysShow'] : bool.tryParse(json['alwaysShow']?.toString() ?? ''),
       createTime: json['createTime'] != null
-          ? DateTime.tryParse(json['createTime'] as String)
+          ? DateTime.tryParse(json['createTime'].toString())
+          : null,
+      children: json['children'] != null
+          ? (json['children'] as List<dynamic>)
+              .map((e) => Menu.fromJson(e as Map<String, dynamic>))
+              .toList()
           : null,
     );
   }
@@ -73,6 +80,7 @@ class Menu {
       if (keepAlive != null) 'keepAlive': keepAlive,
       if (alwaysShow != null) 'alwaysShow': alwaysShow,
       if (createTime != null) 'createTime': createTime?.toIso8601String(),
+      if (children != null) 'children': children!.map((e) => e.toJson()).toList(),
     };
   }
 
@@ -92,6 +100,7 @@ class Menu {
     bool? keepAlive,
     bool? alwaysShow,
     DateTime? createTime,
+    List<Menu>? children,
   }) {
     return Menu(
       id: id ?? this.id,
@@ -109,6 +118,7 @@ class Menu {
       keepAlive: keepAlive ?? this.keepAlive,
       alwaysShow: alwaysShow ?? this.alwaysShow,
       createTime: createTime ?? this.createTime,
+      children: children ?? this.children,
     );
   }
 }
@@ -127,9 +137,9 @@ class SimpleMenu {
 
   factory SimpleMenu.fromJson(Map<String, dynamic> json) {
     return SimpleMenu(
-      id: json['id'] as int,
-      name: json['name'] as String? ?? '',
-      parentId: json['parentId'] as int?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      name: json['name']?.toString() ?? '',
+      parentId: json['parentId'] is int ? json['parentId'] : int.tryParse(json['parentId']?.toString() ?? ''),
     );
   }
 }

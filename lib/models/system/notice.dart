@@ -22,14 +22,14 @@ class Notice {
 
   factory Notice.fromJson(Map<String, dynamic> json) {
     return Notice(
-      id: json['id'] as int?,
-      title: json['title'] as String? ?? '',
-      type: json['type'] as int? ?? 0,
-      content: json['content'] as String? ?? '',
-      status: json['status'] as int? ?? 0,
-      remark: json['remark'] as String?,
-      creator: json['creator'] as String?,
-      createTime: json['createTime'] as String?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      title: json['title']?.toString() ?? '',
+      type: json['type'] is int ? json['type'] : int.tryParse(json['type']?.toString() ?? '') ?? 0,
+      content: json['content']?.toString() ?? '',
+      status: json['status'] is int ? json['status'] : int.tryParse(json['status']?.toString() ?? '') ?? 0,
+      remark: json['remark']?.toString(),
+      creator: json['creator']?.toString(),
+      createTime: json['createTime']?.toString(),
     );
   }
 

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:data_table_2/data_table_2.dart';
 import '/../../api/system/sms_template_api.dart';
 import '/../../api/system/sms_channel_api.dart';
 import '/../../models/system/sms_template.dart';
 import '/../../models/system/sms_channel.dart';
 
-// 短信模板管理页面
+/// 短信模板管理页面
 class SmsTemplatePage extends ConsumerStatefulWidget {
   const SmsTemplatePage({super.key});
 
@@ -20,18 +21,20 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
   int? _selectedStatus;
   int? _selectedChannelId;
 
-  List<SmsTemplate> _templates = [];
-  List<SmsChannel> _channels = [];
-  bool _isLoading = false;
+  List<SmsTemplate> _templateList = [];
+  List<SmsChannel> _channelList = [];
+  Set<int> _selectedIds = {};
+  int _totalCount = 0;
   int _currentPage = 1;
   int _pageSize = 10;
-  int _total = 0;
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _loadChannels();
-    _loadData();
+    _loadChannelList();
+    _loadTemplateList();
   }
 
   @override
@@ -41,24 +44,27 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
     super.dispose();
   }
 
-  Future<void> _loadChannels() async {
+  Future<void> _loadChannelList() async {
     try {
       final api = ref.read(smsChannelApiProvider);
       final response = await api.getSimpleSmsChannelList();
       if (response.isSuccess && response.data != null) {
-        setState(() => _channels = response.data!);
+        setState(() => _channelList = response.data!);
       }
     } catch (e) {
-      // Ignore error for channel loading
+      // 渠道列表加载失败不影响模板列表
     }
   }
 
-  Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+  Future<void> _loadTemplateList() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
 
     try {
       final api = ref.read(smsTemplateApiProvider);
-      final params = {
+      final params = <String, dynamic>{
         'pageNo': _currentPage,
         'pageSize': _pageSize,
         if (_searchCodeController.text.isNotEmpty) 'code': _searchCodeController.text,
@@ -69,26 +75,99 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
       };
 
       final response = await api.getSmsTemplatePage(params);
+
       if (response.isSuccess && response.data != null) {
         setState(() {
-          _templates = response.data!.list;
-          _total = response.data!.total;
+          _templateList = response.data!.list;
+          _totalCount = response.data!.total;
+          _isLoading = false;
+          _selectedIds.clear();
+        });
+      } else {
+        setState(() {
+          _error = response.msg.isNotEmpty ? response.msg : '加载失败';
+          _isLoading = false;
         });
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('加载失败: $e')),
-        );
-      }
-    } finally {
-      setState(() => _isLoading = false);
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
     }
   }
 
-  void _refresh() {
+  void _search() {
     _currentPage = 1;
-    _loadData();
+    _loadTemplateList();
+  }
+
+  void _reset() {
+    _searchCodeController.clear();
+    _searchNameController.clear();
+    setState(() {
+      _selectedType = null;
+      _selectedStatus = null;
+      _selectedChannelId = null;
+    });
+    _currentPage = 1;
+    _loadTemplateList();
+  }
+
+  Future<void> _deleteSelected() async {
+    if (_selectedIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请选择要删除的数据')),
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('确认删除'),
+        content: Text('确定要删除选中的 ${_selectedIds.length} 条记录吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('删除'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final api = ref.read(smsTemplateApiProvider);
+        final response = await api.deleteSmsTemplateList(_selectedIds.toList());
+
+        if (response.isSuccess) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('删除成功')),
+            );
+            _loadTemplateList();
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(response.msg.isNotEmpty ? response.msg : '删除失败')),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('删除失败: $e')),
+          );
+        }
+      }
+    }
   }
 
   Future<void> _deleteTemplate(SmsTemplate template) async {
@@ -120,8 +199,8 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('删除成功')),
             );
+            _loadTemplateList();
           }
-          _loadData();
         }
       } catch (e) {
         if (mounted) {
@@ -160,6 +239,7 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
                     decoration: const InputDecoration(
                       labelText: '短信类型 *',
                       border: OutlineInputBorder(),
+                      isDense: true,
                     ),
                     items: const [
                       DropdownMenuItem(value: 1, child: Text('验证码')),
@@ -174,6 +254,7 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
                     decoration: const InputDecoration(
                       labelText: '模板名称 *',
                       border: OutlineInputBorder(),
+                      isDense: true,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -182,6 +263,7 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
                     decoration: const InputDecoration(
                       labelText: '模板编码 *',
                       border: OutlineInputBorder(),
+                      isDense: true,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -190,10 +272,11 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
                     decoration: const InputDecoration(
                       labelText: '短信渠道 *',
                       border: OutlineInputBorder(),
+                      isDense: true,
                     ),
                     items: [
                       const DropdownMenuItem(value: null, child: Text('请选择')),
-                      ..._channels.map((c) => DropdownMenuItem(
+                      ..._channelList.map((c) => DropdownMenuItem(
                             value: c.id,
                             child: Text(c.signature),
                           )),
@@ -206,6 +289,7 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
                     decoration: const InputDecoration(
                       labelText: '开启状态',
                       border: OutlineInputBorder(),
+                      isDense: true,
                     ),
                     items: const [
                       DropdownMenuItem(value: 0, child: Text('开启')),
@@ -219,6 +303,7 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
                     decoration: const InputDecoration(
                       labelText: '模板内容 *',
                       border: OutlineInputBorder(),
+                      isDense: true,
                       hintText: '例如：您的验证码为{code}，有效期{time}分钟',
                     ),
                     maxLines: 3,
@@ -229,6 +314,7 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
                     decoration: const InputDecoration(
                       labelText: '短信 API 的模板编号 *',
                       border: OutlineInputBorder(),
+                      isDense: true,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -237,6 +323,7 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
                     decoration: const InputDecoration(
                       labelText: '备注',
                       border: OutlineInputBorder(),
+                      isDense: true,
                     ),
                     maxLines: 2,
                   ),
@@ -287,7 +374,7 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
                         SnackBar(content: Text(isEdit ? '修改成功' : '添加成功')),
                       );
                     }
-                    _loadData();
+                    _loadTemplateList();
                   }
                 } catch (e) {
                   if (mounted) {
@@ -352,6 +439,7 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
                     labelText: '手机号码 *',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.phone),
+                    isDense: true,
                   ),
                   keyboardType: TextInputType.phone,
                 ),
@@ -366,6 +454,7 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
                           decoration: InputDecoration(
                             labelText: '参数 ${entry.key}',
                             border: const OutlineInputBorder(),
+                            isDense: true,
                           ),
                         ),
                       )),
@@ -437,11 +526,9 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
         children: [
           _buildSearchBar(context),
           const Divider(height: 1),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _buildDataTable(context),
-          ),
+          _buildToolbar(context),
+          const Divider(height: 1),
+          Expanded(child: _buildDataTable(context)),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -468,7 +555,7 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
                 border: OutlineInputBorder(),
                 isDense: true,
               ),
-              onSubmitted: (_) => _refresh(),
+              onSubmitted: (_) => _search(),
             ),
           ),
           SizedBox(
@@ -480,7 +567,7 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
                 border: OutlineInputBorder(),
                 isDense: true,
               ),
-              onSubmitted: (_) => _refresh(),
+              onSubmitted: (_) => _search(),
             ),
           ),
           SizedBox(
@@ -500,7 +587,7 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
               ],
               onChanged: (value) {
                 setState(() => _selectedType = value);
-                _refresh();
+                _search();
               },
             ),
           ),
@@ -515,14 +602,14 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
               ),
               items: [
                 const DropdownMenuItem(value: null, child: Text('全部')),
-                ..._channels.map((c) => DropdownMenuItem(
+                ..._channelList.map((c) => DropdownMenuItem(
                       value: c.id,
                       child: Text(c.signature),
                     )),
               ],
               onChanged: (value) {
                 setState(() => _selectedChannelId = value);
-                _refresh();
+                _search();
               },
             ),
           ),
@@ -542,14 +629,38 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
               ],
               onChanged: (value) {
                 setState(() => _selectedStatus = value);
-                _refresh();
+                _search();
               },
             ),
           ),
           ElevatedButton.icon(
-            onPressed: _refresh,
+            onPressed: _search,
             icon: const Icon(Icons.search),
             label: const Text('搜索'),
+          ),
+          OutlinedButton.icon(
+            onPressed: _reset,
+            icon: const Icon(Icons.refresh),
+            label: const Text('重置'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToolbar(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          ElevatedButton.icon(
+            onPressed: _selectedIds.isEmpty ? null : _deleteSelected,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            icon: const Icon(Icons.delete),
+            label: const Text('批量删除'),
           ),
         ],
       ),
@@ -557,102 +668,196 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
   }
 
   Widget _buildDataTable(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: PaginatedDataTable(
-        header: const Text('短信模板列表'),
-        rowsPerPage: _pageSize,
-        availableRowsPerPage: const [10, 20, 50, 100],
-        onPageChanged: (page) {
-          _currentPage = (page ~/ _pageSize) + 1;
-          _loadData();
-        },
-        onRowsPerPageChanged: (value) {
-          setState(() => _pageSize = value ?? 10);
-          _loadData();
-        },
-        columns: const [
-          DataColumn(label: Text('编号')),
-          DataColumn(label: Text('类型')),
-          DataColumn(label: Text('模板名称')),
-          DataColumn(label: Text('模板编码')),
-          DataColumn(label: Text('模板内容')),
-          DataColumn(label: Text('状态')),
-          DataColumn(label: Text('API模板编号')),
-          DataColumn(label: Text('渠道')),
-          DataColumn(label: Text('操作')),
-        ],
-        source: _SmsTemplateDataSource(
-          _templates,
-          context,
-          onEdit: _showTemplateDialog,
-          onDelete: _deleteTemplate,
-          onSend: _showSendSmsDialog,
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('加载失败: $_error', style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _loadTemplateList, child: const Text('重试')),
+          ],
         ),
+      );
+    }
+
+    if (_templateList.isEmpty) {
+      return const Center(child: Text('暂无数据'));
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Checkbox(
+                value: _selectedIds.length == _templateList.length && _templateList.isNotEmpty,
+                tristate: true,
+                onChanged: (value) {
+                  setState(() {
+                    if (value == true) {
+                      _selectedIds = _templateList.where((t) => t.id != null).map((t) => t.id!).toSet();
+                    } else {
+                      _selectedIds.clear();
+                    }
+                  });
+                },
+              ),
+              const Text('短信模板列表'),
+              const Spacer(),
+              Text('共 $_totalCount 条'),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: DataTable2(
+              columnSpacing: 12,
+              horizontalMargin: 12,
+              minWidth: 1000,
+              smRatio: 0.75,
+              lmRatio: 1.5,
+              headingRowColor: WidgetStateProperty.resolveWith(
+                (states) => Theme.of(context).colorScheme.surfaceContainerHighest,
+              ),
+              headingTextStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              dataRowColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3);
+                }
+                return null;
+              }),
+              columns: const [
+                DataColumn2(label: Text('编号'), size: ColumnSize.S),
+                DataColumn2(label: Text('类型'), size: ColumnSize.S),
+                DataColumn2(label: Text('模板名称'), size: ColumnSize.M),
+                DataColumn2(label: Text('模板编码'), size: ColumnSize.M),
+                DataColumn2(label: Text('模板内容'), size: ColumnSize.L),
+                DataColumn2(label: Text('状态'), size: ColumnSize.S),
+                DataColumn2(label: Text('API模板编号'), size: ColumnSize.M),
+                DataColumn2(label: Text('渠道'), size: ColumnSize.S),
+                DataColumn2(label: Text('操作'), size: ColumnSize.M),
+              ],
+              rows: _templateList.map((template) {
+                final isSelected = template.id != null && _selectedIds.contains(template.id);
+                return DataRow2(
+                  selected: isSelected,
+                  onSelectChanged: (selected) {
+                    if (template.id != null) {
+                      setState(() {
+                        if (selected == true) {
+                          _selectedIds.add(template.id!);
+                        } else {
+                          _selectedIds.remove(template.id!);
+                        }
+                      });
+                    }
+                  },
+                  cells: [
+                    DataCell(Text(template.id?.toString() ?? '-')),
+                    DataCell(_buildTypeTag(template.type)),
+                    DataCell(Text(template.name)),
+                    DataCell(Text(template.code)),
+                    DataCell(
+                      SizedBox(
+                        width: 150,
+                        child: Text(
+                          template.content,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                    ),
+                    DataCell(_buildStatusTag(template.status)),
+                    DataCell(Text(template.apiTemplateId ?? '-')),
+                    DataCell(Text(_getChannelCodeText(template.channelCode))),
+                    DataCell(
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextButton(
+                            onPressed: () => _showTemplateDialog(template),
+                            child: const Text('编辑'),
+                          ),
+                          TextButton(
+                            onPressed: () => _showSendSmsDialog(template),
+                            child: const Text('测试', style: TextStyle(color: Colors.blue)),
+                          ),
+                          TextButton(
+                            onPressed: () => _deleteTemplate(template),
+                            child: const Text('删除', style: TextStyle(color: Colors.red)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 8),
+          _buildPagination(),
+        ],
       ),
     );
   }
-}
 
-/// 数据源
-class _SmsTemplateDataSource extends DataTableSource {
-  final List<SmsTemplate> templates;
-  final BuildContext context;
-  final void Function(SmsTemplate) onEdit;
-  final void Function(SmsTemplate) onDelete;
-  final void Function(SmsTemplate) onSend;
-
-  _SmsTemplateDataSource(
-    this.templates,
-    this.context, {
-    required this.onEdit,
-    required this.onDelete,
-    required this.onSend,
-  });
-
-  @override
-  int get rowCount => templates.length;
-
-  @override
-  DataRow getRow(int index) {
-    final template = templates[index];
-    return DataRow(
-      cells: [
-        DataCell(Text(template.id?.toString() ?? '-')),
-        DataCell(_buildTypeTag(template.type)),
-        DataCell(Text(template.name)),
-        DataCell(Text(template.code)),
-        DataCell(
-          SizedBox(
-            width: 150,
-            child: Text(
-              template.content,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
+  Widget _buildPagination() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Row(
+          children: [
+            const Text('每页: '),
+            DropdownButton<int>(
+              value: _pageSize,
+              items: [10, 20, 50, 100].map((value) {
+                return DropdownMenuItem(
+                  value: value,
+                  child: Text('$value'),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _pageSize = value;
+                    _currentPage = 1;
+                  });
+                  _loadTemplateList();
+                }
+              },
             ),
-          ),
+          ],
         ),
-        DataCell(_buildStatusTag(template.status)),
-        DataCell(Text(template.apiTemplateId ?? '-')),
-        DataCell(Text(_getChannelCodeText(template.channelCode))),
-        DataCell(
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextButton(
-                onPressed: () => onEdit(template),
-                child: const Text('编辑'),
-              ),
-              TextButton(
-                onPressed: () => onSend(template),
-                child: const Text('测试', style: TextStyle(color: Colors.blue)),
-              ),
-              TextButton(
-                onPressed: () => onDelete(template),
-                child: const Text('删除', style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
+        const SizedBox(width: 24),
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.chevron_left),
+              onPressed: _currentPage > 1
+                  ? () {
+                      setState(() => _currentPage--);
+                      _loadTemplateList();
+                    }
+                  : null,
+            ),
+            Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
+            IconButton(
+              icon: const Icon(Icons.chevron_right),
+              onPressed: _currentPage * _pageSize < _totalCount
+                  ? () {
+                      setState(() => _currentPage++);
+                      _loadTemplateList();
+                    }
+                  : null,
+            ),
+          ],
         ),
       ],
     );
@@ -686,32 +891,18 @@ class _SmsTemplateDataSource extends DataTableSource {
       ),
       child: Text(
         isEnabled ? '开启' : '关闭',
-        style: TextStyle(
-          color: isEnabled ? Colors.green : Colors.red,
-          fontSize: 12,
-        ),
+        style: TextStyle(color: isEnabled ? Colors.green : Colors.red, fontSize: 12),
       ),
     );
   }
 
   String _getChannelCodeText(String? code) {
     switch (code) {
-      case 'aliyun':
-        return '阿里云';
-      case 'tencent':
-        return '腾讯云';
-      case 'huawei':
-        return '华为云';
-      case 'yunpian':
-        return '云片';
-      default:
-        return code ?? '-';
+      case 'aliyun': return '阿里云';
+      case 'tencent': return '腾讯云';
+      case 'huawei': return '华为云';
+      case 'yunpian': return '云片';
+      default: return code ?? '-';
     }
   }
-
-  @override
-  bool get isRowCountApproximate => false;
-
-  @override
-  int get selectedRowCount => 0;
 }

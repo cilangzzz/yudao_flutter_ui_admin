@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:data_table_2/data_table_2.dart';
 import '/../../api/system/sms_channel_api.dart';
 import '/../../core/api_client.dart';
 import '/../../models/system/sms_channel.dart';
@@ -14,19 +15,21 @@ class SmsChannelPage extends ConsumerStatefulWidget {
 
 class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
   final _searchController = TextEditingController();
-  String? _selectedStatus;
+  int? _selectedStatus;
   String? _selectedCode;
 
-  List<SmsChannel> _channels = [];
-  bool _isLoading = false;
+  List<SmsChannel> _channelList = [];
+  Set<int> _selectedIds = {};
+  int _totalCount = 0;
   int _currentPage = 1;
   int _pageSize = 10;
-  int _total = 0;
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _loadChannelList();
   }
 
   @override
@@ -35,40 +38,114 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
     super.dispose();
   }
 
-  Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+  Future<void> _loadChannelList() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
 
     try {
       final api = ref.read(smsChannelApiProvider);
-      final params = {
+      final params = <String, dynamic>{
         'pageNo': _currentPage,
         'pageSize': _pageSize,
         if (_searchController.text.isNotEmpty) 'signature': _searchController.text,
-        if (_selectedStatus != null) 'status': int.parse(_selectedStatus!),
+        if (_selectedStatus != null) 'status': _selectedStatus,
         if (_selectedCode != null) 'code': _selectedCode,
       };
 
       final response = await api.getSmsChannelPage(params);
+
       if (response.isSuccess && response.data != null) {
         setState(() {
-          _channels = response.data!.list;
-          _total = response.data!.total;
+          _channelList = response.data!.list;
+          _totalCount = response.data!.total;
+          _isLoading = false;
+          _selectedIds.clear();
+        });
+      } else {
+        setState(() {
+          _error = response.msg.isNotEmpty ? response.msg : '加载失败';
+          _isLoading = false;
         });
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('加载失败: $e')),
-        );
-      }
-    } finally {
-      setState(() => _isLoading = false);
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
     }
   }
 
-  void _refresh() {
+  void _search() {
     _currentPage = 1;
-    _loadData();
+    _loadChannelList();
+  }
+
+  void _reset() {
+    _searchController.clear();
+    setState(() {
+      _selectedStatus = null;
+      _selectedCode = null;
+    });
+    _currentPage = 1;
+    _loadChannelList();
+  }
+
+  Future<void> _deleteSelected() async {
+    if (_selectedIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请选择要删除的数据')),
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('确认删除'),
+        content: Text('确定要删除选中的 ${_selectedIds.length} 条记录吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('删除'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final api = ref.read(smsChannelApiProvider);
+        final response = await api.deleteSmsChannelList(_selectedIds.toList());
+
+        if (response.isSuccess) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('删除成功')),
+            );
+            _loadChannelList();
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(response.msg.isNotEmpty ? response.msg : '删除失败')),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('删除失败: $e')),
+          );
+        }
+      }
+    }
   }
 
   Future<void> _deleteChannel(SmsChannel channel) async {
@@ -100,8 +177,8 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('删除成功')),
             );
+            _loadChannelList();
           }
-          _loadData();
         }
       } catch (e) {
         if (mounted) {
@@ -139,6 +216,7 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
                     decoration: const InputDecoration(
                       labelText: '短信签名 *',
                       border: OutlineInputBorder(),
+                      isDense: true,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -147,6 +225,7 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
                     decoration: const InputDecoration(
                       labelText: '渠道编码 *',
                       border: OutlineInputBorder(),
+                      isDense: true,
                     ),
                     items: const [
                       DropdownMenuItem(value: 'aliyun', child: Text('阿里云')),
@@ -154,7 +233,7 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
                       DropdownMenuItem(value: 'huawei', child: Text('华为云')),
                       DropdownMenuItem(value: 'yunpian', child: Text('云片')),
                     ],
-                    onChanged: (value) => codeController.text = value ?? '',
+                    onChanged: (value) => setState(() => codeController.text = value ?? ''),
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<int>(
@@ -162,6 +241,7 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
                     decoration: const InputDecoration(
                       labelText: '启用状态',
                       border: OutlineInputBorder(),
+                      isDense: true,
                     ),
                     items: const [
                       DropdownMenuItem(value: 0, child: Text('开启')),
@@ -175,6 +255,7 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
                     decoration: const InputDecoration(
                       labelText: '短信 API 的账号 *',
                       border: OutlineInputBorder(),
+                      isDense: true,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -183,6 +264,7 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
                     decoration: const InputDecoration(
                       labelText: '短信 API 的密钥',
                       border: OutlineInputBorder(),
+                      isDense: true,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -191,6 +273,7 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
                     decoration: const InputDecoration(
                       labelText: '短信发送回调 URL',
                       border: OutlineInputBorder(),
+                      isDense: true,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -199,6 +282,7 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
                     decoration: const InputDecoration(
                       labelText: '备注',
                       border: OutlineInputBorder(),
+                      isDense: true,
                     ),
                     maxLines: 2,
                   ),
@@ -246,7 +330,7 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
                         SnackBar(content: Text(isEdit ? '修改成功' : '添加成功')),
                       );
                     }
-                    _loadData();
+                    _loadChannelList();
                   }
                 } catch (e) {
                   if (mounted) {
@@ -271,11 +355,9 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
         children: [
           _buildSearchBar(context),
           const Divider(height: 1),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _buildDataTable(context),
-          ),
+          _buildToolbar(context),
+          const Divider(height: 1),
+          Expanded(child: _buildDataTable(context)),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -291,17 +373,17 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          Expanded(
-            flex: 2,
+          SizedBox(
+            width: 200,
             child: TextField(
               controller: _searchController,
               decoration: const InputDecoration(
-                hintText: '搜索短信签名',
+                hintText: '短信签名',
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
                 isDense: true,
               ),
-              onSubmitted: (_) => _refresh(),
+              onSubmitted: (_) => _search(),
             ),
           ),
           const SizedBox(width: 16),
@@ -323,14 +405,14 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
               ],
               onChanged: (value) {
                 setState(() => _selectedCode = value);
-                _refresh();
+                _search();
               },
             ),
           ),
           const SizedBox(width: 16),
           SizedBox(
             width: 120,
-            child: DropdownButtonFormField<String>(
+            child: DropdownButtonFormField<int>(
               value: _selectedStatus,
               decoration: const InputDecoration(
                 labelText: '状态',
@@ -339,20 +421,45 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
               ),
               items: const [
                 DropdownMenuItem(value: null, child: Text('全部')),
-                DropdownMenuItem(value: '0', child: Text('开启')),
-                DropdownMenuItem(value: '1', child: Text('关闭')),
+                DropdownMenuItem(value: 0, child: Text('开启')),
+                DropdownMenuItem(value: 1, child: Text('关闭')),
               ],
               onChanged: (value) {
                 setState(() => _selectedStatus = value);
-                _refresh();
+                _search();
               },
             ),
           ),
           const SizedBox(width: 16),
           ElevatedButton.icon(
-            onPressed: _refresh,
-            icon: const Icon(Icons.refresh),
+            onPressed: _search,
+            icon: const Icon(Icons.search),
             label: const Text('搜索'),
+          ),
+          const SizedBox(width: 8),
+          OutlinedButton.icon(
+            onPressed: _reset,
+            icon: const Icon(Icons.refresh),
+            label: const Text('重置'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToolbar(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          ElevatedButton.icon(
+            onPressed: _selectedIds.isEmpty ? null : _deleteSelected,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            icon: const Icon(Icons.delete),
+            label: const Text('批量删除'),
           ),
         ],
       ),
@@ -360,82 +467,179 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
   }
 
   Widget _buildDataTable(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: PaginatedDataTable(
-        header: const Text('短信渠道列表'),
-        rowsPerPage: _pageSize,
-        availableRowsPerPage: const [10, 20, 50, 100],
-        onPageChanged: (page) {
-          _currentPage = (page ~/ _pageSize) + 1;
-          _loadData();
-        },
-        onRowsPerPageChanged: (value) {
-          setState(() => _pageSize = value ?? 10);
-          _loadData();
-        },
-        columns: const [
-          DataColumn(label: Text('编号')),
-          DataColumn(label: Text('短信签名')),
-          DataColumn(label: Text('渠道编码')),
-          DataColumn(label: Text('状态')),
-          DataColumn(label: Text('API 账号')),
-          DataColumn(label: Text('创建时间')),
-          DataColumn(label: Text('操作')),
-        ],
-        source: _SmsChannelDataSource(
-          _channels,
-          context,
-          onEdit: _showChannelDialog,
-          onDelete: _deleteChannel,
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('加载失败: $_error', style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _loadChannelList, child: const Text('重试')),
+          ],
         ),
+      );
+    }
+
+    if (_channelList.isEmpty) {
+      return const Center(child: Text('暂无数据'));
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Checkbox(
+                value: _selectedIds.length == _channelList.length && _channelList.isNotEmpty,
+                tristate: true,
+                onChanged: (value) {
+                  setState(() {
+                    if (value == true) {
+                      _selectedIds = _channelList.where((c) => c.id != null).map((c) => c.id!).toSet();
+                    } else {
+                      _selectedIds.clear();
+                    }
+                  });
+                },
+              ),
+              const Text('短信渠道列表'),
+              const Spacer(),
+              Text('共 $_totalCount 条'),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: DataTable2(
+              columnSpacing: 12,
+              horizontalMargin: 12,
+              minWidth: 800,
+              smRatio: 0.75,
+              lmRatio: 1.5,
+              headingRowColor: WidgetStateProperty.resolveWith(
+                (states) => Theme.of(context).colorScheme.surfaceContainerHighest,
+              ),
+              headingTextStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              dataRowColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3);
+                }
+                return null;
+              }),
+              columns: const [
+                DataColumn2(label: Text('编号'), size: ColumnSize.S),
+                DataColumn2(label: Text('短信签名'), size: ColumnSize.M),
+                DataColumn2(label: Text('渠道编码'), size: ColumnSize.M),
+                DataColumn2(label: Text('状态'), size: ColumnSize.S),
+                DataColumn2(label: Text('API 账号'), size: ColumnSize.L),
+                DataColumn2(label: Text('创建时间'), size: ColumnSize.L),
+                DataColumn2(label: Text('操作'), size: ColumnSize.M),
+              ],
+              rows: _channelList.map((channel) {
+                final isSelected = channel.id != null && _selectedIds.contains(channel.id);
+                return DataRow2(
+                  selected: isSelected,
+                  onSelectChanged: (selected) {
+                    if (channel.id != null) {
+                      setState(() {
+                        if (selected == true) {
+                          _selectedIds.add(channel.id!);
+                        } else {
+                          _selectedIds.remove(channel.id!);
+                        }
+                      });
+                    }
+                  },
+                  cells: [
+                    DataCell(Text(channel.id?.toString() ?? '-')),
+                    DataCell(Text(channel.signature)),
+                    DataCell(_buildChannelCodeTag(channel.code)),
+                    DataCell(_buildStatusTag(channel.status)),
+                    DataCell(Text(channel.apiKey)),
+                    DataCell(Text(channel.createTime ?? '-')),
+                    DataCell(
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextButton(
+                            onPressed: () => _showChannelDialog(channel),
+                            child: const Text('编辑'),
+                          ),
+                          TextButton(
+                            onPressed: () => _deleteChannel(channel),
+                            child: const Text('删除', style: TextStyle(color: Colors.red)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 8),
+          _buildPagination(),
+        ],
       ),
     );
   }
-}
 
-/// 数据源
-class _SmsChannelDataSource extends DataTableSource {
-  final List<SmsChannel> channels;
-  final BuildContext context;
-  final void Function(SmsChannel) onEdit;
-  final void Function(SmsChannel) onDelete;
-
-  _SmsChannelDataSource(
-    this.channels,
-    this.context, {
-    required this.onEdit,
-    required this.onDelete,
-  });
-
-  @override
-  int get rowCount => channels.length;
-
-  @override
-  DataRow getRow(int index) {
-    final channel = channels[index];
-    return DataRow(
-      cells: [
-        DataCell(Text(channel.id?.toString() ?? '-')),
-        DataCell(Text(channel.signature)),
-        DataCell(_buildChannelCodeTag(channel.code)),
-        DataCell(_buildStatusTag(channel.status)),
-        DataCell(Text(channel.apiKey)),
-        DataCell(Text(channel.createTime ?? '-')),
-        DataCell(
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextButton(
-                onPressed: () => onEdit(channel),
-                child: const Text('编辑'),
-              ),
-              TextButton(
-                onPressed: () => onDelete(channel),
-                child: const Text('删除', style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
+  Widget _buildPagination() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Row(
+          children: [
+            const Text('每页: '),
+            DropdownButton<int>(
+              value: _pageSize,
+              items: [10, 20, 50, 100].map((value) {
+                return DropdownMenuItem(
+                  value: value,
+                  child: Text('$value'),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _pageSize = value;
+                    _currentPage = 1;
+                  });
+                  _loadChannelList();
+                }
+              },
+            ),
+          ],
+        ),
+        const SizedBox(width: 24),
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.chevron_left),
+              onPressed: _currentPage > 1
+                  ? () {
+                      setState(() => _currentPage--);
+                      _loadChannelList();
+                    }
+                  : null,
+            ),
+            Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
+            IconButton(
+              icon: const Icon(Icons.chevron_right),
+              onPressed: _currentPage * _pageSize < _totalCount
+                  ? () {
+                      setState(() => _currentPage++);
+                      _loadChannelList();
+                    }
+                  : null,
+            ),
+          ],
         ),
       ],
     );
@@ -456,10 +660,7 @@ class _SmsChannelDataSource extends DataTableSource {
         color: info.$2.withOpacity(0.1),
         borderRadius: BorderRadius.circular(4),
       ),
-      child: Text(
-        info.$1,
-        style: TextStyle(color: info.$2, fontSize: 12),
-      ),
+      child: Text(info.$1, style: TextStyle(color: info.$2, fontSize: 12)),
     );
   }
 
@@ -473,17 +674,8 @@ class _SmsChannelDataSource extends DataTableSource {
       ),
       child: Text(
         isEnabled ? '开启' : '关闭',
-        style: TextStyle(
-          color: isEnabled ? Colors.green : Colors.red,
-          fontSize: 12,
-        ),
+        style: TextStyle(color: isEnabled ? Colors.green : Colors.red, fontSize: 12),
       ),
     );
   }
-
-  @override
-  bool get isRowCountApproximate => false;
-
-  @override
-  int get selectedRowCount => 0;
 }

@@ -19,9 +19,10 @@ class AuthApi {
   }
 
   /// 刷新 accessToken
-  Future<ApiResponse<void>> refreshToken(String refreshToken) async {
-    return _client.post<void>(
+  Future<ApiResponse<LoginResult>> refreshToken(String refreshToken) async {
+    return _client.post<LoginResult>(
       '/system/auth/refresh-token?refreshToken=$refreshToken',
+      fromJsonT: (json) => LoginResult.fromJson(json as Map<String, dynamic>),
     );
   }
 

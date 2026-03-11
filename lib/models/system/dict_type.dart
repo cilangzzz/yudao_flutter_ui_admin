@@ -18,13 +18,13 @@ class DictType {
 
   factory DictType.fromJson(Map<String, dynamic> json) {
     return DictType(
-      id: json['id'] as int?,
-      name: json['name'] as String? ?? '',
-      type: json['type'] as String? ?? '',
-      status: json['status'] as int?,
-      remark: json['remark'] as String?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      name: json['name']?.toString() ?? '',
+      type: json['type']?.toString() ?? '',
+      status: json['status'] is int ? json['status'] : int.tryParse(json['status']?.toString() ?? ''),
+      remark: json['remark']?.toString(),
       createTime: json['createTime'] != null
-          ? DateTime.tryParse(json['createTime'] as String)
+          ? DateTime.tryParse(json['createTime'].toString())
           : null,
     );
   }
@@ -73,9 +73,9 @@ class SimpleDictType {
 
   factory SimpleDictType.fromJson(Map<String, dynamic> json) {
     return SimpleDictType(
-      id: json['id'] as int?,
-      name: json['name'] as String? ?? '',
-      type: json['type'] as String? ?? '',
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      name: json['name']?.toString() ?? '',
+      type: json['type']?.toString() ?? '',
     );
   }
 }

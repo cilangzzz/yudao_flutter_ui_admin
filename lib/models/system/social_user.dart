@@ -30,18 +30,18 @@ class SocialUser {
 
   factory SocialUser.fromJson(Map<String, dynamic> json) {
     return SocialUser(
-      id: json['id'] as int?,
-      type: json['type'] as int?,
-      openid: json['openid'] as String?,
-      token: json['token'] as String?,
-      rawTokenInfo: json['rawTokenInfo'] as String?,
-      nickname: json['nickname'] as String?,
-      avatar: json['avatar'] as String?,
-      rawUserInfo: json['rawUserInfo'] as String?,
-      code: json['code'] as String?,
-      state: json['state'] as String?,
-      createTime: json['createTime'] as String?,
-      updateTime: json['updateTime'] as String?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      type: json['type'] is int ? json['type'] : int.tryParse(json['type']?.toString() ?? ''),
+      openid: json['openid']?.toString(),
+      token: json['token']?.toString(),
+      rawTokenInfo: json['rawTokenInfo']?.toString(),
+      nickname: json['nickname']?.toString(),
+      avatar: json['avatar']?.toString(),
+      rawUserInfo: json['rawUserInfo']?.toString(),
+      code: json['code']?.toString(),
+      state: json['state']?.toString(),
+      createTime: json['createTime']?.toString(),
+      updateTime: json['updateTime']?.toString(),
     );
   }
 

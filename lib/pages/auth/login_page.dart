@@ -35,7 +35,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
+      // TODO notifier, ref 异常
+      // 在异步操作前获取所有需要的 notifier 引用，避免 widget disposed 后无法使用 ref
       final authApi = ref.read(authApiProvider);
+      final accessStoreNotifier = ref.read(accessStoreProvider.notifier);
+      final userStoreNotifier = ref.read(userStoreProvider.notifier);
+
       final response = await authApi.login(
         LoginParams(
           username: _usernameController.text.trim(),
@@ -45,51 +50,58 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
       if (response.isSuccess && response.data != null) {
         // 保存 Token
-        await ref.read(accessStoreProvider.notifier).setAccess(
-              accessToken: response.data!.accessToken,
-              refreshToken: response.data!.refreshToken,
-            );
+        await accessStoreNotifier.setAccess(
+          accessToken: response.data!.accessToken,
+          refreshToken: response.data!.refreshToken,
+        );
 
         // 获取用户权限信息
         final permissionResponse = await authApi.getAuthPermissionInfo();
+
         if (permissionResponse.isSuccess && permissionResponse.data != null) {
           final permissionInfo = permissionResponse.data!;
 
           // 保存用户信息到 userStore
           if (permissionInfo.user != null) {
             final user = permissionInfo.user!;
-            await ref.read(userStoreProvider.notifier).setUserInfo(
-                  UserInfoStore(
-                    id: user.id ?? 0,
-                    username: user.username ?? '',
-                    nickname: user.nickname ?? '',
-                    avatar: user.avatar,
-                    email: user.email,
-                    mobile: user.mobile,
-                    deptId: user.deptId,
-                    roles: permissionInfo.roles?.map((r) => r ?? '').toList() ?? [],
-                    permissions: permissionInfo.permissions ?? [],
-                  ),
-                );
+            await userStoreNotifier.setUserInfo(
+              UserInfoStore(
+                id: user.id ?? 0,
+                username: user.username ?? '',
+                nickname: user.nickname ?? '',
+                avatar: user.avatar,
+                email: user.email,
+                mobile: user.mobile,
+                deptId: user.deptId,
+                roles: permissionInfo.roles?.map((r) => r ?? '').toList() ?? [],
+                permissions: permissionInfo.permissions ?? [],
+              ),
+            );
           }
+
           // 保存菜单到 accessStore
           if (permissionInfo.menus != null && permissionInfo.menus!.isNotEmpty) {
             final menuItems = permissionInfo.menus!
                 .map((menu) => _convertMenuInfoToMenuItem(menu))
                 .toList();
-            await ref.read(accessStoreProvider.notifier).setMenus(menuItems);
+            await accessStoreNotifier.setMenus(menuItems);
           }
 
           // 保存权限到 accessStore
           if (permissionInfo.permissions != null) {
-            ref.read(accessStoreProvider.notifier).setPermissions(
-                  permissionInfo.permissions!.toSet(),
-                );
+            accessStoreNotifier.setPermissions(
+              permissionInfo.permissions!.toSet(),
+            );
           }
         }
 
         if (mounted) {
-          context.go(Routes.dashboard);
+          // 使用 addPostFrameCallback 确保状态稳定后再导航
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              context.go(Routes.dashboard);
+            }
+          });
         }
       } else {
         if (mounted) {

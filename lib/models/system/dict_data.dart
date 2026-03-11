@@ -26,17 +26,17 @@ class DictData {
 
   factory DictData.fromJson(Map<String, dynamic> json) {
     return DictData(
-      id: json['id'] as int?,
-      label: json['label'] as String? ?? '',
-      value: json['value'] as String? ?? '',
-      dictType: json['dictType'] as String?,
-      sort: json['sort'] as int?,
-      status: json['status'] as int?,
-      colorType: json['colorType'] as String?,
-      cssClass: json['cssClass'] as String?,
-      remark: json['remark'] as String?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      label: json['label']?.toString() ?? '',
+      value: json['value']?.toString() ?? '',
+      dictType: json['dictType']?.toString(),
+      sort: json['sort'] is int ? json['sort'] : int.tryParse(json['sort']?.toString() ?? ''),
+      status: json['status'] is int ? json['status'] : int.tryParse(json['status']?.toString() ?? ''),
+      colorType: json['colorType']?.toString(),
+      cssClass: json['cssClass']?.toString(),
+      remark: json['remark']?.toString(),
       createTime: json['createTime'] != null
-          ? DateTime.tryParse(json['createTime'] as String)
+          ? DateTime.tryParse(json['createTime'].toString())
           : null,
     );
   }
@@ -97,9 +97,9 @@ class SimpleDictData {
 
   factory SimpleDictData.fromJson(Map<String, dynamic> json) {
     return SimpleDictData(
-      id: json['id'] as int?,
-      label: json['label'] as String? ?? '',
-      value: json['value'] as String? ?? '',
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      label: json['label']?.toString() ?? '',
+      value: json['value']?.toString() ?? '',
     );
   }
 }

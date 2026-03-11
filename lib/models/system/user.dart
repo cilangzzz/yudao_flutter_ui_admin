@@ -38,26 +38,26 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'] as int?,
-      username: json['username'] as String? ?? '',
-      nickname: json['nickname'] as String? ?? '',
-      deptId: json['deptId'] as int?,
-      deptName: json['deptName'] as String?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      username: json['username']?.toString() ?? '',
+      nickname: json['nickname']?.toString() ?? '',
+      deptId: json['deptId'] is int ? json['deptId'] : int.tryParse(json['deptId']?.toString() ?? ''),
+      deptName: json['deptName']?.toString(),
       postIds: (json['postIds'] as List<dynamic>?)
-          ?.map((e) => e is int ? e : int.parse(e.toString()))
+          ?.map((e) => e is int ? e : int.tryParse(e.toString()) ?? 0)
           .toList(),
-      email: json['email'] as String?,
-      mobile: json['mobile'] as String?,
-      sex: json['sex'] as int?,
-      avatar: json['avatar'] as String?,
-      loginIp: json['loginIp'] as String?,
+      email: json['email']?.toString(),
+      mobile: json['mobile']?.toString(),
+      sex: json['sex'] is int ? json['sex'] : int.tryParse(json['sex']?.toString() ?? ''),
+      avatar: json['avatar']?.toString(),
+      loginIp: json['loginIp']?.toString(),
       loginDate: json['loginDate'] != null
-          ? DateTime.tryParse(json['loginDate'] as String)
+          ? DateTime.tryParse(json['loginDate'].toString())
           : null,
-      status: json['status'] as int?,
-      remark: json['remark'] as String?,
+      status: json['status'] is int ? json['status'] : int.tryParse(json['status']?.toString() ?? ''),
+      remark: json['remark']?.toString(),
       createTime: json['createTime'] != null
-          ? DateTime.tryParse(json['createTime'] as String)
+          ? DateTime.tryParse(json['createTime'].toString())
           : null,
     );
   }
@@ -145,6 +145,7 @@ class UserPageParam extends PageParam {
   final int? status;
   final int? deptId;
   final DateTime? createTime;
+  final DateTime? createTimeEnd;
 
   const UserPageParam({
     super.pageNum = 1,
@@ -154,6 +155,7 @@ class UserPageParam extends PageParam {
     this.status,
     this.deptId,
     this.createTime,
+    this.createTimeEnd,
   });
 
   @override
@@ -172,7 +174,7 @@ class UserPageParam extends PageParam {
       json['deptId'] = deptId;
     }
     if (createTime != null) {
-      json['createTime'] = createTime!.toIso8601String();
+      json['createTime'] = [createTime!.toIso8601String(), (createTimeEnd ?? createTime!).toIso8601String()];
     }
     return json;
   }

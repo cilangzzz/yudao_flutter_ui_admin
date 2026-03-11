@@ -42,19 +42,19 @@ class OAuth2Client {
 
   factory OAuth2Client.fromJson(Map<String, dynamic> json) {
     return OAuth2Client(
-      id: json['id'] as int?,
-      clientId: json['clientId'] as String? ?? '',
-      secret: json['secret'] as String?,
-      name: json['name'] as String? ?? '',
-      logo: json['logo'] as String?,
-      description: json['description'] as String?,
-      status: json['status'] as int?,
-      accessTokenValiditySeconds: json['accessTokenValiditySeconds'] as int?,
-      refreshTokenValiditySeconds: json['refreshTokenValiditySeconds'] as int?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      clientId: json['clientId']?.toString() ?? '',
+      secret: json['secret']?.toString(),
+      name: json['name']?.toString() ?? '',
+      logo: json['logo']?.toString(),
+      description: json['description']?.toString(),
+      status: json['status'] is int ? json['status'] : int.tryParse(json['status']?.toString() ?? ''),
+      accessTokenValiditySeconds: json['accessTokenValiditySeconds'] is int ? json['accessTokenValiditySeconds'] : int.tryParse(json['accessTokenValiditySeconds']?.toString() ?? ''),
+      refreshTokenValiditySeconds: json['refreshTokenValiditySeconds'] is int ? json['refreshTokenValiditySeconds'] : int.tryParse(json['refreshTokenValiditySeconds']?.toString() ?? ''),
       redirectUris: (json['redirectUris'] as List<dynamic>?)
           ?.map((e) => e.toString())
           .toList(),
-      autoApprove: json['autoApprove'] as bool?,
+      autoApprove: json['autoApprove'] is bool ? json['autoApprove'] : bool.tryParse(json['autoApprove']?.toString() ?? ''),
       authorizedGrantTypes: (json['authorizedGrantTypes'] as List<dynamic>?)
           ?.map((e) => e.toString())
           .toList(),
@@ -67,9 +67,9 @@ class OAuth2Client {
       resourceIds: (json['resourceIds'] as List<dynamic>?)
           ?.map((e) => e.toString())
           .toList(),
-      additionalInformation: json['additionalInformation'] as String?,
-      isAdditionalInformationJson: json['isAdditionalInformationJson'] as bool?,
-      createTime: json['createTime'] as String?,
+      additionalInformation: json['additionalInformation']?.toString(),
+      isAdditionalInformationJson: json['isAdditionalInformationJson'] is bool ? json['isAdditionalInformationJson'] : bool.tryParse(json['isAdditionalInformationJson']?.toString() ?? ''),
+      createTime: json['createTime']?.toString(),
     );
   }
 

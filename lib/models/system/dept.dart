@@ -26,16 +26,16 @@ class Dept {
 
   factory Dept.fromJson(Map<String, dynamic> json) {
     return Dept(
-      id: json['id'] as int?,
-      name: json['name'] as String? ?? '',
-      parentId: json['parentId'] as int?,
-      status: json['status'] as int?,
-      sort: json['sort'] as int?,
-      leaderUserId: json['leaderUserId'] as int?,
-      phone: json['phone'] as String?,
-      email: json['email'] as String?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      name: json['name']?.toString() ?? '',
+      parentId: json['parentId'] is int ? json['parentId'] : int.tryParse(json['parentId']?.toString() ?? ''),
+      status: json['status'] is int ? json['status'] : int.tryParse(json['status']?.toString() ?? ''),
+      sort: json['sort'] is int ? json['sort'] : int.tryParse(json['sort']?.toString() ?? ''),
+      leaderUserId: json['leaderUserId'] is int ? json['leaderUserId'] : int.tryParse(json['leaderUserId']?.toString() ?? ''),
+      phone: json['phone']?.toString(),
+      email: json['email']?.toString(),
       createTime: json['createTime'] != null
-          ? DateTime.tryParse(json['createTime'] as String)
+          ? DateTime.tryParse(json['createTime'].toString())
           : null,
       children: json['children'] != null
           ? (json['children'] as List<dynamic>)
@@ -100,9 +100,9 @@ class SimpleDept {
 
   factory SimpleDept.fromJson(Map<String, dynamic> json) {
     return SimpleDept(
-      id: json['id'] as int,
-      name: json['name'] as String? ?? '',
-      parentId: json['parentId'] as int?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      name: json['name']?.toString() ?? '',
+      parentId: json['parentId'] is int ? json['parentId'] : int.tryParse(json['parentId']?.toString() ?? ''),
     );
   }
 }

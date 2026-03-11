@@ -30,18 +30,18 @@ class SmsTemplate {
 
   factory SmsTemplate.fromJson(Map<String, dynamic> json) {
     return SmsTemplate(
-      id: json['id'] as int?,
-      type: json['type'] as int?,
-      status: json['status'] as int? ?? 0,
-      code: json['code'] as String? ?? '',
-      name: json['name'] as String? ?? '',
-      content: json['content'] as String? ?? '',
-      remark: json['remark'] as String?,
-      apiTemplateId: json['apiTemplateId'] as String?,
-      channelId: json['channelId'] as int?,
-      channelCode: json['channelCode'] as String?,
-      params: (json['params'] as List<dynamic>?)?.map((e) => e as String).toList(),
-      createTime: json['createTime'] as String?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      type: json['type'] is int ? json['type'] : int.tryParse(json['type']?.toString() ?? ''),
+      status: json['status'] is int ? json['status'] : int.tryParse(json['status']?.toString() ?? '') ?? 0,
+      code: json['code']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      content: json['content']?.toString() ?? '',
+      remark: json['remark']?.toString(),
+      apiTemplateId: json['apiTemplateId']?.toString(),
+      channelId: json['channelId'] is int ? json['channelId'] : int.tryParse(json['channelId']?.toString() ?? ''),
+      channelCode: json['channelCode']?.toString(),
+      params: (json['params'] as List<dynamic>?)?.map((e) => e.toString()).toList(),
+      createTime: json['createTime']?.toString(),
     );
   }
 

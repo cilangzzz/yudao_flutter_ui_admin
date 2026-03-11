@@ -26,18 +26,18 @@ class Role {
 
   factory Role.fromJson(Map<String, dynamic> json) {
     return Role(
-      id: json['id'] as int?,
-      name: json['name'] as String? ?? '',
-      code: json['code'] as String? ?? '',
-      sort: json['sort'] as int?,
-      status: json['status'] as int?,
-      type: json['type'] as int?,
-      dataScope: json['dataScope'] as int?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      name: json['name']?.toString() ?? '',
+      code: json['code']?.toString() ?? '',
+      sort: json['sort'] is int ? json['sort'] : int.tryParse(json['sort']?.toString() ?? ''),
+      status: json['status'] is int ? json['status'] : int.tryParse(json['status']?.toString() ?? ''),
+      type: json['type'] is int ? json['type'] : int.tryParse(json['type']?.toString() ?? ''),
+      dataScope: json['dataScope'] is int ? json['dataScope'] : int.tryParse(json['dataScope']?.toString() ?? ''),
       dataScopeDeptIds: (json['dataScopeDeptIds'] as List<dynamic>?)
-          ?.map((e) => e as int)
+          ?.map((e) => e is int ? e : int.tryParse(e.toString()) ?? 0)
           .toList(),
       createTime: json['createTime'] != null
-          ? DateTime.tryParse(json['createTime'] as String)
+          ? DateTime.tryParse(json['createTime'].toString())
           : null,
     );
   }
@@ -95,9 +95,9 @@ class SimpleRole {
 
   factory SimpleRole.fromJson(Map<String, dynamic> json) {
     return SimpleRole(
-      id: json['id'] as int,
-      name: json['name'] as String? ?? '',
-      code: json['code'] as String? ?? '',
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      name: json['name']?.toString() ?? '',
+      code: json['code']?.toString() ?? '',
     );
   }
 }

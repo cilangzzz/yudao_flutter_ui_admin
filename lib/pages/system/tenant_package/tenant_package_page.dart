@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:data_table_2/data_table_2.dart';
 import '../../../api/system/tenant_package_api.dart';
+import '../../../api/system/menu_api.dart';
 import '../../../models/system/tenant_package.dart';
+import '../../../models/system/menu.dart';
+import '../../../i18n/i18n.dart';
 
 /// 租户套餐管理页面
 class TenantPackagePage extends ConsumerStatefulWidget {
@@ -12,13 +16,20 @@ class TenantPackagePage extends ConsumerStatefulWidget {
 }
 
 class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
-  final _searchController = TextEditingController();
+  // 搜索控制器
+  final _nameController = TextEditingController();
   int? _selectedStatus;
+  DateTimeRange? _createTimeRange;
+
+  // 数据状态
   List<TenantPackage> _dataList = [];
-  int _total = 0;
+  List<Menu> _menuList = [];
+  Set<int> _selectedIds = {};
+  int _totalCount = 0;
   int _currentPage = 1;
   int _pageSize = 10;
-  bool _isLoading = false;
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -28,40 +39,82 @@ class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
 
   @override
   void dispose() {
-    _searchController.dispose();
+    _nameController.dispose();
     super.dispose();
   }
 
+  /// 加载租户套餐数据
   Future<void> _loadData() async {
-    if (_isLoading) return;
-    setState(() => _isLoading = true);
+    if (_isLoading && _dataList.isNotEmpty) return;
+
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
 
     try {
       final api = ref.read(tenantPackageApiProvider);
-      final params = {
+      final params = <String, dynamic>{
         'pageNo': _currentPage,
         'pageSize': _pageSize,
-        if (_searchController.text.isNotEmpty) 'name': _searchController.text,
+        if (_nameController.text.isNotEmpty) 'name': _nameController.text,
         if (_selectedStatus != null) 'status': _selectedStatus,
+        if (_createTimeRange != null) ...{
+          'createTime': [
+            _createTimeRange!.start.millisecondsSinceEpoch,
+            _createTimeRange!.end.millisecondsSinceEpoch,
+          ],
+        },
       };
+
       final response = await api.getTenantPackagePage(params);
       if (response.isSuccess && response.data != null) {
         setState(() {
           _dataList = response.data!.list;
-          _total = response.data!.total;
+          _totalCount = response.data!.total;
+          _selectedIds.clear();
         });
+      } else {
+        setState(() => _error = response.msg);
       }
+    } catch (e) {
+      setState(() => _error = e.toString());
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
-  Future<void> _delete(TenantPackage item) async {
+  /// 加载菜单列表
+  Future<List<Menu>> _loadMenuList() async {
+    if (_menuList.isNotEmpty) return _menuList;
+
+    final api = ref.read(menuApiProvider);
+    final response = await api.getMenuList();
+    if (response.isSuccess && response.data != null) {
+      _menuList = response.data!;
+      return _menuList;
+    }
+    return [];
+  }
+
+  /// 重置搜索条件
+  void _resetSearch() {
+    _nameController.clear();
+    setState(() {
+      _selectedStatus = null;
+      _createTimeRange = null;
+      _currentPage = 1;
+    });
+    _loadData();
+  }
+
+  /// 删除单个租户套餐
+  Future<void> _deleteTenantPackage(TenantPackage pkg) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('确认删除'),
-        content: Text('确定要删除租户套餐 "${item.name}" 吗？'),
+        content: Text('确定要删除租户套餐 "${pkg.name}" 吗？'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -76,18 +129,16 @@ class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
       ),
     );
 
-    if (confirmed == true && item.id != null) {
+    if (confirmed == true && pkg.id != null) {
       final api = ref.read(tenantPackageApiProvider);
-      final response = await api.deleteTenantPackage(item.id!);
-      if (response.isSuccess) {
-        if (mounted) {
+      final response = await api.deleteTenantPackage(pkg.id!);
+      if (mounted) {
+        if (response.isSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('删除成功')),
           );
           _loadData();
-        }
-      } else {
-        if (mounted) {
+        } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('删除失败: ${response.msg}')),
           );
@@ -96,122 +147,394 @@ class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
     }
   }
 
-  void _showFormDialog([TenantPackage? item]) {
-    final isEdit = item != null;
-    final nameController = TextEditingController(text: item?.name ?? '');
-    final remarkController = TextEditingController(text: item?.remark ?? '');
-    int status = item?.status ?? 0;
-    List<int> menuIds = item?.menuIds ?? [];
+  /// 批量删除租户套餐
+  Future<void> _deleteTenantPackageBatch() async {
+    if (_selectedIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请选择要删除的租户套餐')),
+      );
+      return;
+    }
 
-    showDialog(
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(isEdit ? '编辑租户套餐' : '新增租户套餐'),
-          content: SizedBox(
-            width: 500,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: '套餐名称 *',
-                      border: OutlineInputBorder(),
+      builder: (context) => AlertDialog(
+        title: const Text('确认批量删除'),
+        content: Text('确定要删除选中的 ${_selectedIds.length} 个租户套餐吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('删除'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final api = ref.read(tenantPackageApiProvider);
+      final response = await api.deleteTenantPackageList(_selectedIds.toList());
+      if (mounted) {
+        if (response.isSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('批量删除成功')),
+          );
+          _loadData();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('批量删除失败: ${response.msg}')),
+          );
+        }
+      }
+    }
+  }
+
+  /// 显示表单弹窗
+  void _showFormDialog([TenantPackage? pkg]) async {
+    final isEdit = pkg != null;
+    final formKey = GlobalKey<FormState>();
+
+    // 表单控制器
+    final nameController = TextEditingController(text: pkg?.name ?? '');
+    final remarkController = TextEditingController(text: pkg?.remark ?? '');
+
+    // 表单状态
+    int status = pkg?.status ?? 0;
+    List<int> selectedMenuIds = pkg?.menuIds ?? [];
+    Set<int> expandedMenuIds = {};
+
+    // 加载菜单列表
+    final menuList = await _loadMenuList();
+
+    // 构建菜单树
+    List<TreeNode> buildTree(List<Menu> menus, int? parentId) {
+      return menus
+          .where((m) => m.parentId == parentId)
+          .map((m) => TreeNode(
+                id: m.id!,
+                name: m.name,
+                children: buildTree(menus, m.id),
+              ))
+          .toList();
+    }
+
+    final menuTree = buildTree(menuList, null);
+
+    // 获取所有菜单ID
+    List<int> getAllMenuIds(List<TreeNode> nodes) {
+      final ids = <int>[];
+      for (final node in nodes) {
+        ids.add(node.id);
+        ids.addAll(getAllMenuIds(node.children));
+      }
+      return ids;
+    }
+
+    final allMenuIds = getAllMenuIds(menuTree);
+
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (context) => StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            title: Text(isEdit ? '编辑租户套餐' : '新增租户套餐'),
+            content: SizedBox(
+              width: 600,
+              height: 500,
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // 套餐名称
+                    TextFormField(
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                        labelText: '套餐名称 *',
+                        hintText: '请输入套餐名称',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return '请输入套餐名称';
+                        }
+                        return null;
+                      },
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<int>(
-                    value: status,
-                    decoration: const InputDecoration(
-                      labelText: '状态',
-                      border: OutlineInputBorder(),
+                    const SizedBox(height: 16),
+
+                    // 状态
+                    DropdownButtonFormField<int>(
+                      value: status,
+                      decoration: const InputDecoration(
+                        labelText: '状态',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 0, child: Text('开启')),
+                        DropdownMenuItem(value: 1, child: Text('禁用')),
+                      ],
+                      onChanged: (value) {
+                        setDialogState(() => status = value ?? 0);
+                      },
                     ),
-                    items: const [
-                      DropdownMenuItem(value: 0, child: Text('开启')),
-                      DropdownMenuItem(value: 1, child: Text('禁用')),
-                    ],
-                    onChanged: (value) => setState(() => status = value ?? 0),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: remarkController,
-                    decoration: const InputDecoration(
-                      labelText: '备注',
-                      border: OutlineInputBorder(),
+                    const SizedBox(height: 16),
+
+                    // 备注
+                    TextFormField(
+                      controller: remarkController,
+                      decoration: const InputDecoration(
+                        labelText: '备注',
+                        hintText: '请输入备注',
+                        border: OutlineInputBorder(),
+                        alignLabelWithHint: true,
+                      ),
+                      maxLines: 2,
                     ),
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('关联菜单ID（逗号分隔）', style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: TextEditingController(text: menuIds.join(', ')),
-                    decoration: const InputDecoration(
-                      hintText: '例如: 1, 2, 3, 100, 101',
-                      border: OutlineInputBorder(),
+                    const SizedBox(height: 16),
+
+                    // 菜单权限树
+                    const Text('菜单权限', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+
+                    // 菜单树操作按钮
+                    Row(
+                      children: [
+                        TextButton.icon(
+                          onPressed: () {
+                            setDialogState(() {
+                              if (selectedMenuIds.length == allMenuIds.length) {
+                                selectedMenuIds.clear();
+                              } else {
+                                selectedMenuIds = List.from(allMenuIds);
+                              }
+                            });
+                          },
+                          icon: Icon(
+                            selectedMenuIds.length == allMenuIds.length
+                                ? Icons.check_box
+                                : Icons.check_box_outline_blank,
+                            size: 20,
+                          ),
+                          label: const Text('全选'),
+                        ),
+                        TextButton.icon(
+                          onPressed: () {
+                            setDialogState(() {
+                              if (expandedMenuIds.length == allMenuIds.length) {
+                                expandedMenuIds.clear();
+                              } else {
+                                expandedMenuIds = Set.from(allMenuIds);
+                              }
+                            });
+                          },
+                          icon: Icon(
+                            expandedMenuIds.length == allMenuIds.length
+                                ? Icons.unfold_less
+                                : Icons.unfold_more,
+                            size: 20,
+                          ),
+                          label: Text(
+                            expandedMenuIds.length == allMenuIds.length
+                                ? '收起全部'
+                                : '展开全部',
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          '已选择 ${selectedMenuIds.length} 项',
+                          style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                        ),
+                      ],
                     ),
-                    onChanged: (value) {
-                      menuIds = value
-                          .split(',')
-                          .map((e) => int.tryParse(e.trim()))
-                          .where((e) => e != null)
-                          .cast<int>()
-                          .toList();
-                    },
-                  ),
-                ],
+                    const SizedBox(height: 8),
+
+                    // 菜单树
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey[300]!),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: menuTree.isEmpty
+                            ? const Center(child: Text('暂无菜单数据'))
+                            : SingleChildScrollView(
+                                child: _buildMenuTree(
+                                  menuTree,
+                                  selectedMenuIds,
+                                  expandedMenuIds,
+                                  (menuId, isSelected) {
+                                    setDialogState(() {
+                                      if (isSelected) {
+                                        selectedMenuIds.add(menuId);
+                                      } else {
+                                        selectedMenuIds.remove(menuId);
+                                      }
+                                    });
+                                  },
+                                  (menuId, isExpanded) {
+                                    setDialogState(() {
+                                      if (isExpanded) {
+                                        expandedMenuIds.add(menuId);
+                                      } else {
+                                        expandedMenuIds.remove(menuId);
+                                      }
+                                    });
+                                  },
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('取消'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (nameController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('请填写套餐名称')),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('取消'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (!formKey.currentState!.validate()) return;
+
+                  final data = TenantPackage(
+                    id: pkg?.id,
+                    name: nameController.text.trim(),
+                    status: status,
+                    remark: remarkController.text.trim().isNotEmpty
+                        ? remarkController.text.trim()
+                        : null,
+                    menuIds: selectedMenuIds.isNotEmpty ? selectedMenuIds : null,
                   );
-                  return;
-                }
 
-                final data = TenantPackage(
-                  id: item?.id,
-                  name: nameController.text,
-                  status: status,
-                  remark: remarkController.text.isEmpty ? null : remarkController.text,
-                  menuIds: menuIds.isEmpty ? null : menuIds,
-                );
+                  final api = ref.read(tenantPackageApiProvider);
+                  final response = isEdit
+                      ? await api.updateTenantPackage(data)
+                      : await api.createTenantPackage(data);
 
-                final api = ref.read(tenantPackageApiProvider);
-                final response = isEdit
-                    ? await api.updateTenantPackage(data)
-                    : await api.createTenantPackage(data);
-
-                if (response.isSuccess) {
                   if (mounted) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(isEdit ? '更新成功' : '创建成功')),
-                    );
-                    _loadData();
+                    if (response.isSuccess) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(isEdit ? '更新成功' : '创建成功')),
+                      );
+                      _loadData();
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('操作失败: ${response.msg}')),
+                      );
+                    }
                   }
-                } else {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('操作失败: ${response.msg}')),
-                    );
-                  }
-                }
-              },
-              child: const Text('确定'),
+                },
+                child: const Text('确定'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+  }
+
+  /// 构建菜单树
+  Widget _buildMenuTree(
+    List<TreeNode> nodes,
+    List<int> selectedIds,
+    Set<int> expandedIds,
+    void Function(int, bool) onSelect,
+    void Function(int, bool) onExpand,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: nodes.map((node) {
+        final isSelected = selectedIds.contains(node.id);
+        final isExpanded = expandedIds.contains(node.id);
+        final hasChildren = node.children.isNotEmpty;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InkWell(
+              onTap: () => onSelect(node.id, !isSelected),
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: node.depth * 20.0,
+                  top: 4,
+                  bottom: 4,
+                ),
+                child: Row(
+                  children: [
+                    // 展开/收起图标
+                    if (hasChildren)
+                      IconButton(
+                        icon: Icon(
+                          isExpanded
+                              ? Icons.keyboard_arrow_down
+                              : Icons.keyboard_arrow_right,
+                          size: 20,
+                        ),
+                        onPressed: () => onExpand(node.id, !isExpanded),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                      )
+                    else
+                      const SizedBox(width: 24),
+
+                    // 复选框
+                    Checkbox(
+                      value: isSelected,
+                      tristate: true,
+                      onChanged: (value) => onSelect(node.id, value == true),
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: VisualDensity.compact,
+                    ),
+
+                    // 菜单名称
+                    Expanded(
+                      child: Text(
+                        node.name,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
+
+            // 子节点
+            if (hasChildren && isExpanded)
+              _buildMenuTree(
+                node.children,
+                selectedIds,
+                expandedIds,
+                onSelect,
+                onExpand,
+              ),
           ],
+        );
+      }).toList(),
+    );
+  }
+
+  /// 构建状态标签
+  Widget _buildStatusBadge(int? status) {
+    final isOpen = status == 0;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isOpen ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        isOpen ? '开启' : '禁用',
+        style: TextStyle(
+          color: isOpen ? Colors.green : Colors.red,
+          fontSize: 12,
         ),
       ),
     );
@@ -219,49 +542,59 @@ class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
 
   @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
+
     return Scaffold(
       body: Column(
         children: [
-          _buildSearchBar(context),
+          // 搜索栏
+          _buildSearchBar(s),
           const Divider(height: 1),
-          Expanded(child: _buildDataTable(context)),
+
+          // 工具栏
+          _buildToolbar(s),
+
+          // 数据表格
+          Expanded(child: _buildDataTable()),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showFormDialog(),
-        icon: const Icon(Icons.add),
-        label: const Text('新增套餐'),
       ),
     );
   }
 
-  Widget _buildSearchBar(BuildContext context) {
-    return Padding(
+  Widget _buildSearchBar(S s) {
+    return Container(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Wrap(
+        spacing: 16,
+        runSpacing: 12,
         children: [
-          Expanded(
-            flex: 2,
+          // 套餐名称
+          SizedBox(
+            width: 200,
             child: TextField(
-              controller: _searchController,
+              controller: _nameController,
               decoration: const InputDecoration(
-                hintText: '搜索套餐名称',
-                prefixIcon: Icon(Icons.search),
+                labelText: '套餐名称',
+                hintText: '请输入套餐名称',
+                prefixIcon: Icon(Icons.search, size: 20),
                 border: OutlineInputBorder(),
                 isDense: true,
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               ),
               onSubmitted: (_) => _loadData(),
             ),
           ),
-          const SizedBox(width: 16),
+
+          // 状态
           SizedBox(
-            width: 120,
+            width: 140,
             child: DropdownButtonFormField<int>(
               value: _selectedStatus,
               decoration: const InputDecoration(
                 labelText: '状态',
                 border: OutlineInputBorder(),
                 isDense: true,
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
               items: const [
                 DropdownMenuItem(value: null, child: Text('全部')),
@@ -270,132 +603,232 @@ class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
               ],
               onChanged: (value) {
                 setState(() => _selectedStatus = value);
-                _loadData();
               },
             ),
           ),
-          const SizedBox(width: 16),
+
+          // 创建时间
+          SizedBox(
+            width: 260,
+            child: InkWell(
+              onTap: () async {
+                final range = await showDateRangePicker(
+                  context: context,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2030),
+                  initialDateRange: _createTimeRange,
+                );
+                if (range != null) {
+                  setState(() => _createTimeRange = range);
+                }
+              },
+              child: InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: '创建时间',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  suffixIcon: Icon(Icons.calendar_today, size: 20),
+                ),
+                child: Text(
+                  _createTimeRange != null
+                      ? '${_createTimeRange!.start.toString().substring(0, 10)} ~ ${_createTimeRange!.end.toString().substring(0, 10)}'
+                      : '请选择时间范围',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: _createTimeRange != null ? null : Colors.grey,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // 搜索按钮
           ElevatedButton.icon(
             onPressed: _loadData,
-            icon: const Icon(Icons.refresh),
-            label: const Text('搜索'),
+            icon: const Icon(Icons.search, size: 20),
+            label: Text(s.search),
+          ),
+
+          // 重置按钮
+          OutlinedButton.icon(
+            onPressed: _resetSearch,
+            icon: const Icon(Icons.refresh, size: 20),
+            label: Text(s.reset),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDataTable(BuildContext context) {
+  Widget _buildToolbar(S s) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          // 新增按钮
+          ElevatedButton.icon(
+            onPressed: () => _showFormDialog(),
+            icon: const Icon(Icons.add, size: 20),
+            label: const Text('新增套餐'),
+          ),
+          const SizedBox(width: 12),
+
+          // 批量删除按钮
+          OutlinedButton.icon(
+            onPressed: _selectedIds.isEmpty ? null : _deleteTenantPackageBatch,
+            icon: const Icon(Icons.delete_outline, size: 20),
+            label: Text('批量删除 (${_selectedIds.length})'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: _selectedIds.isEmpty ? null : Colors.red,
+            ),
+          ),
+
+          const Spacer(),
+
+          // 刷新按钮
+          IconButton(
+            onPressed: _loadData,
+            icon: const Icon(Icons.refresh),
+            tooltip: '刷新',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDataTable() {
     if (_isLoading && _dataList.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: PaginatedDataTable(
-        header: const Text('租户套餐列表'),
-        rowsPerPage: _pageSize,
-        availableRowsPerPage: const [10, 20, 50, 100],
-        onPageChanged: (page) {
-          setState(() => _currentPage = page ~/ _pageSize + 1);
-          _loadData();
-        },
-        onRowsPerPageChanged: (value) {
-          if (value != null) {
-            setState(() {
-              _pageSize = value;
-              _currentPage = 1;
-            });
-            _loadData();
-          }
-        },
-        columns: const [
-          DataColumn(label: Text('套餐名称')),
-          DataColumn(label: Text('状态')),
-          DataColumn(label: Text('备注')),
-          DataColumn(label: Text('创建时间')),
-          DataColumn(label: Text('操作')),
-        ],
-        source: _TenantPackageDataSource(
-          _dataList,
-          context,
-          onEdit: _showFormDialog,
-          onDelete: _delete,
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('加载失败: $_error'),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _loadData, child: const Text('重试')),
+          ],
+        ),
+      );
+    }
+
+    return DataTable2(
+      columns: [
+        DataColumn2(
+          label: Checkbox(
+            value: _selectedIds.length == _dataList.length && _dataList.isNotEmpty,
+            tristate: true,
+            onChanged: (value) {
+              setState(() {
+                if (value == true) {
+                  _selectedIds = _dataList.where((e) => e.id != null).map((e) => e.id!).toSet();
+                } else {
+                  _selectedIds.clear();
+                }
+              });
+            },
+          ),
+          size: ColumnSize.S,
+        ),
+        const DataColumn2(label: Text('套餐编号'), size: ColumnSize.S),
+        const DataColumn2(label: Text('套餐名称')),
+        const DataColumn2(label: Text('状态'), size: ColumnSize.S),
+        const DataColumn2(label: Text('备注')),
+        const DataColumn2(label: Text('创建时间')),
+        const DataColumn2(label: Text('操作'), fixedWidth: 120),
+      ],
+      rows: _dataList.map((pkg) {
+        return DataRow2(
+          selected: pkg.id != null && _selectedIds.contains(pkg.id),
+          onSelectChanged: pkg.id != null
+              ? (selected) {
+                  setState(() {
+                    if (selected == true) {
+                      _selectedIds.add(pkg.id!);
+                    } else {
+                      _selectedIds.remove(pkg.id!);
+                    }
+                  });
+                }
+              : null,
+          cells: [
+            DataCell(Checkbox(
+              value: pkg.id != null && _selectedIds.contains(pkg.id),
+              onChanged: pkg.id != null
+                  ? (value) {
+                      setState(() {
+                        if (value == true) {
+                          _selectedIds.add(pkg.id!);
+                        } else {
+                          _selectedIds.remove(pkg.id!);
+                        }
+                      });
+                    }
+                  : null,
+            )),
+            DataCell(Text(pkg.id?.toString() ?? '-')),
+            DataCell(Text(pkg.name)),
+            DataCell(_buildStatusBadge(pkg.status)),
+            DataCell(
+              Tooltip(
+                message: pkg.remark ?? '',
+                child: SizedBox(
+                  width: 200,
+                  child: Text(
+                    pkg.remark ?? '-',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ),
+            DataCell(Text(pkg.createTime ?? '-')),
+            DataCell(Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextButton(
+                  onPressed: () => _showFormDialog(pkg),
+                  child: const Text('编辑'),
+                ),
+                TextButton(
+                  onPressed: () => _deleteTenantPackage(pkg),
+                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                  child: const Text('删除'),
+                ),
+              ],
+            )),
+          ],
+        );
+      }).toList(),
+      empty: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.inbox_outlined, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text('暂无数据', style: TextStyle(color: Colors.grey[600])),
+          ],
         ),
       ),
     );
   }
 }
 
-class _TenantPackageDataSource extends DataTableSource {
-  final List<TenantPackage> dataList;
-  final BuildContext context;
-  final void Function(TenantPackage) onEdit;
-  final void Function(TenantPackage) onDelete;
-
-  _TenantPackageDataSource(
-    this.dataList,
-    this.context, {
-    required this.onEdit,
-    required this.onDelete,
-  });
-
-  @override
-  int get rowCount => dataList.length;
-
-  @override
-  DataRow getRow(int index) {
-    final item = dataList[index];
-    return DataRow(
-      cells: [
-        DataCell(Text(item.name)),
-        DataCell(
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: item.status == 0 ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              item.status == 0 ? '开启' : '禁用',
-              style: TextStyle(color: item.status == 0 ? Colors.green : Colors.red, fontSize: 12),
-            ),
-          ),
-        ),
-        DataCell(
-          Tooltip(
-            message: item.remark ?? '',
-            child: SizedBox(
-              width: 200,
-              child: Text(
-                item.remark ?? '-',
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ),
-        ),
-        DataCell(Text(item.createTime ?? '')),
-        DataCell(
-          Row(
-            children: [
-              TextButton(
-                onPressed: () => onEdit(item),
-                child: const Text('编辑'),
-              ),
-              TextButton(
-                onPressed: () => onDelete(item),
-                child: const Text('删除', style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+/// 树节点辅助类
+class TreeNode {
+  final int id;
+  final String name;
+  final List<TreeNode> children;
+  int get depth {
+    if (children.isEmpty) return 0;
+    return 1 + children.map((c) => c.depth).reduce((a, b) => a > b ? a : b);
   }
 
-  @override
-  bool get isRowCountApproximate => false;
-
-  @override
-  int get selectedRowCount => 0;
+  TreeNode({
+    required this.id,
+    required this.name,
+    this.children = const [],
+  });
 }

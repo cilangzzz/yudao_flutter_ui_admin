@@ -22,14 +22,14 @@ class OAuth2Token {
 
   factory OAuth2Token.fromJson(Map<String, dynamic> json) {
     return OAuth2Token(
-      id: json['id'] as int?,
-      accessToken: json['accessToken'] as String?,
-      refreshToken: json['refreshToken'] as String?,
-      userId: json['userId'] as int?,
-      userType: json['userType'] as int?,
-      clientId: json['clientId'] as String?,
-      createTime: json['createTime'] as String?,
-      expiresTime: json['expiresTime'] as String?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      accessToken: json['accessToken']?.toString(),
+      refreshToken: json['refreshToken']?.toString(),
+      userId: json['userId'] is int ? json['userId'] : int.tryParse(json['userId']?.toString() ?? ''),
+      userType: json['userType'] is int ? json['userType'] : int.tryParse(json['userType']?.toString() ?? ''),
+      clientId: json['clientId']?.toString(),
+      createTime: json['createTime']?.toString(),
+      expiresTime: json['expiresTime']?.toString(),
     );
   }
 

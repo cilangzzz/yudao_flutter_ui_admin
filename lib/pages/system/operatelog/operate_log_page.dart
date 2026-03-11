@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
+import 'package:data_table_2/data_table_2.dart';
 import '../../../api/system/operate_log_api.dart';
+import '../../../core/api_client.dart';
 import '../../../models/system/operate_log.dart';
-import '../../../models/common/page_result.dart';
 import '../../../i18n/i18n.dart';
 
 /// 操作日志管理页面
@@ -26,6 +28,7 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
   int _currentPage = 1;
   int _pageSize = 10;
   int _totalCount = 0;
+  String? _error;
 
   @override
   void initState() {
@@ -46,6 +49,7 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
   Future<void> _loadData() async {
     setState(() {
       _isLoading = true;
+      _error = null;
     });
 
     try {
@@ -75,18 +79,14 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
           _totalCount = response.data!.total;
         });
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(response.msg ?? S.current.operateLog_loadFailed)),
-          );
-        }
+        setState(() {
+          _error = response.msg ?? S.current.operateLog_loadFailed;
+        });
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${S.current.operateLog_loadFailed}: $e')),
-        );
-      }
+      setState(() {
+        _error = e.toString();
+      });
     } finally {
       setState(() {
         _isLoading = false;
@@ -110,6 +110,53 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
     });
     _currentPage = 1;
     _loadData();
+  }
+
+  Future<void> _exportLogs() async {
+    try {
+      final dio = ref.read(dioProvider);
+      final params = <String, dynamic>{};
+      if (_userNameController.text.isNotEmpty) {
+        params['userName'] = _userNameController.text;
+      }
+      if (_typeController.text.isNotEmpty) {
+        params['type'] = _typeController.text;
+      }
+      if (_subTypeController.text.isNotEmpty) {
+        params['subType'] = _subTypeController.text;
+      }
+      if (_actionController.text.isNotEmpty) {
+        params['action'] = _actionController.text;
+      }
+      if (_bizIdController.text.isNotEmpty) {
+        params['bizId'] = _bizIdController.text;
+      }
+      if (_dateRange != null) {
+        params['createTime'] = [
+          _dateRange!.start.toIso8601String(),
+          _dateRange!.end.toIso8601String(),
+        ];
+      }
+
+      final response = await dio.get<List<int>>(
+        '/system/operate-log/export-excel',
+        queryParameters: params,
+        options: Options(responseType: ResponseType.bytes),
+      );
+
+      // response.data contains the Excel file bytes
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(S.current.exportSuccess)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${S.current.exportFailed}: $e')),
+        );
+      }
+    }
   }
 
   void _showDetail(OperateLog log) {
@@ -153,7 +200,7 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(S.current.common_close),
+            child: Text(S.current.close),
           ),
         ],
       ),
@@ -335,14 +382,21 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
           ElevatedButton.icon(
             onPressed: _search,
             icon: const Icon(Icons.search),
-            label: Text(S.current.common_search),
+            label: Text(S.current.search),
           ),
 
           // 重置按钮
           OutlinedButton.icon(
             onPressed: _reset,
             icon: const Icon(Icons.refresh),
-            label: Text(S.current.common_reset),
+            label: Text(S.current.reset),
+          ),
+
+          // 导出按钮
+          ElevatedButton.icon(
+            onPressed: _exportLogs,
+            icon: const Icon(Icons.download),
+            label: Text(S.current.export),
           ),
         ],
       ),
@@ -354,90 +408,180 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return SingleChildScrollView(
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('${S.current.loadFailed}: $_error', style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _loadData, child: Text(S.current.retry)),
+          ],
+        ),
+      );
+    }
+
+    if (_logs.isEmpty) {
+      return Center(child: Text(S.current.noData));
+    }
+
+    return Padding(
       padding: const EdgeInsets.all(16),
-      child: PaginatedDataTable(
-        header: Text('${S.current.operateLog_list} (${S.current.common_totalCount})'),
-        rowsPerPage: _pageSize,
-        availableRowsPerPage: const [10, 20, 50, 100],
-        onPageChanged: (page) {
-          _currentPage = page ~/ _pageSize + 1;
-          _loadData();
-        },
-        onRowsPerPageChanged: (value) {
-          if (value != null) {
-            setState(() {
-              _pageSize = value;
-            });
-            _loadData();
-          }
-        },
-        columns: [
-          DataColumn(label: Text(S.current.operateLog_logId)),
-          DataColumn(label: Text(S.current.operateLog_userName)),
-          DataColumn(label: Text(S.current.operateLog_module)),
-          DataColumn(label: Text(S.current.operateLog_actionName)),
-          DataColumn(label: Text(S.current.operateLog_actionContent)),
-          DataColumn(label: Text(S.current.operateLog_operateTime)),
-          DataColumn(label: Text(S.current.operateLog_bizId)),
-          DataColumn(label: Text(S.current.operateLog_userIp)),
-          DataColumn(label: Text(S.current.common_operation)),
+      child: Column(
+        children: [
+          // 表头工具栏
+          Row(
+            children: [
+              Text(S.current.operateLog_list),
+              const Spacer(),
+              Text('${S.current.total}: $_totalCount'),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // 表格
+          Expanded(
+            child: DataTable2(
+              columnSpacing: 12,
+              horizontalMargin: 12,
+              minWidth: 1000,
+              smRatio: 0.75,
+              lmRatio: 1.5,
+              headingRowColor: WidgetStateProperty.resolveWith(
+                (states) => Theme.of(context).colorScheme.surfaceContainerHighest,
+              ),
+              headingTextStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              columns: [
+                DataColumn2(
+                  label: Text(S.current.operateLog_logId),
+                  size: ColumnSize.S,
+                ),
+                DataColumn2(
+                  label: Text(S.current.operateLog_userName),
+                  size: ColumnSize.M,
+                ),
+                DataColumn2(
+                  label: Text(S.current.operateLog_module),
+                  size: ColumnSize.M,
+                ),
+                DataColumn2(
+                  label: Text(S.current.operateLog_actionName),
+                  size: ColumnSize.M,
+                ),
+                DataColumn2(
+                  label: Text(S.current.operateLog_actionContent),
+                  size: ColumnSize.L,
+                ),
+                DataColumn2(
+                  label: Text(S.current.operateLog_operateTime),
+                  size: ColumnSize.L,
+                ),
+                DataColumn2(
+                  label: Text(S.current.operateLog_bizId),
+                  size: ColumnSize.S,
+                ),
+                DataColumn2(
+                  label: Text(S.current.operateLog_userIp),
+                  size: ColumnSize.M,
+                ),
+                DataColumn2(
+                  label: Text(S.current.operation),
+                  size: ColumnSize.S,
+                ),
+              ],
+              rows: _logs.map((log) {
+                return DataRow2(
+                  cells: [
+                    DataCell(Text(log.id?.toString() ?? '-')),
+                    DataCell(Text(log.userName ?? '-')),
+                    DataCell(Text(log.type ?? '-')),
+                    DataCell(Text(log.subType ?? '-')),
+                    DataCell(
+                      Tooltip(
+                        message: log.action ?? '-',
+                        child: SizedBox(
+                          width: 150,
+                          child: Text(
+                            log.action ?? '-',
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ),
+                    DataCell(Text(log.createTime ?? '-')),
+                    DataCell(Text(log.bizId?.toString() ?? '-')),
+                    DataCell(Text(log.userIp ?? '-')),
+                    DataCell(
+                      IconButton(
+                        icon: const Icon(Icons.visibility, size: 20),
+                        tooltip: S.current.detail,
+                        onPressed: () => _showDetail(log),
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+          // 分页控件
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              // 每页行数选择
+              Row(
+                children: [
+                  Text('${S.current.pageSize}: '),
+                  DropdownButton<int>(
+                    value: _pageSize,
+                    items: [10, 20, 50, 100].map((value) {
+                      return DropdownMenuItem(
+                        value: value,
+                        child: Text('$value'),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _pageSize = value;
+                          _currentPage = 1;
+                        });
+                        _loadData();
+                      }
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(width: 24),
+              // 分页导航
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left),
+                    onPressed: _currentPage > 1
+                        ? () {
+                            setState(() => _currentPage--);
+                            _loadData();
+                          }
+                        : null,
+                  ),
+                  Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right),
+                    onPressed: _currentPage * _pageSize < _totalCount
+                        ? () {
+                            setState(() => _currentPage++);
+                            _loadData();
+                          }
+                        : null,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ],
-        source: _OperateLogDataSource(_logs, context, _showDetail),
       ),
     );
   }
-}
-
-/// 操作日志数据源
-class _OperateLogDataSource extends DataTableSource {
-  final List<OperateLog> logs;
-  final BuildContext context;
-  final void Function(OperateLog) onShowDetail;
-
-  _OperateLogDataSource(this.logs, this.context, this.onShowDetail);
-
-  @override
-  int get rowCount => logs.length;
-
-  @override
-  DataRow getRow(int index) {
-    final log = logs[index];
-    return DataRow(
-      cells: [
-        DataCell(Text(log.id?.toString() ?? '-')),
-        DataCell(Text(log.userName ?? '-')),
-        DataCell(Text(log.type ?? '-')),
-        DataCell(Text(log.subType ?? '-')),
-        DataCell(
-          Tooltip(
-            message: log.action ?? '-',
-            child: SizedBox(
-              width: 150,
-              child: Text(
-                log.action ?? '-',
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ),
-        ),
-        DataCell(Text(log.createTime ?? '-')),
-        DataCell(Text(log.bizId?.toString() ?? '-')),
-        DataCell(Text(log.userIp ?? '-')),
-        DataCell(
-          TextButton.icon(
-            onPressed: () => onShowDetail(log),
-            icon: const Icon(Icons.visibility, size: 18),
-            label: Text(S.current.common_detail),
-          ),
-        ),
-      ],
-    );
-  }
-
-  @override
-  bool get isRowCountApproximate => false;
-
-  @override
-  int get selectedRowCount => 0;
 }

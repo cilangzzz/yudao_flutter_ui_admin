@@ -28,17 +28,17 @@ class MailAccount {
 
   factory MailAccount.fromJson(Map<String, dynamic> json) {
     return MailAccount(
-      id: json['id'] as int?,
-      mail: json['mail'] as String? ?? '',
-      username: json['username'] as String? ?? '',
-      password: json['password'] as String? ?? '',
-      host: json['host'] as String? ?? '',
-      port: json['port'] as int? ?? 0,
-      sslEnable: json['sslEnable'] as bool? ?? false,
-      starttlsEnable: json['starttlsEnable'] as bool? ?? false,
-      status: json['status'] as int? ?? 0,
-      createTime: json['createTime'] as String?,
-      remark: json['remark'] as String?,
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      mail: json['mail']?.toString() ?? '',
+      username: json['username']?.toString() ?? '',
+      password: json['password']?.toString() ?? '',
+      host: json['host']?.toString() ?? '',
+      port: json['port'] is int ? json['port'] : int.tryParse(json['port']?.toString() ?? '') ?? 0,
+      sslEnable: json['sslEnable'] is bool ? json['sslEnable'] : bool.tryParse(json['sslEnable']?.toString() ?? '') ?? false,
+      starttlsEnable: json['starttlsEnable'] is bool ? json['starttlsEnable'] : bool.tryParse(json['starttlsEnable']?.toString() ?? '') ?? false,
+      status: json['status'] is int ? json['status'] : int.tryParse(json['status']?.toString() ?? '') ?? 0,
+      createTime: json['createTime']?.toString(),
+      remark: json['remark']?.toString(),
     );
   }
 
