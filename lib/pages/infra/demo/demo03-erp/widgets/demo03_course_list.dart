@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:yudao_flutter_ui_admin/api/infra/demo03_student_api.dart';
+import 'package:yudao_flutter_ui_admin/api/infra/demo03_student_erp_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/demo03_student.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
 
@@ -25,6 +25,7 @@ class _Demo03CourseListState extends ConsumerState<Demo03CourseList> {
   int _pageSize = 10;
   bool _isLoading = false;
   String? _error;
+  Set<int> _selectedIds = {};
 
   @override
   void initState() {
@@ -36,6 +37,7 @@ class _Demo03CourseListState extends ConsumerState<Demo03CourseList> {
   void didUpdateWidget(Demo03CourseList oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.studentId != widget.studentId) {
+      _currentPage = 1;
       _loadCourseList();
     }
   }
@@ -55,13 +57,17 @@ class _Demo03CourseListState extends ConsumerState<Demo03CourseList> {
     });
 
     try {
-      final studentApi = ref.read(demo03StudentApiProvider);
-      final response = await studentApi.getDemo03CourseListByStudentId(widget.studentId!);
+      final studentApi = ref.read(demo03StudentErpApiProvider);
+      final response = await studentApi.getDemo03CoursePage({
+        'pageNo': _currentPage,
+        'pageSize': _pageSize,
+        'studentId': widget.studentId,
+      });
 
       if (response.isSuccess && response.data != null) {
         setState(() {
-          _courseList = response.data!;
-          _totalCount = response.data!.length;
+          _courseList = response.data!.list;
+          _totalCount = response.data!.total;
           _isLoading = false;
         });
       } else {
@@ -75,6 +81,55 @@ class _Demo03CourseListState extends ConsumerState<Demo03CourseList> {
         _error = e.toString();
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _deleteCourse(Demo03Course course) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(S.current.confirmDelete),
+        content: Text('${S.current.confirmDeleteItem} "${course.name}" ?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(S.current.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(S.current.delete),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final studentApi = ref.read(demo03StudentErpApiProvider);
+        final response = await studentApi.deleteDemo03Course(course.id!);
+
+        if (response.isSuccess) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(S.current.deleteSuccess)),
+            );
+            _loadCourseList();
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(response.msg ?? S.current.deleteFailed)),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${S.current.deleteFailed}: $e')),
+          );
+        }
+      }
     }
   }
 
@@ -139,50 +194,106 @@ class _Demo03CourseListState extends ConsumerState<Demo03CourseList> {
           const SizedBox(height: 8),
           // 表格
           Expanded(
-            child: DataTable2(
-              columnSpacing: 12,
-              horizontalMargin: 12,
-              minWidth: 400,
-              headingRowColor: WidgetStateProperty.resolveWith(
-                (states) => Theme.of(context).colorScheme.surfaceContainerHighest,
-              ),
-              columns: [
-                DataColumn2(label: Text(S.current.id), size: ColumnSize.S),
-                DataColumn2(label: Text(S.current.courseName), size: ColumnSize.L),
-                DataColumn2(label: Text(S.current.score), size: ColumnSize.M),
-                DataColumn2(label: Text(S.current.operation), size: ColumnSize.M),
-              ],
-              rows: _courseList.map((course) {
-                return DataRow2(
-                  cells: [
-                    DataCell(Text(course.id?.toString() ?? '-')),
-                    DataCell(Text(course.name)),
-                    DataCell(Text(course.score.toString())),
-                    DataCell(Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        TextButton(
-                          onPressed: () {
-                            // TODO: 编辑
-                          },
-                          child: Text(S.current.edit),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            // TODO: 删除
-                          },
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.red,
-                          ),
-                          child: Text(S.current.delete),
-                        ),
-                      ],
-                    )),
-                  ],
-                );
-              }).toList(),
-            ),
+            child: _courseList.isEmpty
+                ? Center(child: Text(S.current.noData))
+                : DataTable2(
+                    columnSpacing: 12,
+                    horizontalMargin: 12,
+                    minWidth: 400,
+                    headingRowColor: WidgetStateProperty.resolveWith(
+                      (states) => Theme.of(context).colorScheme.surfaceContainerHighest,
+                    ),
+                    columns: [
+                      DataColumn2(label: Text(S.current.id), size: ColumnSize.S),
+                      DataColumn2(label: Text(S.current.courseName), size: ColumnSize.L),
+                      DataColumn2(label: Text(S.current.score), size: ColumnSize.M),
+                      DataColumn2(label: Text(S.current.operation), size: ColumnSize.M),
+                    ],
+                    rows: _courseList.map((course) {
+                      return DataRow2(
+                        cells: [
+                          DataCell(Text(course.id?.toString() ?? '-')),
+                          DataCell(Text(course.name)),
+                          DataCell(Text(course.score.toString())),
+                          DataCell(Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              TextButton(
+                                onPressed: () {
+                                  // TODO: 编辑
+                                },
+                                child: Text(S.current.edit),
+                              ),
+                              TextButton(
+                                onPressed: () => _deleteCourse(course),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Colors.red,
+                                ),
+                                child: Text(S.current.delete),
+                              ),
+                            ],
+                          )),
+                        ],
+                      );
+                    }).toList(),
+                  ),
           ),
+          // 分页
+          if (_totalCount > 0) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Row(
+                  children: [
+                    Text('${S.current.pageSize}: '),
+                    DropdownButton<int>(
+                      value: _pageSize,
+                      items: [10, 20, 50, 100].map((value) {
+                        return DropdownMenuItem(
+                          value: value,
+                          child: Text('$value'),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _pageSize = value;
+                            _currentPage = 1;
+                          });
+                          _loadCourseList();
+                        }
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 24),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.chevron_left),
+                      onPressed: _currentPage > 1
+                          ? () {
+                              setState(() => _currentPage--);
+                              _loadCourseList();
+                            }
+                          : null,
+                    ),
+                    Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
+                    IconButton(
+                      icon: const Icon(Icons.chevron_right),
+                      onPressed: _currentPage * _pageSize < _totalCount
+                          ? () {
+                              setState(() => _currentPage++);
+                              _loadCourseList();
+                            }
+                          : null,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

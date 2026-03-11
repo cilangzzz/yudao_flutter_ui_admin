@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:yudao_flutter_ui_admin/api/infra/demo03_student_api.dart';
+import 'package:yudao_flutter_ui_admin/api/infra/demo03_student_inner_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/demo03_student.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
 import '../demo03-normal/widgets/demo03_search_form.dart';
 import '../demo03-normal/widgets/demo03_action_buttons.dart';
-import '../demo03-normal/dialogs/demo03_form_dialog.dart';
+import 'dialogs/demo03_inner_form_dialog.dart';
 import 'widgets/demo03_expandable_data_table.dart';
 
 /// 学生管理页面 - Demo03 Inner模式（子表内嵌展开）
@@ -48,7 +48,7 @@ class _Demo03InnerPageState extends ConsumerState<Demo03InnerPage> {
     });
 
     try {
-      final studentApi = ref.read(demo03StudentApiProvider);
+      final studentApi = ref.read(demo03StudentInnerApiProvider);
       final params = <String, dynamic>{
         'pageNo': _currentPage,
         'pageSize': _pageSize,
@@ -116,7 +116,7 @@ class _Demo03InnerPageState extends ConsumerState<Demo03InnerPage> {
 
     if (confirmed == true) {
       try {
-        final studentApi = ref.read(demo03StudentApiProvider);
+        final studentApi = ref.read(demo03StudentInnerApiProvider);
         final response = await studentApi.deleteDemo03Student(student.id!);
 
         if (response.isSuccess) {
@@ -170,7 +170,7 @@ class _Demo03InnerPageState extends ConsumerState<Demo03InnerPage> {
 
     if (confirmed == true) {
       try {
-        final studentApi = ref.read(demo03StudentApiProvider);
+        final studentApi = ref.read(demo03StudentInnerApiProvider);
         final response =
             await studentApi.deleteDemo03StudentList(_selectedIds.toList());
 
@@ -201,7 +201,7 @@ class _Demo03InnerPageState extends ConsumerState<Demo03InnerPage> {
 
   Future<void> _export() async {
     try {
-      final studentApi = ref.read(demo03StudentApiProvider);
+      final studentApi = ref.read(demo03StudentInnerApiProvider);
       final params = <String, dynamic>{
         if (_nameController.text.isNotEmpty) 'name': _nameController.text,
         if (_selectedSex != null) 'sex': _selectedSex,
@@ -238,7 +238,7 @@ class _Demo03InnerPageState extends ConsumerState<Demo03InnerPage> {
 
           // 工具栏
           Demo03ActionButtons(
-            onAdd: () => showDemo03FormDialog(
+            onAdd: () => showDemo03InnerFormDialog(
               context,
               ref: ref,
               onSuccess: _loadStudentList,
@@ -270,7 +270,7 @@ class _Demo03InnerPageState extends ConsumerState<Demo03InnerPage> {
                 setState(() => _currentPage = page);
                 _loadStudentList();
               },
-              onEdit: (student) => showDemo03FormDialog(
+              onEdit: (student) => showDemo03InnerFormDialog(
                 context,
                 student: student,
                 ref: ref,

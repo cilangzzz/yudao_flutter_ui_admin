@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:yudao_flutter_ui_admin/api/infra/demo03_student_api.dart';
+import 'package:yudao_flutter_ui_admin/api/infra/demo03_student_erp_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/demo03_student.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
 
@@ -19,7 +19,10 @@ class Demo03GradeList extends ConsumerStatefulWidget {
 }
 
 class _Demo03GradeListState extends ConsumerState<Demo03GradeList> {
-  Demo03Grade? _grade;
+  List<Demo03Grade> _gradeList = [];
+  int _totalCount = 0;
+  int _currentPage = 1;
+  int _pageSize = 10;
   bool _isLoading = false;
   String? _error;
 
@@ -33,6 +36,7 @@ class _Demo03GradeListState extends ConsumerState<Demo03GradeList> {
   void didUpdateWidget(Demo03GradeList oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.studentId != widget.studentId) {
+      _currentPage = 1;
       _loadGradeList();
     }
   }
@@ -40,7 +44,8 @@ class _Demo03GradeListState extends ConsumerState<Demo03GradeList> {
   Future<void> _loadGradeList() async {
     if (widget.studentId == null) {
       setState(() {
-        _grade = null;
+        _gradeList = [];
+        _totalCount = 0;
       });
       return;
     }
@@ -51,12 +56,17 @@ class _Demo03GradeListState extends ConsumerState<Demo03GradeList> {
     });
 
     try {
-      final studentApi = ref.read(demo03StudentApiProvider);
-      final response = await studentApi.getDemo03GradeByStudentId(widget.studentId!);
+      final studentApi = ref.read(demo03StudentErpApiProvider);
+      final response = await studentApi.getDemo03GradePage({
+        'pageNo': _currentPage,
+        'pageSize': _pageSize,
+        'studentId': widget.studentId,
+      });
 
-      if (response.isSuccess) {
+      if (response.isSuccess && response.data != null) {
         setState(() {
-          _grade = response.data;
+          _gradeList = response.data!.list;
+          _totalCount = response.data!.total;
           _isLoading = false;
         });
       } else {
@@ -70,6 +80,55 @@ class _Demo03GradeListState extends ConsumerState<Demo03GradeList> {
         _error = e.toString();
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _deleteGrade(Demo03Grade grade) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(S.current.confirmDelete),
+        content: Text('${S.current.confirmDeleteItem} "${grade.name}" ?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(S.current.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(S.current.delete),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final studentApi = ref.read(demo03StudentErpApiProvider);
+        final response = await studentApi.deleteDemo03Grade(grade.id!);
+
+        if (response.isSuccess) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(S.current.deleteSuccess)),
+            );
+            _loadGradeList();
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(response.msg ?? S.current.deleteFailed)),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${S.current.deleteFailed}: $e')),
+          );
+        }
+      }
     }
   }
 
@@ -134,7 +193,7 @@ class _Demo03GradeListState extends ConsumerState<Demo03GradeList> {
           const SizedBox(height: 8),
           // 表格
           Expanded(
-            child: _grade == null
+            child: _gradeList.isEmpty
                 ? Center(child: Text(S.current.noData))
                 : DataTable2(
                     columnSpacing: 12,
@@ -153,12 +212,12 @@ class _Demo03GradeListState extends ConsumerState<Demo03GradeList> {
                       DataColumn2(
                           label: Text(S.current.operation), size: ColumnSize.M),
                     ],
-                    rows: [
-                      DataRow2(
+                    rows: _gradeList.map((grade) {
+                      return DataRow2(
                         cells: [
-                          DataCell(Text(_grade!.id?.toString() ?? '-')),
-                          DataCell(Text(_grade!.name)),
-                          DataCell(Text(_grade!.teacher)),
+                          DataCell(Text(grade.id?.toString() ?? '-')),
+                          DataCell(Text(grade.name)),
+                          DataCell(Text(grade.teacher)),
                           DataCell(Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -169,9 +228,7 @@ class _Demo03GradeListState extends ConsumerState<Demo03GradeList> {
                                 child: Text(S.current.edit),
                               ),
                               TextButton(
-                                onPressed: () {
-                                  // TODO: 删除
-                                },
+                                onPressed: () => _deleteGrade(grade),
                                 style: TextButton.styleFrom(
                                   foregroundColor: Colors.red,
                                 ),
@@ -180,10 +237,66 @@ class _Demo03GradeListState extends ConsumerState<Demo03GradeList> {
                             ],
                           )),
                         ],
-                      ),
-                    ],
+                      );
+                    }).toList(),
                   ),
           ),
+          // 分页
+          if (_totalCount > 0) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Row(
+                  children: [
+                    Text('${S.current.pageSize}: '),
+                    DropdownButton<int>(
+                      value: _pageSize,
+                      items: [10, 20, 50, 100].map((value) {
+                        return DropdownMenuItem(
+                          value: value,
+                          child: Text('$value'),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _pageSize = value;
+                            _currentPage = 1;
+                          });
+                          _loadGradeList();
+                        }
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 24),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.chevron_left),
+                      onPressed: _currentPage > 1
+                          ? () {
+                              setState(() => _currentPage--);
+                              _loadGradeList();
+                            }
+                          : null,
+                    ),
+                    Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
+                    IconButton(
+                      icon: const Icon(Icons.chevron_right),
+                      onPressed: _currentPage * _pageSize < _totalCount
+                          ? () {
+                              setState(() => _currentPage++);
+                              _loadGradeList();
+                            }
+                          : null,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

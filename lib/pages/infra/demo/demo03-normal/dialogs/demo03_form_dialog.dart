@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:yudao_flutter_ui_admin/api/infra/demo03_student_api.dart';
+import 'package:yudao_flutter_ui_admin/api/infra/demo03_student_normal_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/demo03_student.dart';
 import 'package:yudao_flutter_ui_admin/models/common/api_response.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
@@ -58,7 +58,7 @@ class _Demo03FormDialogState extends State<Demo03FormDialog> with SingleTickerPr
   Future<void> _loadStudentDetail() async {
     setState(() => _isLoading = true);
     try {
-      final studentApi = widget.ref.read(demo03StudentApiProvider);
+      final studentApi = widget.ref.read(demo03StudentNormalApiProvider);
       final response = await studentApi.getDemo03Student(widget.student!.id!);
       if (response.isSuccess && response.data != null) {
         setState(() {
@@ -106,7 +106,7 @@ class _Demo03FormDialogState extends State<Demo03FormDialog> with SingleTickerPr
     );
 
     try {
-      final studentApi = widget.ref.read(demo03StudentApiProvider);
+      final studentApi = widget.ref.read(demo03StudentNormalApiProvider);
       ApiResponse<void> response;
 
       if (widget.student == null) {

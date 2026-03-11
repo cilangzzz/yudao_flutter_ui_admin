@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:yudao_flutter_ui_admin/api/infra/demo03_student_api.dart';
+import 'package:yudao_flutter_ui_admin/api/infra/demo03_student_normal_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/demo03_student.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
 import 'widgets/demo03_search_form.dart';
@@ -47,7 +47,7 @@ class _Demo03PageState extends ConsumerState<Demo03Page> {
     });
 
     try {
-      final studentApi = ref.read(demo03StudentApiProvider);
+      final studentApi = ref.read(demo03StudentNormalApiProvider);
       final params = <String, dynamic>{
         'pageNo': _currentPage,
         'pageSize': _pageSize,
@@ -115,7 +115,7 @@ class _Demo03PageState extends ConsumerState<Demo03Page> {
 
     if (confirmed == true) {
       try {
-        final studentApi = ref.read(demo03StudentApiProvider);
+        final studentApi = ref.read(demo03StudentNormalApiProvider);
         final response = await studentApi.deleteDemo03Student(student.id!);
 
         if (response.isSuccess) {
@@ -168,7 +168,7 @@ class _Demo03PageState extends ConsumerState<Demo03Page> {
 
     if (confirmed == true) {
       try {
-        final studentApi = ref.read(demo03StudentApiProvider);
+        final studentApi = ref.read(demo03StudentNormalApiProvider);
         final response = await studentApi.deleteDemo03StudentList(_selectedIds.toList());
 
         if (response.isSuccess) {
@@ -198,7 +198,7 @@ class _Demo03PageState extends ConsumerState<Demo03Page> {
 
   Future<void> _export() async {
     try {
-      final studentApi = ref.read(demo03StudentApiProvider);
+      final studentApi = ref.read(demo03StudentNormalApiProvider);
       final params = <String, dynamic>{
         if (_nameController.text.isNotEmpty) 'name': _nameController.text,
         if (_selectedSex != null) 'sex': _selectedSex,
