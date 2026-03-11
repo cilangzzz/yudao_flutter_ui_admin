@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../stores/access_store.dart';
+import 'package:yudao_flutter_ui_admin/stores/access_store.dart';
 
 /// 导航项数据模型
 class NavigationItem {
