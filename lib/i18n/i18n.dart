@@ -223,6 +223,8 @@ abstract class S {
   String get editRole;
   String get roleName;
   String get roleCode;
+  String get menuPermission;
+  String get dataPermission;
 
   // 菜单管理
   String get menuManagement;
@@ -1159,6 +1161,10 @@ class _AppLocalizations extends S {
   String get roleName => _get('roleName', 'Role Name');
   @override
   String get roleCode => _get('roleCode', 'Role Code');
+  @override
+  String get menuPermission => _get('menuPermission', 'Menu Permission');
+  @override
+  String get dataPermission => _get('dataPermission', 'Data Permission');
 
   // 菜单管理
   @override

@@ -17,7 +17,7 @@ class UserApi {
       queryParameters: params.toJson(),
       fromJsonT: (json) => PageResult.fromJson(
         json as Map<String, dynamic>,
-        (e) => User.fromJson(e as Map<String, dynamic>),
+        (e) => User.fromJson(e as Map<String,dynamic>),
       ),
     );
   }

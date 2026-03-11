@@ -407,6 +407,7 @@ class _RolePageState extends ConsumerState<RolePage> {
                 DataColumn2(
                   label: Text(S.current.operation),
                   size: ColumnSize.L,
+                  numeric: true,
                 ),
               ],
               rows: _roleList.map((role) {
@@ -514,26 +515,60 @@ class _RolePageState extends ConsumerState<RolePage> {
   }
 
   Widget _buildActionButtons(Role role) {
-    return Wrap(
-      spacing: 4,
-      runSpacing: 4,
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         TextButton(
           onPressed: () => _showRoleDialog(context, role),
           child: Text(S.current.edit),
         ),
-        TextButton(
-          onPressed: () => _showAssignMenuDialog(role),
-          child: const Text('Menu Permission'),
-        ),
-        TextButton(
-          onPressed: () => _showAssignDataScopeDialog(role),
-          child: const Text('Data Permission'),
-        ),
-        TextButton(
-          onPressed: () => _deleteRole(role),
-          style: TextButton.styleFrom(foregroundColor: Colors.red),
-          child: Text(S.current.delete),
+        PopupMenuButton<String>(
+          tooltip: S.current.more,
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'menu',
+              child: Row(
+                children: [
+                  const Icon(Icons.menu, size: 18),
+                  const SizedBox(width: 8),
+                  Text(S.current.menuPermission),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'data',
+              child: Row(
+                children: [
+                  const Icon(Icons.data_usage, size: 18),
+                  const SizedBox(width: 8),
+                  Text(S.current.dataPermission),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  const Icon(Icons.delete, size: 18, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Text(S.current.delete, style: const TextStyle(color: Colors.red)),
+                ],
+              ),
+            ),
+          ],
+          onSelected: (value) {
+            switch (value) {
+              case 'menu':
+                _showAssignMenuDialog(role);
+                break;
+              case 'data':
+                _showAssignDataScopeDialog(role);
+                break;
+              case 'delete':
+                _deleteRole(role);
+                break;
+            }
+          },
         ),
       ],
     );
