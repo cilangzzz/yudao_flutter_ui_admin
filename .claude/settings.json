@@ -33,12 +33,15 @@
       "Bash(powershell -Command \"Get-ChildItem -Path ''C:\\\\Users\\\\sysadmin\\\\AppData\\\\Roaming'' -Recurse -Filter ''*flutter_secure*'' -ErrorAction SilentlyContinue | Select-Object FullName\")",
       "Read(//c/Users/sysadmin/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_secure_storage_windows-3.1.2/lib/**)",
       "Bash(flutter doctor -v)",
-      "Bash(winget search \"Visual Studio\" --source winget)"
+      "Bash(winget search \"Visual Studio\" --source winget)",
+      "Bash(flutter analyze lib/pages/system/user/user_page.dart)",
+      "Bash(flutter analyze lib/pages/system/notice/notice_page.dart lib/pages/system/notify_template/notify_template_page.dart lib/pages/system/notify_message/notify_message_page.dart)"
     ],
     "additionalDirectories": [
       "h:\\Documents\\toly_ui\\.claude\\skills",
       "h:\\Documents\\yudao_flutter_ui_admin\\lib\\providers",
-      "h:\\Documents\\yudao_flutter_ui_admin\\.claude\\teams"
+      "h:\\Documents\\yudao_flutter_ui_admin\\.claude\\teams",
+      "C:\\Users\\sysadmin\\.claude\\tasks\\system-pages-optimization"
     ]
   },
   "agentMode": "bypassPermissions"

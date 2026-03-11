@@ -135,118 +135,111 @@ class _MailLogPageState extends ConsumerState<MailLogPage> {
   Widget _buildSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            SizedBox(
-              width: 150,
-              child: TextField(
-                controller: _searchUserIdController,
-                decoration: const InputDecoration(
-                  hintText: '用户编号',
-                  prefixIcon: Icon(Icons.person),
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                ),
-                onSubmitted: (_) => _search(),
+      child: Wrap(
+        spacing: 16,
+        runSpacing: 12,
+        children: [
+          SizedBox(
+            width: 150,
+            child: TextField(
+              controller: _searchUserIdController,
+              decoration: const InputDecoration(
+                hintText: '用户编号',
+                prefixIcon: Icon(Icons.person),
+                border: OutlineInputBorder(),
+                isDense: true,
               ),
+              onSubmitted: (_) => _search(),
             ),
-            const SizedBox(width: 16),
-            SizedBox(
-              width: 150,
-              child: TextField(
-                controller: _searchTemplateIdController,
-                decoration: const InputDecoration(
-                  hintText: '模板编号',
-                  prefixIcon: Icon(Icons.description),
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                ),
-                onSubmitted: (_) => _search(),
+          ),
+          SizedBox(
+            width: 150,
+            child: TextField(
+              controller: _searchTemplateIdController,
+              decoration: const InputDecoration(
+                hintText: '模板编号',
+                prefixIcon: Icon(Icons.description),
+                border: OutlineInputBorder(),
+                isDense: true,
               ),
+              onSubmitted: (_) => _search(),
             ),
-            const SizedBox(width: 16),
-            SizedBox(
-              width: 150,
-              child: DropdownButtonFormField<int>(
-                value: _selectedUserType,
-                decoration: const InputDecoration(
-                  labelText: '用户类型',
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                ),
-                items: const [
-                  DropdownMenuItem(value: null, child: Text('全部')),
-                  DropdownMenuItem(value: 1, child: Text('管理员')),
-                  DropdownMenuItem(value: 2, child: Text('会员')),
-                ],
-                onChanged: (value) {
-                  setState(() => _selectedUserType = value);
-                  _search();
-                },
+          ),
+          SizedBox(
+            width: 150,
+            child: DropdownButtonFormField<int>(
+              value: _selectedUserType,
+              decoration: const InputDecoration(
+                labelText: '用户类型',
+                border: OutlineInputBorder(),
+                isDense: true,
               ),
+              items: const [
+                DropdownMenuItem(value: null, child: Text('全部')),
+                DropdownMenuItem(value: 1, child: Text('管理员')),
+                DropdownMenuItem(value: 2, child: Text('会员')),
+              ],
+              onChanged: (value) {
+                setState(() => _selectedUserType = value);
+                _search();
+              },
             ),
-            const SizedBox(width: 16),
-            SizedBox(
-              width: 150,
-              child: DropdownButtonFormField<int>(
-                value: _selectedSendStatus,
-                decoration: const InputDecoration(
-                  labelText: '发送状态',
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                ),
-                items: const [
-                  DropdownMenuItem(value: null, child: Text('全部')),
-                  DropdownMenuItem(value: 0, child: Text('发送中')),
-                  DropdownMenuItem(value: 10, child: Text('发送成功')),
-                  DropdownMenuItem(value: 20, child: Text('发送失败')),
-                  DropdownMenuItem(value: 30, child: Text('不发送')),
-                ],
-                onChanged: (value) {
-                  setState(() => _selectedSendStatus = value);
-                  _search();
-                },
+          ),
+          SizedBox(
+            width: 150,
+            child: DropdownButtonFormField<int>(
+              value: _selectedSendStatus,
+              decoration: const InputDecoration(
+                labelText: '发送状态',
+                border: OutlineInputBorder(),
+                isDense: true,
               ),
+              items: const [
+                DropdownMenuItem(value: null, child: Text('全部')),
+                DropdownMenuItem(value: 0, child: Text('发送中')),
+                DropdownMenuItem(value: 10, child: Text('发送成功')),
+                DropdownMenuItem(value: 20, child: Text('发送失败')),
+                DropdownMenuItem(value: 30, child: Text('不发送')),
+              ],
+              onChanged: (value) {
+                setState(() => _selectedSendStatus = value);
+                _search();
+              },
             ),
-            const SizedBox(width: 16),
-            SizedBox(
-              width: 200,
-              child: DropdownButtonFormField<int>(
-                value: _selectedAccountId,
-                decoration: const InputDecoration(
-                  labelText: '邮箱账号',
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                ),
-                items: [
-                  const DropdownMenuItem(value: null, child: Text('全部')),
-                  ..._accountList.map((a) => DropdownMenuItem(
-                        value: a.id,
-                        child: Text(a.mail),
-                      )),
-                ],
-                onChanged: (value) {
-                  setState(() => _selectedAccountId = value);
-                  _search();
-                },
+          ),
+          SizedBox(
+            width: 200,
+            child: DropdownButtonFormField<int>(
+              value: _selectedAccountId,
+              decoration: const InputDecoration(
+                labelText: '邮箱账号',
+                border: OutlineInputBorder(),
+                isDense: true,
               ),
+              items: [
+                const DropdownMenuItem(value: null, child: Text('全部')),
+                ..._accountList.map((a) => DropdownMenuItem(
+                      value: a.id,
+                      child: Text(a.mail),
+                    )),
+              ],
+              onChanged: (value) {
+                setState(() => _selectedAccountId = value);
+                _search();
+              },
             ),
-            const SizedBox(width: 16),
-            ElevatedButton.icon(
-              onPressed: _search,
-              icon: const Icon(Icons.search),
-              label: const Text('搜索'),
-            ),
-            const SizedBox(width: 8),
-            OutlinedButton.icon(
-              onPressed: _reset,
-              icon: const Icon(Icons.refresh),
-              label: const Text('重置'),
-            ),
-          ],
-        ),
+          ),
+          ElevatedButton.icon(
+            onPressed: _search,
+            icon: const Icon(Icons.search),
+            label: const Text('搜索'),
+          ),
+          OutlinedButton.icon(
+            onPressed: _reset,
+            icon: const Icon(Icons.refresh),
+            label: const Text('重置'),
+          ),
+        ],
       ),
     );
   }

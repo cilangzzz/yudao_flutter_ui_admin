@@ -225,9 +225,13 @@ class _RolePageState extends ConsumerState<RolePage> {
   Widget _buildSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          Expanded(
+          SizedBox(
+            width: 220,
             child: TextField(
               controller: _nameController,
               decoration: InputDecoration(
@@ -239,8 +243,8 @@ class _RolePageState extends ConsumerState<RolePage> {
               onSubmitted: (_) => _search(),
             ),
           ),
-          const SizedBox(width: 8),
-          Expanded(
+          SizedBox(
+            width: 220,
             child: TextField(
               controller: _codeController,
               decoration: InputDecoration(
@@ -252,9 +256,8 @@ class _RolePageState extends ConsumerState<RolePage> {
               onSubmitted: (_) => _search(),
             ),
           ),
-          const SizedBox(width: 8),
           SizedBox(
-            width: 150,
+            width: 160,
             child: DropdownButtonFormField<int>(
               value: _selectedStatus,
               decoration: InputDecoration(
@@ -262,22 +265,21 @@ class _RolePageState extends ConsumerState<RolePage> {
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
-              items: const [
-                DropdownMenuItem(value: 0, child: Text('Enabled')),
-                DropdownMenuItem(value: 1, child: Text('Disabled')),
+              items: [
+                DropdownMenuItem(value: null, child: Text(S.current.all)),
+                DropdownMenuItem(value: 0, child: Text(S.current.enabled)),
+                DropdownMenuItem(value: 1, child: Text(S.current.disabled)),
               ],
               onChanged: (value) {
                 setState(() => _selectedStatus = value);
               },
             ),
           ),
-          const SizedBox(width: 8),
           ElevatedButton.icon(
             onPressed: _search,
             icon: const Icon(Icons.search, size: 20),
             label: Text(S.current.search),
           ),
-          const SizedBox(width: 8),
           OutlinedButton.icon(
             onPressed: _reset,
             icon: const Icon(Icons.refresh, size: 20),
@@ -291,14 +293,16 @@ class _RolePageState extends ConsumerState<RolePage> {
   Widget _buildToolbar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           ElevatedButton.icon(
             onPressed: () => _showRoleDialog(context),
             icon: const Icon(Icons.add),
             label: Text(S.current.addRole),
           ),
-          const SizedBox(width: 8),
           ElevatedButton.icon(
             onPressed: _selectedIds.isEmpty ? null : _deleteSelected,
             style: ElevatedButton.styleFrom(
@@ -510,8 +514,9 @@ class _RolePageState extends ConsumerState<RolePage> {
   }
 
   Widget _buildActionButtons(Role role) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
       children: [
         TextButton(
           onPressed: () => _showRoleDialog(context, role),
@@ -801,18 +806,32 @@ class _AssignMenuDialogState extends State<_AssignMenuDialog> {
         child: Column(
           children: [
             // 角色信息
-            Row(
+            Wrap(
+              spacing: 24,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Text('${S.current.roleName}: ', style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(widget.role.name),
-                const SizedBox(width: 24),
-                Text('${S.current.roleCode}: ', style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(widget.role.code),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('${S.current.roleName}: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(widget.role.name),
+                  ],
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('${S.current.roleCode}: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(widget.role.code),
+                  ],
+                ),
               ],
             ),
             const Divider(height: 24),
             // 工具栏
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 TextButton.icon(
                   onPressed: _toggleSelectAll,
@@ -1059,22 +1078,34 @@ class _AssignDataScopeDialogState extends State<_AssignDataScopeDialog> {
         child: Column(
           children: [
             // 角色信息
-            Row(
+            Wrap(
+              spacing: 24,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Text('${S.current.roleName}: ', style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(widget.role.name),
-                const SizedBox(width: 24),
-                Text('${S.current.roleCode}: ', style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(widget.role.code),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('${S.current.roleName}: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(widget.role.name),
+                  ],
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('${S.current.roleCode}: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(widget.role.code),
+                  ],
+                ),
               ],
             ),
             const Divider(height: 24),
             // 数据权限范围选择
             DropdownButtonFormField<int>(
               value: _dataScope,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Data Scope',
-                border: const OutlineInputBorder(),
+                border: OutlineInputBorder(),
               ),
               items: _dataScopeOptions.map((option) {
                 return DropdownMenuItem(
@@ -1091,7 +1122,9 @@ class _AssignDataScopeDialogState extends State<_AssignDataScopeDialog> {
             const SizedBox(height: 16),
             // 部门选择树（仅自定义部门时显示）
             if (_dataScope == 2) ...[
-              Row(
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   TextButton.icon(
                     onPressed: _toggleSelectAll,

@@ -115,7 +115,10 @@ class _NoticePageState extends ConsumerState<NoticePage> {
   Widget _buildSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Wrap(
+        spacing: 16,
+        runSpacing: 12,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           // 公告标题搜索
           SizedBox(
@@ -131,7 +134,6 @@ class _NoticePageState extends ConsumerState<NoticePage> {
               onSubmitted: (_) => _search(),
             ),
           ),
-          const SizedBox(width: 16),
 
           // 状态筛选
           SizedBox(
@@ -155,7 +157,6 @@ class _NoticePageState extends ConsumerState<NoticePage> {
               },
             ),
           ),
-          const SizedBox(width: 16),
 
           // 搜索按钮
           ElevatedButton.icon(
@@ -163,7 +164,6 @@ class _NoticePageState extends ConsumerState<NoticePage> {
             icon: const Icon(Icons.search),
             label: Text(S.current.strings.search),
           ),
-          const SizedBox(width: 8),
 
           // 重置按钮
           OutlinedButton.icon(
@@ -602,7 +602,9 @@ class _NoticeDataSource extends DataTableSource {
         DataCell(Text(notice.creator ?? '-')),
         DataCell(Text(notice.createTime ?? '-')),
         DataCell(
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
             children: [
               TextButton(
                 onPressed: () => onEdit(notice),

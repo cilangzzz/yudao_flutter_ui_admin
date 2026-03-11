@@ -42,10 +42,15 @@ class _DictTypePageState extends ConsumerState<DictTypePage> {
 
     try {
       final api = ref.read(dictTypeApiProvider);
-      final response = await api.getDictTypePage(PageParam(
-        pageNum: _currentPage,
-        pageSize: _pageSize,
-      ));
+      // 服务端过滤：传递搜索参数
+      final response = await api.getDictTypePage(
+        PageParam(
+          pageNum: _currentPage,
+          pageSize: _pageSize,
+        ),
+        name: _searchController.text.isNotEmpty ? _searchController.text : null,
+        status: _selectedStatus != null ? int.tryParse(_selectedStatus!) : null,
+      );
 
       if (response.isSuccess && response.data != null) {
         setState(() {
@@ -126,47 +131,49 @@ class _DictTypePageState extends ConsumerState<DictTypePage> {
         title: Text(dictType == null ? S.current.addDictType : S.current.editDictType),
         content: SizedBox(
           width: 400,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: S.current.dictName,
-                  border: OutlineInputBorder(),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    labelText: S.current.dictName,
+                    border: OutlineInputBorder(),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: typeController,
-                decoration: InputDecoration(
-                  labelText: S.current.dictType,
-                  border: OutlineInputBorder(),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: typeController,
+                  decoration: InputDecoration(
+                    labelText: S.current.dictType,
+                    border: OutlineInputBorder(),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<int>(
-                value: status,
-                decoration: InputDecoration(
-                  labelText: S.current.status,
-                  border: OutlineInputBorder(),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<int>(
+                  value: status,
+                  decoration: InputDecoration(
+                    labelText: S.current.status,
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [
+                    DropdownMenuItem(value: 0, child: Text(S.current.normal)),
+                    DropdownMenuItem(value: 1, child: Text(S.current.stopped)),
+                  ],
+                  onChanged: (value) => status = value ?? 0,
                 ),
-                items: [
-                  DropdownMenuItem(value: 0, child: Text(S.current.normal)),
-                  DropdownMenuItem(value: 1, child: Text(S.current.stopped)),
-                ],
-                onChanged: (value) => status = value ?? 0,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: remarkController,
-                decoration: InputDecoration(
-                  labelText: S.current.remark,
-                  border: OutlineInputBorder(),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: remarkController,
+                  decoration: InputDecoration(
+                    labelText: S.current.remark,
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
                 ),
-                maxLines: 3,
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         actions: [
@@ -229,10 +236,13 @@ class _DictTypePageState extends ConsumerState<DictTypePage> {
   Widget _buildSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Wrap(
+        spacing: 16,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          Expanded(
-            flex: 2,
+          SizedBox(
+            width: 250,
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -244,7 +254,6 @@ class _DictTypePageState extends ConsumerState<DictTypePage> {
               onSubmitted: (_) => _loadData(),
             ),
           ),
-          const SizedBox(width: 16),
           SizedBox(
             width: 150,
             child: DropdownButtonFormField<String>(
@@ -265,7 +274,6 @@ class _DictTypePageState extends ConsumerState<DictTypePage> {
               },
             ),
           ),
-          const SizedBox(width: 16),
           ElevatedButton.icon(
             onPressed: _loadData,
             icon: const Icon(Icons.refresh),
@@ -284,14 +292,25 @@ class _DictTypePageState extends ConsumerState<DictTypePage> {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: PaginatedDataTable(
-        header: Text(S.current.dictTypeList),
+        header: Row(
+          children: [
+            Text(S.current.dictTypeList),
+            const Spacer(),
+            Text(
+              '${S.current.total}: $_total',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
         rowsPerPage: _pageSize,
         availableRowsPerPage: const [10, 20, 50],
         onPageChanged: (page) {
           _currentPage = page + 1;
           _loadData();
         },
-        // total: _total,
         columns: [
           DataColumn(label: Text(S.current.id)),
           DataColumn(label: Text(S.current.dictName)),
@@ -374,7 +393,9 @@ class _DictTypeDataSource extends DataTableSource {
           dictType.createTime?.toString().substring(0, 19) ?? '-',
         )),
         DataCell(
-          Row(
+          Wrap(
+            spacing: 0,
+            runSpacing: 4,
             children: [
               TextButton(
                 onPressed: () => onEdit?.call(dictType),

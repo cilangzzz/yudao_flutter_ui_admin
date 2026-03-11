@@ -57,18 +57,19 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
 
     try {
       final api = ref.read(dictDataApiProvider);
-      final response = await api.getDictDataPage(PageParam(
-        pageNum: _currentPage,
-        pageSize: _pageSize,
-      ));
+      // 服务端过滤：传递 dictType 参数，避免客户端过滤
+      final response = await api.getDictDataPage(
+        PageParam(
+          pageNum: _currentPage,
+          pageSize: _pageSize,
+        ),
+        dictType: widget.dictType,
+        status: _selectedStatus != null ? int.tryParse(_selectedStatus!) : null,
+      );
 
       if (response.isSuccess && response.data != null) {
-        // 过滤当前字典类型的数据
-        final filteredList = response.data!.list
-            .where((item) => item.dictType == widget.dictType)
-            .toList();
         setState(() {
-          _dictDataList = filteredList;
+          _dictDataList = response.data!.list;
           _total = response.data!.total;
         });
       } else {
@@ -301,17 +302,17 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
   Widget _buildSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Wrap(
+        spacing: 16,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          Expanded(
-            child: Text(
-              widget.dictType != null
-                  ? '${S.current.currentDictType}: ${widget.dictType}'
-                  : S.current.pleaseSelectDictType,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+          Text(
+            widget.dictType != null
+                ? '${S.current.currentDictType}: ${widget.dictType}'
+                : S.current.pleaseSelectDictType,
+            style: Theme.of(context).textTheme.titleMedium,
           ),
-          const SizedBox(width: 16),
           SizedBox(
             width: 150,
             child: DropdownButtonFormField<String>(
@@ -332,7 +333,6 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
               },
             ),
           ),
-          const SizedBox(width: 16),
           ElevatedButton.icon(
             onPressed: widget.dictType == null ? null : _loadData,
             icon: const Icon(Icons.refresh),
@@ -363,14 +363,25 @@ class _DictDataPageState extends ConsumerState<DictDataPage> {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: PaginatedDataTable(
-        header: Text(S.current.dictDataList),
+        header: Row(
+          children: [
+            Text(S.current.dictDataList),
+            const Spacer(),
+            Text(
+              '${S.current.total}: $_total',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
         rowsPerPage: _pageSize,
         availableRowsPerPage: const [10, 20, 50],
         onPageChanged: (page) {
           _currentPage = page + 1;
           _loadData();
         },
-        // total: _total,
         columns: [
           DataColumn(label: Text(S.current.id)),
           DataColumn(label: Text(S.current.dataLabel)),
@@ -471,7 +482,9 @@ class _DictDataDataSource extends DataTableSource {
           dictData.createTime?.toString().substring(0, 19) ?? '-',
         )),
         DataCell(
-          Row(
+          Wrap(
+            spacing: 0,
+            runSpacing: 4,
             children: [
               TextButton(
                 onPressed: () => onEdit?.call(dictData),

@@ -247,10 +247,12 @@ class _NotifyMessagePageState extends ConsumerState<NotifyMessagePage> {
   }
 
   Widget _buildDesktopSearchBar(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
+    return Padding(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Wrap(
+        spacing: 16,
+        runSpacing: 12,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           SizedBox(
             width: 150,
@@ -266,7 +268,6 @@ class _NotifyMessagePageState extends ConsumerState<NotifyMessagePage> {
               onSubmitted: (_) => _search(),
             ),
           ),
-          const SizedBox(width: 16),
           SizedBox(
             width: 150,
             child: DropdownButtonFormField<int?>(
@@ -288,7 +289,6 @@ class _NotifyMessagePageState extends ConsumerState<NotifyMessagePage> {
               },
             ),
           ),
-          const SizedBox(width: 16),
           SizedBox(
             width: 180,
             child: TextField(
@@ -302,7 +302,6 @@ class _NotifyMessagePageState extends ConsumerState<NotifyMessagePage> {
               onSubmitted: (_) => _search(),
             ),
           ),
-          const SizedBox(width: 16),
           SizedBox(
             width: 150,
             child: DropdownButtonFormField<int?>(
@@ -325,7 +324,6 @@ class _NotifyMessagePageState extends ConsumerState<NotifyMessagePage> {
               },
             ),
           ),
-          const SizedBox(width: 16),
           // 创建时间范围选择
           InkWell(
             onTap: () async {
@@ -349,6 +347,7 @@ class _NotifyMessagePageState extends ConsumerState<NotifyMessagePage> {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.date_range, size: 18, color: Colors.grey),
                   const SizedBox(width: 8),
@@ -364,13 +363,11 @@ class _NotifyMessagePageState extends ConsumerState<NotifyMessagePage> {
               ),
             ),
           ),
-          const SizedBox(width: 16),
           ElevatedButton.icon(
             onPressed: _search,
             icon: const Icon(Icons.search),
             label: Text(S.current.search),
           ),
-          const SizedBox(width: 8),
           OutlinedButton.icon(
             onPressed: _reset,
             icon: const Icon(Icons.refresh),

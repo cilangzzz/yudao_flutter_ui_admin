@@ -12,10 +12,24 @@ class DictTypeApi {
   DictTypeApi(this._client);
 
   /// 分页查询字典类型
-  Future<ApiResponse<PageResult<DictType>>> getDictTypePage(PageParam params) async {
+  /// [params] 分页参数
+  /// [name] 字典名称（模糊搜索）
+  /// [type] 字典类型（模糊搜索）
+  /// [status] 状态
+  Future<ApiResponse<PageResult<DictType>>> getDictTypePage(
+    PageParam params, {
+    String? name,
+    String? type,
+    int? status,
+  }) async {
+    final queryParams = params.toJson();
+    if (name != null && name.isNotEmpty) queryParams['name'] = name;
+    if (type != null && type.isNotEmpty) queryParams['type'] = type;
+    if (status != null) queryParams['status'] = status;
+
     return _client.get<PageResult<DictType>>(
       '/system/dict-type/page',
-      queryParameters: params.toJson(),
+      queryParameters: queryParams,
       fromJsonT: (json) => PageResult.fromJson(
         json as Map<String, dynamic>,
         (e) => DictType.fromJson(e as Map<String, dynamic>),

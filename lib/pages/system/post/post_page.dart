@@ -120,11 +120,14 @@ class _PostPageState extends ConsumerState<PostPage> {
   Widget _buildSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           // 岗位名称搜索
           SizedBox(
-            width: 200,
+            width: 220,
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -136,11 +139,9 @@ class _PostPageState extends ConsumerState<PostPage> {
               onSubmitted: (_) => _search(),
             ),
           ),
-          const SizedBox(width: 16),
-
           // 岗位编码搜索
           SizedBox(
-            width: 200,
+            width: 220,
             child: TextField(
               controller: _codeSearchController,
               decoration: InputDecoration(
@@ -152,11 +153,9 @@ class _PostPageState extends ConsumerState<PostPage> {
               onSubmitted: (_) => _search(),
             ),
           ),
-          const SizedBox(width: 16),
-
           // 状态筛选
           SizedBox(
-            width: 150,
+            width: 160,
             child: DropdownButtonFormField<int?>(
               value: _selectedStatus,
               decoration: InputDecoration(
@@ -176,16 +175,12 @@ class _PostPageState extends ConsumerState<PostPage> {
               },
             ),
           ),
-          const SizedBox(width: 16),
-
           // 搜索按钮
           ElevatedButton.icon(
             onPressed: _search,
             icon: const Icon(Icons.search),
             label: Text(S.current.search),
           ),
-          const SizedBox(width: 8),
-
           // 重置按钮
           OutlinedButton.icon(
             onPressed: _reset,
@@ -272,69 +267,62 @@ class _PostPageState extends ConsumerState<PostPage> {
           title: Text(post == null ? S.current.addPost : S.current.editPost),
           content: SizedBox(
             width: 400,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    labelText: '${S.current.postName} *',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: codeController,
-                  decoration: InputDecoration(
-                    labelText: '${S.current.postCode} *',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: sortController,
-                  decoration: InputDecoration(
-                    labelText: S.current.postSort,
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Text('${S.current.status}: '),
-                    Radio<int>(
-                      value: 0,
-                      groupValue: status,
-                      onChanged: (value) {
-                        setState(() {
-                          status = value!;
-                        });
-                      },
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      labelText: '${S.current.postName} *',
+                      border: const OutlineInputBorder(),
                     ),
-                    Text(S.current.enabled),
-                    Radio<int>(
-                      value: 1,
-                      groupValue: status,
-                      onChanged: (value) {
-                        setState(() {
-                          status = value!;
-                        });
-                      },
-                    ),
-                    Text(S.current.disabled),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: remarkController,
-                  decoration: InputDecoration(
-                    labelText: S.current.remark,
-                    border: OutlineInputBorder(),
                   ),
-                  maxLines: 3,
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: codeController,
+                    decoration: InputDecoration(
+                      labelText: '${S.current.postCode} *',
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: sortController,
+                    decoration: InputDecoration(
+                      labelText: S.current.postSort,
+                      border: const OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<int>(
+                    value: status,
+                    decoration: InputDecoration(
+                      labelText: S.current.status,
+                      border: const OutlineInputBorder(),
+                    ),
+                    items: [
+                      DropdownMenuItem(value: 0, child: Text(S.current.enabled)),
+                      DropdownMenuItem(value: 1, child: Text(S.current.disabled)),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() => status = value);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: remarkController,
+                    decoration: InputDecoration(
+                      labelText: S.current.remark,
+                      border: const OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                  ),
+                ],
+              ),
             ),
           ),
           actions: [
@@ -499,7 +487,9 @@ class _PostDataSource extends DataTableSource {
         DataCell(Text(post.remark ?? '-')),
         DataCell(Text(post.createTime ?? '-')),
         DataCell(
-          Row(
+          Wrap(
+            spacing: 4,
+            runSpacing: 4,
             children: [
               TextButton(
                 onPressed: () => onEdit(post),

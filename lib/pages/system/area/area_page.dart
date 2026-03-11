@@ -17,7 +17,7 @@ class _AreaPageState extends ConsumerState<AreaPage> {
   List<Area> _areaTree = [];
   bool _isLoading = true;
   String? _error;
-  bool _isExpanded = true;
+  bool _isExpanded = false; // 默认折叠所有节点，优化大数据量性能
 
   // 展开状态记录
   final Map<int, bool> _expandedMap = {};
@@ -74,7 +74,8 @@ class _AreaPageState extends ConsumerState<AreaPage> {
     final result = <_FlatArea>[];
     for (final area in areas) {
       final hasChildren = area.children != null && area.children!.isNotEmpty;
-      final isExpanded = _expandedMap[area.id] ?? true;
+      // 默认折叠所有节点，优化大数据量性能
+      final isExpanded = _expandedMap[area.id] ?? false;
       result.add(_FlatArea(area: area, level: level, hasChildren: hasChildren));
 
       if (hasChildren && isExpanded) {
@@ -86,7 +87,8 @@ class _AreaPageState extends ConsumerState<AreaPage> {
 
   void _toggleExpand(int areaId) {
     setState(() {
-      _expandedMap[areaId] = !(_expandedMap[areaId] ?? true);
+      // 默认折叠，切换时取反
+      _expandedMap[areaId] = !(_expandedMap[areaId] ?? false);
     });
   }
 

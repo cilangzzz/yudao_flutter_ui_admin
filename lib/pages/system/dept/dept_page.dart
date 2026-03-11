@@ -24,7 +24,7 @@ class _DeptPageState extends ConsumerState<DeptPage> {
   Set<int> _selectedIds = {};
   bool _isLoading = true;
   String? _error;
-  bool _isExpanded = true;
+  bool _isExpanded = false; // 默认折叠所有节点，优化大数据量性能
 
   // 展开状态记录
   final Map<int, bool> _expandedMap = {};
@@ -105,7 +105,8 @@ class _DeptPageState extends ConsumerState<DeptPage> {
     final result = <_FlatDept>[];
     for (final dept in depts) {
       final hasChildren = dept.children != null && dept.children!.isNotEmpty;
-      final isExpanded = _expandedMap[dept.id] ?? true;
+      // 默认折叠所有节点，优化大数据量性能
+      final isExpanded = _expandedMap[dept.id] ?? false;
       result.add(_FlatDept(dept: dept, level: level, hasChildren: hasChildren));
 
       if (hasChildren && isExpanded) {
@@ -117,7 +118,8 @@ class _DeptPageState extends ConsumerState<DeptPage> {
 
   void _toggleExpand(int deptId) {
     setState(() {
-      _expandedMap[deptId] = !(_expandedMap[deptId] ?? true);
+      // 默认折叠，切换时取反
+      _expandedMap[deptId] = !(_expandedMap[deptId] ?? false);
     });
   }
 
@@ -479,7 +481,10 @@ class _DeptPageState extends ConsumerState<DeptPage> {
   Widget _buildToolbar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           // 搜索框
           SizedBox(
@@ -495,19 +500,16 @@ class _DeptPageState extends ConsumerState<DeptPage> {
               onSubmitted: (_) => _loadDeptList(),
             ),
           ),
-          const SizedBox(width: 16),
           ElevatedButton.icon(
             onPressed: _loadDeptList,
             icon: const Icon(Icons.refresh),
             label: Text(S.current.refresh),
           ),
-          const SizedBox(width: 8),
           OutlinedButton.icon(
             onPressed: _toggleAll,
             icon: Icon(_isExpanded ? Icons.unfold_less : Icons.unfold_more),
             label: Text(_isExpanded ? S.current.collapseAll : S.current.expandAll),
           ),
-          const SizedBox(width: 8),
           ElevatedButton.icon(
             onPressed: _selectedIds.isEmpty ? null : _deleteSelected,
             style: ElevatedButton.styleFrom(
@@ -690,8 +692,9 @@ class _DeptPageState extends ConsumerState<DeptPage> {
                     ),
                     DataCell(Text(dept.createTime?.toString().substring(0, 19) ?? '-')),
                     DataCell(
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
+                      Wrap(
+                        spacing: 0,
+                        runSpacing: 4,
                         children: [
                           TextButton(
                             onPressed: () => _showDeptDialog(null, dept.id),

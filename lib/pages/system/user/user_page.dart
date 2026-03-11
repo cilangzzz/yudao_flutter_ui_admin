@@ -42,6 +42,9 @@ class _UserPageState extends ConsumerState<UserPage> {
   bool _isLoading = true;
   String? _error;
 
+  // 部门树展开状态管理
+  final Map<int, bool> _deptExpandedMap = {};
+
   @override
   void initState() {
     super.initState();
@@ -183,6 +186,14 @@ class _UserPageState extends ConsumerState<UserPage> {
     });
     _currentPage = 1;
     _loadUserList();
+  }
+
+  /// 切换部门树节点展开/折叠状态
+  void _toggleDeptExpand(int deptId) {
+    setState(() {
+      // 默认折叠，切换时取反
+      _deptExpandedMap[deptId] = !(_deptExpandedMap[deptId] ?? false);
+    });
   }
 
   Future<void> _exportUsers() async {
@@ -366,6 +377,8 @@ class _UserPageState extends ConsumerState<UserPage> {
   Widget _buildDeptTile(BuildContext context, Dept dept, int level) {
     final hasChildren = dept.children != null && dept.children!.isNotEmpty;
     final isSelected = _selectedDeptId == dept.id;
+    // 默认折叠所有节点
+    final isExpanded = _deptExpandedMap[dept.id] ?? false;
 
     return Column(
       children: [
@@ -375,6 +388,19 @@ class _UserPageState extends ConsumerState<UserPage> {
             padding: EdgeInsets.only(left: 16.0 * level, top: 8, bottom: 8),
             child: Row(
               children: [
+                // 展开/折叠图标
+                if (hasChildren)
+                  GestureDetector(
+                    onTap: () => _toggleDeptExpand(dept.id!),
+                    child: Icon(
+                      isExpanded ? Icons.expand_more : Icons.chevron_right,
+                      size: 20,
+                      color: Colors.grey[600],
+                    ),
+                  )
+                else
+                  const SizedBox(width: 20),
+                const SizedBox(width: 4),
                 Icon(
                   hasChildren ? Icons.folder : Icons.folder_open,
                   size: 18,
@@ -394,7 +420,8 @@ class _UserPageState extends ConsumerState<UserPage> {
             ),
           ),
         ),
-        if (hasChildren)
+        // 只在展开时渲染子节点
+        if (hasChildren && isExpanded)
           ...dept.children!.map((child) => _buildDeptTile(context, child, level + 1)),
       ],
     );
@@ -551,20 +578,21 @@ class _UserPageState extends ConsumerState<UserPage> {
   Widget _buildToolbar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           ElevatedButton.icon(
             onPressed: () => _showUserDialog(context),
             icon: const Icon(Icons.add),
             label: Text(S.current.addUser),
           ),
-          const SizedBox(width: 8),
           ElevatedButton.icon(
             onPressed: _exportUsers,
             icon: const Icon(Icons.download),
             label: Text(S.current.export),
           ),
-          const SizedBox(width: 8),
           ElevatedButton.icon(
             onPressed: _selectedIds.isEmpty ? null : _deleteSelected,
             style: ElevatedButton.styleFrom(

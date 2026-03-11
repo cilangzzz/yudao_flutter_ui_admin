@@ -49,7 +49,7 @@ class _MenuPageState extends ConsumerState<MenuPage> {
   Set<int> _selectedIds = {};
   bool _isLoading = true;
   String? _error;
-  bool _isExpanded = true;
+  bool _isExpanded = false; // 默认折叠所有节点，优化大数据量性能
 
   // 展开状态记录
   final Map<int, bool> _expandedMap = {};
@@ -115,7 +115,8 @@ class _MenuPageState extends ConsumerState<MenuPage> {
     final result = <_FlatMenu>[];
     for (final menu in menus) {
       final hasChildren = menu.children != null && menu.children!.isNotEmpty;
-      final isExpanded = _expandedMap[menu.id] ?? true;
+      // 默认折叠所有节点，优化大数据量性能
+      final isExpanded = _expandedMap[menu.id] ?? false;
       result.add(_FlatMenu(menu: menu, level: level, hasChildren: hasChildren));
 
       if (hasChildren && isExpanded) {
@@ -127,7 +128,8 @@ class _MenuPageState extends ConsumerState<MenuPage> {
 
   void _toggleExpand(int menuId) {
     setState(() {
-      _expandedMap[menuId] = !(_expandedMap[menuId] ?? true);
+      // 默认折叠，切换时取反
+      _expandedMap[menuId] = !(_expandedMap[menuId] ?? false);
     });
   }
 
@@ -640,7 +642,10 @@ class _MenuPageState extends ConsumerState<MenuPage> {
   Widget _buildToolbar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           // 搜索框
           SizedBox(
@@ -656,13 +661,11 @@ class _MenuPageState extends ConsumerState<MenuPage> {
               onSubmitted: (_) => _loadMenuList(),
             ),
           ),
-          const SizedBox(width: 16),
           ElevatedButton.icon(
             onPressed: _loadMenuList,
             icon: const Icon(Icons.refresh),
             label: Text(S.current.refresh),
           ),
-          const SizedBox(width: 8),
           OutlinedButton.icon(
             onPressed: _toggleAll,
             icon: Icon(_isExpanded ? Icons.unfold_less : Icons.unfold_more),
@@ -842,8 +845,9 @@ class _MenuPageState extends ConsumerState<MenuPage> {
                       ),
                     ),
                     DataCell(
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
+                      Wrap(
+                        spacing: 0,
+                        runSpacing: 4,
                         children: [
                           TextButton(
                             onPressed: () => _showMenuDialog(null, menu.id),

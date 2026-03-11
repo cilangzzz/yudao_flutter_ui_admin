@@ -264,95 +264,89 @@ class _MailTemplatePageState extends ConsumerState<MailTemplatePage> {
   Widget _buildSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            SizedBox(
-              width: 150,
-              child: TextField(
-                controller: _searchNameController,
-                decoration: const InputDecoration(
-                  hintText: '模板名称',
-                  prefixIcon: Icon(Icons.text_fields),
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                ),
-                onSubmitted: (_) => _search(),
+      child: Wrap(
+        spacing: 16,
+        runSpacing: 12,
+        children: [
+          SizedBox(
+            width: 150,
+            child: TextField(
+              controller: _searchNameController,
+              decoration: const InputDecoration(
+                hintText: '模板名称',
+                prefixIcon: Icon(Icons.text_fields),
+                border: OutlineInputBorder(),
+                isDense: true,
               ),
+              onSubmitted: (_) => _search(),
             ),
-            const SizedBox(width: 16),
-            SizedBox(
-              width: 150,
-              child: TextField(
-                controller: _searchCodeController,
-                decoration: const InputDecoration(
-                  hintText: '模板编码',
-                  prefixIcon: Icon(Icons.code),
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                ),
-                onSubmitted: (_) => _search(),
+          ),
+          SizedBox(
+            width: 150,
+            child: TextField(
+              controller: _searchCodeController,
+              decoration: const InputDecoration(
+                hintText: '模板编码',
+                prefixIcon: Icon(Icons.code),
+                border: OutlineInputBorder(),
+                isDense: true,
               ),
+              onSubmitted: (_) => _search(),
             ),
-            const SizedBox(width: 16),
-            SizedBox(
-              width: 150,
-              child: DropdownButtonFormField<int>(
-                value: _selectedStatus,
-                decoration: const InputDecoration(
-                  labelText: '状态',
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                ),
-                items: const [
-                  DropdownMenuItem(value: null, child: Text('全部')),
-                  DropdownMenuItem(value: 0, child: Text('开启')),
-                  DropdownMenuItem(value: 1, child: Text('关闭')),
-                ],
-                onChanged: (value) {
-                  setState(() => _selectedStatus = value);
-                  _search();
-                },
+          ),
+          SizedBox(
+            width: 150,
+            child: DropdownButtonFormField<int>(
+              value: _selectedStatus,
+              decoration: const InputDecoration(
+                labelText: '状态',
+                border: OutlineInputBorder(),
+                isDense: true,
               ),
+              items: const [
+                DropdownMenuItem(value: null, child: Text('全部')),
+                DropdownMenuItem(value: 0, child: Text('开启')),
+                DropdownMenuItem(value: 1, child: Text('关闭')),
+              ],
+              onChanged: (value) {
+                setState(() => _selectedStatus = value);
+                _search();
+              },
             ),
-            const SizedBox(width: 16),
-            SizedBox(
-              width: 200,
-              child: DropdownButtonFormField<int>(
-                value: _selectedAccountId,
-                decoration: const InputDecoration(
-                  labelText: '邮箱账号',
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                ),
-                items: [
-                  const DropdownMenuItem(value: null, child: Text('全部')),
-                  ..._accountList.map((a) => DropdownMenuItem(
-                        value: a.id,
-                        child: Text(a.mail),
-                      )),
-                ],
-                onChanged: (value) {
-                  setState(() => _selectedAccountId = value);
-                  _search();
-                },
+          ),
+          SizedBox(
+            width: 200,
+            child: DropdownButtonFormField<int>(
+              value: _selectedAccountId,
+              decoration: const InputDecoration(
+                labelText: '邮箱账号',
+                border: OutlineInputBorder(),
+                isDense: true,
               ),
+              items: [
+                const DropdownMenuItem(value: null, child: Text('全部')),
+                ..._accountList.map((a) => DropdownMenuItem(
+                      value: a.id,
+                      child: Text(a.mail),
+                    )),
+              ],
+              onChanged: (value) {
+                setState(() => _selectedAccountId = value);
+                _search();
+              },
             ),
-            const SizedBox(width: 16),
-            ElevatedButton.icon(
-              onPressed: _search,
-              icon: const Icon(Icons.search),
-              label: const Text('搜索'),
-            ),
-            const SizedBox(width: 8),
-            OutlinedButton.icon(
-              onPressed: _reset,
-              icon: const Icon(Icons.refresh),
-              label: const Text('重置'),
-            ),
-          ],
-        ),
+          ),
+          ElevatedButton.icon(
+            onPressed: _search,
+            icon: const Icon(Icons.search),
+            label: const Text('搜索'),
+          ),
+          OutlinedButton.icon(
+            onPressed: _reset,
+            icon: const Icon(Icons.refresh),
+            label: const Text('重置'),
+          ),
+        ],
       ),
     );
   }
@@ -477,8 +471,9 @@ class _MailTemplatePageState extends ConsumerState<MailTemplatePage> {
                     DataCell(Text(item.nickname ?? '-')),
                     DataCell(_buildStatusTag(item.status)),
                     DataCell(Text(item.createTime ?? '-')),
-                    DataCell(Row(
-                      mainAxisSize: MainAxisSize.min,
+                    DataCell(Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
                       children: [
                         TextButton(
                           onPressed: () => _showTemplateDialog(item),

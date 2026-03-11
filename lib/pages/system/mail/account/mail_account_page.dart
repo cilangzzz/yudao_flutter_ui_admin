@@ -214,7 +214,9 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
   Widget _buildSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Wrap(
+        spacing: 16,
+        runSpacing: 12,
         children: [
           SizedBox(
             width: 200,
@@ -229,7 +231,6 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
               onSubmitted: (_) => _search(),
             ),
           ),
-          const SizedBox(width: 16),
           SizedBox(
             width: 200,
             child: TextField(
@@ -243,13 +244,11 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
               onSubmitted: (_) => _search(),
             ),
           ),
-          const SizedBox(width: 16),
           ElevatedButton.icon(
             onPressed: _search,
             icon: const Icon(Icons.search),
             label: const Text('搜索'),
           ),
-          const SizedBox(width: 8),
           OutlinedButton.icon(
             onPressed: _reset,
             icon: const Icon(Icons.refresh),
@@ -380,8 +379,9 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
                     DataCell(_buildBoolTag(item.sslEnable)),
                     DataCell(_buildBoolTag(item.starttlsEnable)),
                     DataCell(Text(item.createTime ?? '-')),
-                    DataCell(Row(
-                      mainAxisSize: MainAxisSize.min,
+                    DataCell(Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
                       children: [
                         TextButton(
                           onPressed: () => _showAccountDialog(item),
