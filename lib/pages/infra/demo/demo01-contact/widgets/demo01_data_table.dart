@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/demo01_contact.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 示例联系人数据表格组件
 class Demo01DataTable extends StatelessWidget {
@@ -18,6 +19,8 @@ class Demo01DataTable extends StatelessWidget {
   final void Function(Demo01Contact contact) onDelete;
   final Set<int> selectedIds;
   final void Function(Set<int> ids) onSelectionChanged;
+  final bool isMobile;
+  final double availableWidth;
 
   const Demo01DataTable({
     super.key,
@@ -34,6 +37,8 @@ class Demo01DataTable extends StatelessWidget {
     required this.onDelete,
     required this.selectedIds,
     required this.onSelectionChanged,
+    this.isMobile = false,
+    this.availableWidth = double.infinity,
   });
 
   @override
@@ -62,8 +67,13 @@ class Demo01DataTable extends StatelessWidget {
       return Center(child: Text(S.current.noData));
     }
 
+    // 响应式适配：根据可用宽度调整最小宽度
+    final minWidth = isMobile ? availableWidth : 1000.0;
+    final columnSpacing = isMobile ? 8.0 : 12.0;
+    final horizontalMargin = isMobile ? 8.0 : 12.0;
+
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isMobile ? 8 : 16),
       child: Column(
         children: [
           // 表头工具栏
@@ -75,12 +85,12 @@ class Demo01DataTable extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          // 表格
-          Expanded(
+          // 表格 - 使用 Flexible 防止溢出
+          Flexible(
             child: DataTable2(
-              columnSpacing: 12,
-              horizontalMargin: 12,
-              minWidth: 1000,
+              columnSpacing: columnSpacing,
+              horizontalMargin: horizontalMargin,
+              minWidth: minWidth,
               smRatio: 0.75,
               lmRatio: 1.5,
               headingRowColor: WidgetStateProperty.resolveWith(
@@ -167,7 +177,7 @@ class Demo01DataTable extends StatelessWidget {
                     DataCell(Text(contact.name)),
                     DataCell(_buildSexCell(contact)),
                     DataCell(Text(_formatBirthday(contact.birthday))),
-                    DataCell(Text(contact.description ?? '-')),
+                    DataCell(Text(contact.description ?? '-', overflow: TextOverflow.ellipsis)),
                     DataCell(_buildAvatarCell(contact)),
                     DataCell(Text(contact.createTime ?? '-')),
                     DataCell(_buildActionButtons(context, contact)),
@@ -176,49 +186,52 @@ class Demo01DataTable extends StatelessWidget {
               }).toList(),
             ),
           ),
-          // 分页控件
+          // 分页控件 - 使用 SingleChildScrollView 防止溢出
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Row(
-                children: [
-                  Text('${S.current.pageSize}: '),
-                  DropdownButton<int>(
-                    value: pageSize,
-                    items: [10, 20, 50, 100].map((value) {
-                      return DropdownMenuItem(
-                        value: value,
-                        child: Text('$value'),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        onPageSizeChanged(value);
-                      }
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(width: 24),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left),
-                    onPressed: currentPage > 1
-                        ? () => onPageChanged(currentPage - 1)
-                        : null,
-                  ),
-                  Text('$currentPage / ${(totalCount / pageSize).ceil()}'),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right),
-                    onPressed: currentPage * pageSize < totalCount
-                        ? () => onPageChanged(currentPage + 1)
-                        : null,
-                  ),
-                ],
-              ),
-            ],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Row(
+                  children: [
+                    Text('${S.current.pageSize}: '),
+                    DropdownButton<int>(
+                      value: pageSize,
+                      items: [10, 20, 50, 100].map((value) {
+                        return DropdownMenuItem(
+                          value: value,
+                          child: Text('$value'),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          onPageSizeChanged(value);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 24),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.chevron_left),
+                      onPressed: currentPage > 1
+                          ? () => onPageChanged(currentPage - 1)
+                          : null,
+                    ),
+                    Text('$currentPage / ${(totalCount / pageSize).ceil()}'),
+                    IconButton(
+                      icon: const Icon(Icons.chevron_right),
+                      onPressed: currentPage * pageSize < totalCount
+                          ? () => onPageChanged(currentPage + 1)
+                          : null,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),

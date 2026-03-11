@@ -3,10 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yudao_flutter_ui_admin/api/infra/demo03_student_inner_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/demo03_student.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
-import '../demo03-normal/widgets/demo03_search_form.dart';
-import '../demo03-normal/widgets/demo03_action_buttons.dart';
-import 'dialogs/demo03_inner_form_dialog.dart';
-import 'widgets/demo03_expandable_data_table.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo03-normal/widgets/demo03_search_form.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo03-normal/widgets/demo03_action_buttons.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo03-inner/dialogs/demo03_inner_form_dialog.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo03-inner/widgets/demo03_expandable_data_table.dart';
 
 /// 学生管理页面 - Demo03 Inner模式（子表内嵌展开）
 class Demo03InnerPage extends ConsumerStatefulWidget {
@@ -223,6 +224,8 @@ class _Demo03InnerPageState extends ConsumerState<Demo03InnerPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+
     return Scaffold(
       body: Column(
         children: [
@@ -249,45 +252,51 @@ class _Demo03InnerPageState extends ConsumerState<Demo03InnerPage> {
           ),
           const Divider(height: 1),
 
-          // 可展开的数据表格
+          // 可展开的数据表格 - 使用 LayoutBuilder 确保布局适配
           Expanded(
-            child: Demo03ExpandableDataTable(
-              studentList: _studentList,
-              totalCount: _totalCount,
-              currentPage: _currentPage,
-              pageSize: _pageSize,
-              isLoading: _isLoading,
-              error: _error,
-              onReload: _loadStudentList,
-              onPageSizeChanged: (value) {
-                setState(() {
-                  _pageSize = value;
-                  _currentPage = 1;
-                });
-                _loadStudentList();
-              },
-              onPageChanged: (page) {
-                setState(() => _currentPage = page);
-                _loadStudentList();
-              },
-              onEdit: (student) => showDemo03InnerFormDialog(
-                context,
-                student: student,
-                ref: ref,
-                onSuccess: _loadStudentList,
-              ),
-              onDelete: _deleteStudent,
-              selectedIds: _selectedIds,
-              onSelectionChanged: (ids) => setState(() => _selectedIds = ids),
-              expandedRows: _expandedRows,
-              onExpandChanged: (id, isExpanded) {
-                setState(() {
-                  if (isExpanded) {
-                    _expandedRows.add(id);
-                  } else {
-                    _expandedRows.remove(id);
-                  }
-                });
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Demo03ExpandableDataTable(
+                  studentList: _studentList,
+                  totalCount: _totalCount,
+                  currentPage: _currentPage,
+                  pageSize: _pageSize,
+                  isLoading: _isLoading,
+                  error: _error,
+                  onReload: _loadStudentList,
+                  onPageSizeChanged: (value) {
+                    setState(() {
+                      _pageSize = value;
+                      _currentPage = 1;
+                    });
+                    _loadStudentList();
+                  },
+                  onPageChanged: (page) {
+                    setState(() => _currentPage = page);
+                    _loadStudentList();
+                  },
+                  onEdit: (student) => showDemo03InnerFormDialog(
+                    context,
+                    student: student,
+                    ref: ref,
+                    onSuccess: _loadStudentList,
+                  ),
+                  onDelete: _deleteStudent,
+                  selectedIds: _selectedIds,
+                  onSelectionChanged: (ids) => setState(() => _selectedIds = ids),
+                  expandedRows: _expandedRows,
+                  onExpandChanged: (id, isExpanded) {
+                    setState(() {
+                      if (isExpanded) {
+                        _expandedRows.add(id);
+                      } else {
+                        _expandedRows.remove(id);
+                      }
+                    });
+                  },
+                  isMobile: isMobile,
+                  availableWidth: constraints.maxWidth,
+                );
               },
             ),
           ),

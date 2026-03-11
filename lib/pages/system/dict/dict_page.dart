@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../api/system/dict_type_api.dart';
-import '../../../api/system/dict_data_api.dart';
-import '../../../models/system/dict_type.dart';
-import '../../../models/system/dict_data.dart';
-import '../../../models/common/page_param.dart';
-import '../../../i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/api/system/dict_type_api.dart';
+import 'package:yudao_flutter_ui_admin/api/system/dict_data_api.dart';
+import 'package:yudao_flutter_ui_admin/models/system/dict_type.dart';
+import 'package:yudao_flutter_ui_admin/models/system/dict_data.dart';
+import 'package:yudao_flutter_ui_admin/models/common/page_param.dart';
+import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 import 'widgets/dict_type_search_form.dart';
 import 'widgets/dict_type_action_buttons.dart';
 import 'widgets/dict_type_table.dart';
@@ -398,22 +399,30 @@ class _DictPageState extends ConsumerState<DictPage> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 800;
-
     return Scaffold(
-      body: isMobile
-          ? _buildMobileLayout(context)
-          : _buildDesktopLayout(context),
+      body: DeviceUIMode.layoutBuilder(
+        builder: (context, mode) {
+          if (mode == UIMode.mobile) {
+            return _buildMobileLayout(context);
+          }
+          return _buildDesktopLayout(context);
+        },
+      ),
     );
   }
 
   Widget _buildDesktopLayout(BuildContext context) {
+    final screenWidth = DeviceUIMode.widthOf(context);
+    // 响应式左侧面板宽度，防止溢出
+    final leftPanelWidth = screenWidth < 1200
+        ? screenWidth * 0.45
+        : screenWidth * 0.4;
+
     return Row(
       children: [
         // 左侧字典类型列表
         SizedBox(
-          width: MediaQuery.of(context).size.width * 0.5,
+          width: leftPanelWidth.clamp(300.0, 600.0),
           child: Card(
             margin: const EdgeInsets.all(8),
             child: Column(
@@ -554,8 +563,8 @@ class _DictPageState extends ConsumerState<DictPage> {
       children: [
         // 字典类型选择器
         Container(
-          height: 60,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          constraints: const BoxConstraints(minHeight: 60, maxHeight: 80),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
             children: [
               Text('${S.current.dictType}: '),
@@ -565,11 +574,16 @@ class _DictPageState extends ConsumerState<DictPage> {
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     isDense: true,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
+                  isExpanded: true,
                   items: _dictTypeList.map((type) {
                     return DropdownMenuItem(
                       value: type.type,
-                      child: Text(type.name),
+                      child: Text(
+                        type.name,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -582,6 +596,17 @@ class _DictPageState extends ConsumerState<DictPage> {
                     }
                   },
                 ),
+              ),
+              const SizedBox(width: 8),
+              // 添加字典类型按钮
+              IconButton(
+                onPressed: () => showDictTypeFormDialog(
+                  context,
+                  ref: ref,
+                  onSuccess: _loadDictTypeList,
+                ),
+                icon: const Icon(Icons.add),
+                tooltip: S.current.addType,
               ),
             ],
           ),

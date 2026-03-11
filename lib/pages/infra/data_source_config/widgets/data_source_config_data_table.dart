@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/data_source_config.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 数据源配置数据表格组件
 class DataSourceConfigDataTable extends StatelessWidget {
@@ -24,22 +25,28 @@ class DataSourceConfigDataTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     if (error != null) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('${S.current.loadFailed}: $error', style: const TextStyle(color: Colors.red)),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: onReload,
-              child: Text(S.current.retry),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('${S.current.loadFailed}: $error', style: const TextStyle(color: Colors.red)),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: onReload,
+                child: Text(S.current.retry),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -49,7 +56,7 @@ class DataSourceConfigDataTable extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isMobile ? 8 : 16),
       child: Column(
         children: [
           // 表头工具栏
@@ -64,9 +71,9 @@ class DataSourceConfigDataTable extends StatelessWidget {
           // 表格
           Expanded(
             child: DataTable2(
-              columnSpacing: 12,
-              horizontalMargin: 12,
-              minWidth: 800,
+              columnSpacing: isMobile ? 8 : 12,
+              horizontalMargin: isMobile ? 8 : 12,
+              minWidth: isMobile ? 500 : 800,
               smRatio: 0.75,
               lmRatio: 1.5,
               headingRowColor: WidgetStateProperty.resolveWith(
@@ -111,7 +118,7 @@ class DataSourceConfigDataTable extends StatelessWidget {
                     DataCell(Text(dataSourceConfig.url)),
                     DataCell(Text(dataSourceConfig.username)),
                     DataCell(Text(dataSourceConfig.createTime ?? '-')),
-                    DataCell(_buildActionButtons(context, dataSourceConfig, isMainDataSource)),
+                    DataCell(_buildActionButtons(context, dataSourceConfig, isMainDataSource, isMobile)),
                   ],
                 );
               }).toList(),
@@ -122,7 +129,25 @@ class DataSourceConfigDataTable extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, DataSourceConfig dataSourceConfig, bool isMainDataSource) {
+  Widget _buildActionButtons(BuildContext context, DataSourceConfig dataSourceConfig, bool isMainDataSource, bool isMobile) {
+    if (isMobile) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.edit, size: 20),
+            onPressed: isMainDataSource ? null : () => onEdit(dataSourceConfig),
+            tooltip: S.current.edit,
+          ),
+          IconButton(
+            icon: Icon(Icons.delete, size: 20, color: isMainDataSource ? Colors.grey : Colors.red),
+            onPressed: isMainDataSource ? null : () => onDelete(dataSourceConfig),
+            tooltip: S.current.delete,
+          ),
+        ],
+      );
+    }
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [

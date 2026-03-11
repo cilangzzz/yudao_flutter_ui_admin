@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../api/system/dept_api.dart';
-import '../../../../models/system/dept.dart';
-import '../../../../models/system/user.dart';
-import '../../../../i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/api/system/dept_api.dart';
+import 'package:yudao_flutter_ui_admin/models/system/dept.dart';
+import 'package:yudao_flutter_ui_admin/models/system/user.dart';
+import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
 
 /// 部门表单对话框（新增/编辑部门）
 class DeptFormDialog extends StatefulWidget {

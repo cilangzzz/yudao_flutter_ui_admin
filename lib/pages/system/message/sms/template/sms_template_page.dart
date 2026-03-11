@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:data_table_2/data_table_2.dart';
-import '/../../api/system/sms_template_api.dart';
-import '/../../api/system/sms_channel_api.dart';
-import '/../../models/system/sms_template.dart';
-import '/../../models/system/sms_channel.dart';
+import 'package:yudao_flutter_ui_admin/api/system/sms_template_api.dart';
+import 'package:yudao_flutter_ui_admin/api/system/sms_channel_api.dart';
+import 'package:yudao_flutter_ui_admin/models/system/sms_template.dart';
+import 'package:yudao_flutter_ui_admin/models/system/sms_channel.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 短信模板管理页面
 class SmsTemplatePage extends ConsumerStatefulWidget {
@@ -229,7 +230,7 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
         builder: (context, setState) => AlertDialog(
           title: Text(isEdit ? '编辑短信模板' : '添加短信模板'),
           content: SizedBox(
-            width: 500,
+            width: DeviceUIMode.select(context, mobile: () => double.maxFinite, desktop: () => 500.0),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -396,7 +397,6 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
     final mobileController = TextEditingController();
     final Map<String, TextEditingController> paramControllers = {};
 
-    // 解析模板参数
     final paramPattern = RegExp(r'\{(\w+)\}');
     final matches = paramPattern.allMatches(template.content);
     for (final match in matches) {
@@ -411,7 +411,7 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
       builder: (context) => AlertDialog(
         title: const Text('发送测试短信'),
         content: SizedBox(
-          width: 400,
+          width: DeviceUIMode.select(context, mobile: () => double.maxFinite, desktop: () => 400.0),
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -522,14 +522,10 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          _buildSearchBar(context),
-          const Divider(height: 1),
-          _buildToolbar(context),
-          const Divider(height: 1),
-          Expanded(child: _buildDataTable(context)),
-        ],
+      body: DeviceUIMode.builder(
+        context,
+        mobile: (context) => _buildMobileLayout(context),
+        desktop: (context) => _buildDesktopLayout(context),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showTemplateDialog(),
@@ -539,7 +535,29 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
     );
   }
 
-  Widget _buildSearchBar(BuildContext context) {
+  Widget _buildDesktopLayout(BuildContext context) {
+    return Column(
+      children: [
+        _buildDesktopSearchBar(context),
+        const Divider(height: 1),
+        _buildToolbar(context),
+        const Divider(height: 1),
+        Expanded(child: _buildDataTable(context)),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context) {
+    return Column(
+      children: [
+        _buildMobileSearchBar(context),
+        const Divider(height: 1),
+        Expanded(child: _buildMobileList(context)),
+      ],
+    );
+  }
+
+  Widget _buildDesktopSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Wrap(
@@ -547,7 +565,7 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
         runSpacing: 12,
         children: [
           SizedBox(
-            width: 150,
+            width: DeviceUIMode.select(context, mobile: () => 120.0, desktop: () => 150.0),
             child: TextField(
               controller: _searchCodeController,
               decoration: const InputDecoration(
@@ -559,7 +577,7 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
             ),
           ),
           SizedBox(
-            width: 150,
+            width: DeviceUIMode.select(context, mobile: () => 120.0, desktop: () => 150.0),
             child: TextField(
               controller: _searchNameController,
               decoration: const InputDecoration(
@@ -571,7 +589,7 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
             ),
           ),
           SizedBox(
-            width: 140,
+            width: DeviceUIMode.select(context, mobile: () => 100.0, desktop: () => 140.0),
             child: DropdownButtonFormField<int>(
               value: _selectedType,
               decoration: const InputDecoration(
@@ -592,7 +610,7 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
             ),
           ),
           SizedBox(
-            width: 180,
+            width: DeviceUIMode.select(context, mobile: () => 120.0, desktop: () => 180.0),
             child: DropdownButtonFormField<int>(
               value: _selectedChannelId,
               decoration: const InputDecoration(
@@ -614,7 +632,7 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
             ),
           ),
           SizedBox(
-            width: 120,
+            width: DeviceUIMode.select(context, mobile: () => 100.0, desktop: () => 120.0),
             child: DropdownButtonFormField<int>(
               value: _selectedStatus,
               decoration: const InputDecoration(
@@ -642,6 +660,63 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
             onPressed: _reset,
             icon: const Icon(Icons.refresh),
             label: const Text('重置'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileSearchBar(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _searchCodeController,
+                  decoration: const InputDecoration(
+                    hintText: '模板编码',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onSubmitted: (_) => _search(),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _searchNameController,
+                  decoration: const InputDecoration(
+                    hintText: '模板名称',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onSubmitted: (_) => _search(),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _search,
+                  icon: const Icon(Icons.search, size: 20),
+                  label: const Text('搜索'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _reset,
+                  icon: const Icon(Icons.refresh, size: 20),
+                  label: const Text('重置'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -768,8 +843,8 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
                     DataCell(Text(template.name)),
                     DataCell(Text(template.code)),
                     DataCell(
-                      SizedBox(
-                        width: 150,
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 150),
                         child: Text(
                           template.content,
                           overflow: TextOverflow.ellipsis,
@@ -834,6 +909,114 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
           const SizedBox(height: 8),
           _buildPagination(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMobileList(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('加载失败: $_error', style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _loadTemplateList, child: const Text('重试')),
+          ],
+        ),
+      );
+    }
+
+    if (_templateList.isEmpty) {
+      return const Center(child: Text('暂无数据'));
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadTemplateList,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(12),
+        itemCount: _templateList.length,
+        itemBuilder: (context, index) {
+          final template = _templateList[index];
+          return _buildTemplateCard(template);
+        },
+      ),
+    );
+  }
+
+  Widget _buildTemplateCard(SmsTemplate template) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _buildTypeTag(template.type),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    template.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                _buildStatusTag(template.status),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '编码: ${template.code}',
+              style: const TextStyle(color: Colors.grey),
+            ),
+            Text(
+              '渠道: ${_getChannelCodeText(template.channelCode)}',
+              style: const TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                template.content,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: () => _showTemplateDialog(template),
+                  icon: const Icon(Icons.edit, size: 18),
+                  label: const Text('编辑'),
+                ),
+                TextButton.icon(
+                  onPressed: () => _showSendSmsDialog(template),
+                  icon: const Icon(Icons.send, size: 18, color: Colors.blue),
+                  label: const Text('测试'),
+                ),
+                TextButton.icon(
+                  onPressed: () => _deleteTemplate(template),
+                  icon: const Icon(Icons.delete, size: 18, color: Colors.red),
+                  label: const Text('删除'),
+                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -928,11 +1111,16 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
 
   String _getChannelCodeText(String? code) {
     switch (code) {
-      case 'aliyun': return '阿里云';
-      case 'tencent': return '腾讯云';
-      case 'huawei': return '华为云';
-      case 'yunpian': return '云片';
-      default: return code ?? '-';
+      case 'aliyun':
+        return '阿里云';
+      case 'tencent':
+        return '腾讯云';
+      case 'huawei':
+        return '华为云';
+      case 'yunpian':
+        return '云片';
+      default:
+        return code ?? '-';
     }
   }
 }

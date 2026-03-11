@@ -3,10 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yudao_flutter_ui_admin/api/infra/demo02_category_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/demo02_category.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
-import 'widgets/demo02_search_form.dart';
-import 'widgets/demo02_action_buttons.dart';
-import 'widgets/demo02_tree_table.dart';
-import 'dialogs/demo02_form_dialog.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo02-category/widgets/demo02_search_form.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo02-category/widgets/demo02_action_buttons.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo02-category/widgets/demo02_tree_table.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo02-category/dialogs/demo02_form_dialog.dart';
 
 /// 示例分类管理页面 - Demo02 (树形结构)
 class Demo02Page extends ConsumerStatefulWidget {
@@ -190,6 +191,8 @@ class _Demo02PageState extends ConsumerState<Demo02Page> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+
     return Scaffold(
       body: Column(
         children: [
@@ -214,28 +217,34 @@ class _Demo02PageState extends ConsumerState<Demo02Page> {
           ),
           const Divider(height: 1),
 
-          // 树形表格
+          // 树形表格 - 使用 LayoutBuilder 确保布局适配
           Expanded(
-            child: Demo02TreeTable(
-              categoryList: _categoryList,
-              isLoading: _isLoading,
-              error: _error,
-              onReload: _loadCategoryList,
-              onEdit: (category) => showDemo02FormDialog(
-                context,
-                category: category,
-                ref: ref,
-                onSuccess: _loadCategoryList,
-              ),
-              onDelete: _deleteCategory,
-              onAddChild: (category) => showDemo02FormDialog(
-                context,
-                parentId: category.id,
-                ref: ref,
-                onSuccess: _loadCategoryList,
-              ),
-              onExpandAll: (expanded) => setState(() => _isExpanded = expanded),
-              isExpanded: _isExpanded,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Demo02TreeTable(
+                  categoryList: _categoryList,
+                  isLoading: _isLoading,
+                  error: _error,
+                  onReload: _loadCategoryList,
+                  onEdit: (category) => showDemo02FormDialog(
+                    context,
+                    category: category,
+                    ref: ref,
+                    onSuccess: _loadCategoryList,
+                  ),
+                  onDelete: _deleteCategory,
+                  onAddChild: (category) => showDemo02FormDialog(
+                    context,
+                    parentId: category.id,
+                    ref: ref,
+                    onSuccess: _loadCategoryList,
+                  ),
+                  onExpandAll: (expanded) => setState(() => _isExpanded = expanded),
+                  isExpanded: _isExpanded,
+                  isMobile: isMobile,
+                  availableWidth: constraints.maxWidth,
+                );
+              },
             ),
           ),
         ],

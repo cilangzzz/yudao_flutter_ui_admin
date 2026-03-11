@@ -3,12 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yudao_flutter_ui_admin/api/infra/job_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/job.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
-import 'widgets/job_search_form.dart';
-import 'widgets/job_action_buttons.dart';
-import 'widgets/job_data_table.dart';
-import 'dialogs/job_form_dialog.dart';
-import 'dialogs/job_detail_dialog.dart';
-import 'job_log_page.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/job/widgets/job_search_form.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/job/widgets/job_action_buttons.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/job/widgets/job_data_table.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/job/dialogs/job_form_dialog.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/job/dialogs/job_detail_dialog.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/job/job_log_page.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 定时任务管理页面
 class JobPage extends ConsumerStatefulWidget {

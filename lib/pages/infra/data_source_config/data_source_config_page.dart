@@ -3,9 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yudao_flutter_ui_admin/api/infra/data_source_config_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/data_source_config.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
-import 'widgets/data_source_config_data_table.dart';
-import 'widgets/data_source_config_action_buttons.dart';
-import 'dialogs/data_source_config_form_dialog.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/data_source_config/widgets/data_source_config_data_table.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/data_source_config/widgets/data_source_config_action_buttons.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/data_source_config/dialogs/data_source_config_form_dialog.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 数据源配置管理页面
 class DataSourceConfigPage extends ConsumerStatefulWidget {

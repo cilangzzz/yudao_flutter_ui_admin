@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:data_table_2/data_table_2.dart';
-import '../../../api/system/social_user_api.dart';
-import '../../../models/system/social_user.dart';
-import '../../../i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/api/system/social_user_api.dart';
+import 'package:yudao_flutter_ui_admin/models/system/social_user.dart';
+import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 社交用户管理页面
 class SocialUserPage extends ConsumerStatefulWidget {
@@ -109,8 +110,8 @@ class _SocialUserPageState extends ConsumerState<SocialUserPage> {
       builder: (context) => AlertDialog(
         title: Text(S.current.socialUserDetail),
         content: SizedBox(
-          width: 600,
-          height: 500,
+          width: 550,
+          height: 480,
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -146,23 +147,23 @@ class _SocialUserPageState extends ConsumerState<SocialUserPage> {
 
   Widget _buildDetailItem(String label, String value, {String? avatarUrl}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 100,
-            child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+            width: 90,
+            child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
           ),
           Expanded(
             child: avatarUrl != null && avatarUrl.isNotEmpty
                 ? CircleAvatar(
-                    radius: 20,
+                    radius: 18,
                     backgroundImage: NetworkImage(avatarUrl),
                     onBackgroundImageError: (_, __) {},
-                    child: avatarUrl.isEmpty ? const Icon(Icons.person) : null,
+                    child: avatarUrl.isEmpty ? const Icon(Icons.person, size: 18) : null,
                   )
-                : SelectableText(value),
+                : SelectableText(value, style: const TextStyle(fontSize: 13)),
           ),
         ],
       ),
@@ -188,12 +189,12 @@ class _SocialUserPageState extends ConsumerState<SocialUserPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 12),
-        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+        const SizedBox(height: 6),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             color: Colors.grey[100],
             borderRadius: BorderRadius.circular(8),
@@ -201,7 +202,7 @@ class _SocialUserPageState extends ConsumerState<SocialUserPage> {
           ),
           child: SelectableText(
             displayText,
-            style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
+            style: const TextStyle(fontSize: 11, fontFamily: 'monospace'),
           ),
         ),
       ],
@@ -264,80 +265,352 @@ class _SocialUserPageState extends ConsumerState<SocialUserPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+
     return Scaffold(
       body: Column(
         children: [
           _buildSearchBar(context),
           const Divider(height: 1),
-          Expanded(child: _buildDataTable(context)),
+          Expanded(
+            child: DeviceUIMode.builder(
+              context,
+              mobile: (context) => _buildMobileList(context),
+              desktop: (context) => _buildDataTable(context),
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildSearchBar(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.all(16),
+    return Container(
+      padding: const EdgeInsets.all(12),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < 768;
+
+          if (isMobile) {
+            return Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _nicknameController,
+                        decoration: InputDecoration(
+                          hintText: S.current.nickname,
+                          prefixIcon: const Icon(Icons.search, size: 20),
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        onSubmitted: (_) => _search(),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: _search,
+                      icon: const Icon(Icons.search),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _openidController,
+                        decoration: InputDecoration(
+                          hintText: 'OpenID',
+                          prefixIcon: const Icon(Icons.vpn_key, size: 20),
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        onSubmitted: (_) => _search(),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        value: _selectedType,
+                        decoration: InputDecoration(
+                          hintText: S.current.socialPlatform,
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        items: [
+                          DropdownMenuItem(value: null, child: Text(S.current.all)),
+                          ..._socialTypes.entries.map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))),
+                        ],
+                        onChanged: (value) {
+                          setState(() => _selectedType = value);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton.icon(
+                      onPressed: _reset,
+                      icon: const Icon(Icons.refresh, size: 18),
+                      label: Text(S.current.reset),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          }
+
+          return Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            children: [
+              SizedBox(
+                width: 160,
+                child: TextField(
+                  controller: _nicknameController,
+                  decoration: InputDecoration(
+                    hintText: S.current.nickname,
+                    prefixIcon: const Icon(Icons.search, size: 18),
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onSubmitted: (_) => _search(),
+                ),
+              ),
+              SizedBox(
+                width: 180,
+                child: TextField(
+                  controller: _openidController,
+                  decoration: InputDecoration(
+                    hintText: 'OpenID',
+                    prefixIcon: const Icon(Icons.vpn_key, size: 18),
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onSubmitted: (_) => _search(),
+                ),
+              ),
+              SizedBox(
+                width: 130,
+                child: DropdownButtonFormField<int>(
+                  value: _selectedType,
+                  decoration: InputDecoration(
+                    labelText: S.current.socialPlatform,
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  items: [
+                    DropdownMenuItem(value: null, child: Text(S.current.all)),
+                    ..._socialTypes.entries.map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))),
+                  ],
+                  onChanged: (value) {
+                    setState(() => _selectedType = value);
+                  },
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: _search,
+                icon: const Icon(Icons.search, size: 18),
+                label: Text(S.current.search),
+              ),
+              OutlinedButton.icon(
+                onPressed: _reset,
+                icon: const Icon(Icons.refresh, size: 18),
+                label: Text(S.current.reset),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  /// 移动端卡片列表（虚拟化优化）
+  Widget _buildMobileList(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('${S.current.loadFailed}: $_error', style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _loadData, child: Text(S.current.retry)),
+          ],
+        ),
+      );
+    }
+
+    if (_dataList.isEmpty) {
+      return Center(child: Text(S.current.noData));
+    }
+
+    return Column(
+      children: [
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: _loadData,
+            // 使用 ListView.builder 实现虚拟化
+            child: ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: _dataList.length,
+              // 添加缓存扩展优化
+              cacheExtent: 500,
+              itemBuilder: (context, index) => _buildUserCard(_dataList[index]),
+            ),
+          ),
+        ),
+        _buildMobilePagination(),
+      ],
+    );
+  }
+
+  Widget _buildUserCard(SocialUser item) {
+    final socialColor = _getSocialColor(item.type);
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                // 头像
+                item.avatar != null && item.avatar!.isNotEmpty
+                    ? CircleAvatar(
+                        radius: 20,
+                        backgroundImage: NetworkImage(item.avatar!),
+                        onBackgroundImageError: (_, __) {},
+                        child: const Icon(Icons.person, size: 20),
+                      )
+                    : CircleAvatar(
+                        radius: 20,
+                        backgroundColor: socialColor.withValues(alpha: 0.1),
+                        child: Icon(Icons.person, color: socialColor),
+                      ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.nickname ?? '-',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        _socialTypes[item.type] ?? '-',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => _showDetailDialog(item),
+                  icon: const Icon(Icons.visibility),
+                  tooltip: S.current.detail,
+                ),
+              ],
+            ),
+            const Divider(height: 20),
+            _buildMobileInfoRow(Icons.vpn_key, 'OpenID', _truncateText(item.openid, 24)),
+            _buildMobileInfoRow(Icons.access_time, S.current.createTime, item.createTime?.toString().substring(0, 19) ?? '-'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileInfoRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          SizedBox(
-            width: 180,
-            child: TextField(
-              controller: _nicknameController,
-              decoration: InputDecoration(
-                hintText: S.current.nickname,
-                prefixIcon: const Icon(Icons.search),
-                border: const OutlineInputBorder(),
-                isDense: true,
-              ),
-              onSubmitted: (_) => _search(),
-            ),
-          ),
-          const SizedBox(width: 16),
-          SizedBox(
-            width: 200,
-            child: TextField(
-              controller: _openidController,
-              decoration: InputDecoration(
-                hintText: 'OpenID',
-                prefixIcon: const Icon(Icons.vpn_key),
-                border: const OutlineInputBorder(),
-                isDense: true,
-              ),
-              onSubmitted: (_) => _search(),
-            ),
-          ),
-          const SizedBox(width: 16),
-          SizedBox(
-            width: 150,
-            child: DropdownButtonFormField<int>(
-              value: _selectedType,
-              decoration: InputDecoration(
-                labelText: S.current.socialPlatform,
-                border: const OutlineInputBorder(),
-                isDense: true,
-              ),
-              items: [
-                DropdownMenuItem(value: null, child: Text(S.current.all)),
-                ..._socialTypes.entries.map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))),
-              ],
-              onChanged: (value) {
-                setState(() => _selectedType = value);
-              },
-            ),
-          ),
-          const SizedBox(width: 16),
-          ElevatedButton.icon(
-            onPressed: _search,
-            icon: const Icon(Icons.search),
-            label: Text(S.current.search),
-          ),
+          Icon(icon, size: 16, color: Colors.grey[600]),
           const SizedBox(width: 8),
-          OutlinedButton.icon(
-            onPressed: _reset,
-            icon: const Icon(Icons.refresh),
-            label: Text(S.current.reset),
+          Text('$label: ', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 13),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getSocialColor(int? type) {
+    switch (type) {
+      case 1:
+        return Colors.blue;
+      case 2:
+        return Colors.indigo;
+      case 3:
+        return Colors.green;
+      case 4:
+        return Colors.lightBlue;
+      case 5:
+        return Colors.orange;
+      case 40:
+        return Colors.black;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Widget _buildMobilePagination() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 4,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('${S.current.total}: $_totalCount'),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left),
+                onPressed: _currentPage > 1
+                    ? () {
+                        setState(() => _currentPage--);
+                        _loadData();
+                      }
+                    : null,
+              ),
+              Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
+              IconButton(
+                icon: const Icon(Icons.chevron_right),
+                onPressed: _currentPage * _pageSize < _totalCount
+                    ? () {
+                        setState(() => _currentPage++);
+                        _loadData();
+                      }
+                    : null,
+              ),
+            ],
           ),
         ],
       ),
@@ -441,18 +714,18 @@ class _SocialUserPageState extends ConsumerState<SocialUserPage> {
                         ),
                       ),
                     ),
-                    DataCell(Text(item.nickname ?? '-')),
+                    DataCell(Text(item.nickname ?? '-', overflow: TextOverflow.ellipsis)),
                     DataCell(
                       item.avatar != null && item.avatar!.isNotEmpty
                           ? CircleAvatar(
-                              radius: 16,
+                              radius: 14,
                               backgroundImage: NetworkImage(item.avatar!),
                               onBackgroundImageError: (_, __) {},
-                              child: const Icon(Icons.person, size: 16),
+                              child: const Icon(Icons.person, size: 14),
                             )
                           : const CircleAvatar(
-                              radius: 16,
-                              child: Icon(Icons.person, size: 16),
+                              radius: 14,
+                              child: Icon(Icons.person, size: 14),
                             ),
                     ),
                     DataCell(Text(item.createTime?.toString().substring(0, 19) ?? '-')),
@@ -470,60 +743,64 @@ class _SocialUserPageState extends ConsumerState<SocialUserPage> {
           ),
           // 分页控件
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Row(
-                children: [
-                  Text('${S.current.pageSize}: '),
-                  DropdownButton<int>(
-                    value: _pageSize,
-                    items: [10, 20, 50, 100].map((value) {
-                      return DropdownMenuItem(
-                        value: value,
-                        child: Text('$value'),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _pageSize = value;
-                          _currentPage = 1;
-                        });
-                        _loadData();
-                      }
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(width: 24),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left),
-                    onPressed: _currentPage > 1
-                        ? () {
-                            setState(() => _currentPage--);
-                            _loadData();
-                          }
-                        : null,
-                  ),
-                  Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right),
-                    onPressed: _currentPage * _pageSize < _totalCount
-                        ? () {
-                            setState(() => _currentPage++);
-                            _loadData();
-                          }
-                        : null,
-                  ),
-                ],
-              ),
-            ],
-          ),
+          _buildDesktopPagination(),
         ],
       ),
+    );
+  }
+
+  Widget _buildDesktopPagination() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Row(
+          children: [
+            Text('${S.current.pageSize}: '),
+            DropdownButton<int>(
+              value: _pageSize,
+              items: [10, 20, 50, 100].map((value) {
+                return DropdownMenuItem(
+                  value: value,
+                  child: Text('$value'),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _pageSize = value;
+                    _currentPage = 1;
+                  });
+                  _loadData();
+                }
+              },
+            ),
+          ],
+        ),
+        const SizedBox(width: 24),
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.chevron_left),
+              onPressed: _currentPage > 1
+                  ? () {
+                      setState(() => _currentPage--);
+                      _loadData();
+                    }
+                  : null,
+            ),
+            Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
+            IconButton(
+              icon: const Icon(Icons.chevron_right),
+              onPressed: _currentPage * _pageSize < _totalCount
+                  ? () {
+                      setState(() => _currentPage++);
+                      _loadData();
+                    }
+                  : null,
+            ),
+          ],
+        ),
+      ],
     );
   }
 

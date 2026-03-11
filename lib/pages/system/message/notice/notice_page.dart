@@ -4,6 +4,7 @@ import 'package:yudao_flutter_ui_admin/api/system/notice_api.dart';
 import 'package:yudao_flutter_ui_admin/models/system/notice.dart';
 import 'package:yudao_flutter_ui_admin/models/common/api_response.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 公告管理页面
 class NoticePage extends ConsumerStatefulWidget {
@@ -90,20 +91,11 @@ class _NoticePageState extends ConsumerState<NoticePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          // 搜索栏
-          _buildSearchBar(context),
-          const Divider(height: 1),
-
-          // 数据表格
-          Expanded(
-            child: _buildDataTable(context),
-          ),
-        ],
+      body: DeviceUIMode.builder(
+        context,
+        mobile: (context) => _buildMobileLayout(context),
+        desktop: (context) => _buildDesktopLayout(context),
       ),
-
-      // 添加公告按钮
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showNoticeDialog(context),
         icon: const Icon(Icons.add),
@@ -112,7 +104,29 @@ class _NoticePageState extends ConsumerState<NoticePage> {
     );
   }
 
-  Widget _buildSearchBar(BuildContext context) {
+  Widget _buildDesktopLayout(BuildContext context) {
+    return Column(
+      children: [
+        _buildDesktopSearchBar(context),
+        const Divider(height: 1),
+        Expanded(
+          child: _buildDesktopDataTable(context),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context) {
+    return Column(
+      children: [
+        _buildMobileSearchBar(context),
+        const Divider(height: 1),
+        Expanded(child: _buildMobileList(context)),
+      ],
+    );
+  }
+
+  Widget _buildDesktopSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Wrap(
@@ -120,9 +134,8 @@ class _NoticePageState extends ConsumerState<NoticePage> {
         runSpacing: 12,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          // 公告标题搜索
           SizedBox(
-            width: 200,
+            width: DeviceUIMode.select(context, mobile: () => 150.0, desktop: () => 200.0),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -134,10 +147,8 @@ class _NoticePageState extends ConsumerState<NoticePage> {
               onSubmitted: (_) => _search(),
             ),
           ),
-
-          // 状态筛选
           SizedBox(
-            width: 150,
+            width: DeviceUIMode.select(context, mobile: () => 120.0, desktop: () => 150.0),
             child: DropdownButtonFormField<int?>(
               value: _selectedStatus,
               decoration: InputDecoration(
@@ -157,15 +168,11 @@ class _NoticePageState extends ConsumerState<NoticePage> {
               },
             ),
           ),
-
-          // 搜索按钮
           ElevatedButton.icon(
             onPressed: _search,
             icon: const Icon(Icons.search),
             label: Text(S.current.strings.search),
           ),
-
-          // 重置按钮
           OutlinedButton.icon(
             onPressed: _reset,
             icon: const Icon(Icons.refresh),
@@ -176,7 +183,75 @@ class _NoticePageState extends ConsumerState<NoticePage> {
     );
   }
 
-  Widget _buildDataTable(BuildContext context) {
+  Widget _buildMobileSearchBar(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: S.current.strings.noticeName,
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onSubmitted: (_) => _search(),
+                ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 100,
+                child: DropdownButtonFormField<int?>(
+                  value: _selectedStatus,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                  ),
+                  items: [
+                    DropdownMenuItem(value: null, child: Text(S.current.strings.all)),
+                    DropdownMenuItem(value: 0, child: Text(S.current.strings.enabled)),
+                    DropdownMenuItem(value: 1, child: Text(S.current.strings.disabled)),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedStatus = value;
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _search,
+                  icon: const Icon(Icons.search, size: 20),
+                  label: Text(S.current.strings.search),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _reset,
+                  icon: const Icon(Icons.refresh, size: 20),
+                  label: Text(S.current.strings.reset),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopDataTable(BuildContext context) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -242,11 +317,171 @@ class _NoticePageState extends ConsumerState<NoticePage> {
     );
   }
 
+  Widget _buildMobileList(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('${S.current.strings.loadFailed}: $_error', style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadNoticeList,
+              child: Text(S.current.strings.retry),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_noticeList.isEmpty) {
+      return Center(child: Text(S.current.strings.noData));
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadNoticeList,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(12),
+        itemCount: _noticeList.length,
+        itemBuilder: (context, index) {
+          final notice = _noticeList[index];
+          return _buildNoticeCard(notice);
+        },
+      ),
+    );
+  }
+
+  Widget _buildNoticeCard(Notice notice) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _getTypeColor(notice.type).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    _getTypeName(notice.type),
+                    style: TextStyle(color: _getTypeColor(notice.type), fontSize: 12),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    notice.title,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: notice.status == 0
+                        ? Colors.green.withOpacity(0.1)
+                        : Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    notice.status == 0 ? S.current.strings.enabled : S.current.strings.disabled,
+                    style: TextStyle(
+                      color: notice.status == 0 ? Colors.green : Colors.red,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              notice.content ?? '',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Colors.grey),
+            ),
+            const Divider(height: 24),
+            Row(
+              children: [
+                Icon(Icons.person, size: 14, color: Colors.grey[600]),
+                const SizedBox(width: 4),
+                Text(
+                  notice.creator ?? '-',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+                const SizedBox(width: 16),
+                Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
+                const SizedBox(width: 4),
+                Text(
+                  notice.createTime ?? '-',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: () => _editNotice(notice),
+                  icon: const Icon(Icons.edit, size: 18),
+                  label: Text(S.current.strings.edit),
+                ),
+                TextButton.icon(
+                  onPressed: () => _pushNotice(notice),
+                  icon: const Icon(Icons.send, size: 18),
+                  label: Text(S.current.strings.push),
+                ),
+                TextButton.icon(
+                  onPressed: () => _deleteNotice(notice),
+                  icon: const Icon(Icons.delete, size: 18, color: Colors.red),
+                  label: Text(S.current.strings.delete),
+                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getTypeName(int type) {
+    switch (type) {
+      case 1:
+        return S.current.strings.typeNotify;
+      case 2:
+        return S.current.strings.typeAnnouncement;
+      default:
+        return S.current.strings.typeUnknown;
+    }
+  }
+
+  Color _getTypeColor(int type) {
+    switch (type) {
+      case 1:
+        return Colors.blue;
+      case 2:
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
   void _showNoticeDialog(BuildContext context, [Notice? notice]) {
     final titleController = TextEditingController(text: notice?.title ?? '');
     final contentController = TextEditingController(text: notice?.content ?? '');
     final remarkController = TextEditingController(text: notice?.remark ?? '');
-    int type = notice?.type ?? 1; // 默认通知
+    int type = notice?.type ?? 1;
     int status = notice?.status ?? 0;
 
     showDialog(
@@ -255,7 +490,7 @@ class _NoticePageState extends ConsumerState<NoticePage> {
         builder: (context, setState) => AlertDialog(
           title: Text(notice == null ? S.current.strings.addNotice : S.current.strings.editNotice),
           content: SizedBox(
-            width: 500,
+            width: DeviceUIMode.select(context, mobile: () => double.maxFinite, desktop: () => 500.0),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -265,12 +500,12 @@ class _NoticePageState extends ConsumerState<NoticePage> {
                     controller: titleController,
                     decoration: InputDecoration(
                       labelText: '${S.current.strings.noticeName} *',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 16),
                   Text('${S.current.strings.noticeType}:'),
-                  Row(
+                  Wrap(
                     children: [
                       Radio<int>(
                         value: 1,
@@ -298,6 +533,7 @@ class _NoticePageState extends ConsumerState<NoticePage> {
                   Text('${S.current.strings.noticeContent}: *'),
                   const SizedBox(height: 8),
                   Container(
+                    constraints: const BoxConstraints(maxHeight: 200),
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.grey),
                       borderRadius: BorderRadius.circular(4),
@@ -313,7 +549,7 @@ class _NoticePageState extends ConsumerState<NoticePage> {
                   ),
                   const SizedBox(height: 16),
                   Text('${S.current.strings.status}:'),
-                  Row(
+                  Wrap(
                     children: [
                       Radio<int>(
                         value: 0,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 任务日志搜索表单组件
 class JobLogSearchForm extends StatelessWidget {
@@ -20,16 +21,23 @@ class JobLogSearchForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+    final screenWidth = DeviceUIMode.widthOf(context);
+
+    // 响应式字段宽度
+    double fieldWidth = isMobile ? screenWidth - 32 : 220;
+    double statusFieldWidth = isMobile ? screenWidth - 32 : 160;
+
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isMobile ? 12 : 16),
       child: Wrap(
-        spacing: 12,
-        runSpacing: 8,
+        spacing: isMobile ? 8 : 12,
+        runSpacing: isMobile ? 12 : 8,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           // 处理器名称搜索
           SizedBox(
-            width: 220,
+            width: fieldWidth,
             child: TextField(
               controller: handlerNameController,
               decoration: InputDecoration(
@@ -43,7 +51,7 @@ class JobLogSearchForm extends StatelessWidget {
           ),
           // 状态筛选
           SizedBox(
-            width: 160,
+            width: statusFieldWidth,
             child: DropdownButtonFormField<int?>(
               value: selectedStatus,
               decoration: InputDecoration(

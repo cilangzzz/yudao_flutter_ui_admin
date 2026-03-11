@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/file_config.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 文件配置数据表格组件
 class FileConfigDataTable extends StatelessWidget {
@@ -60,22 +61,28 @@ class FileConfigDataTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     if (error != null) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('${S.current.loadFailed}: $error', style: const TextStyle(color: Colors.red)),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: onReload,
-              child: Text(S.current.retry),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('${S.current.loadFailed}: $error', style: const TextStyle(color: Colors.red)),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: onReload,
+                child: Text(S.current.retry),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -85,7 +92,7 @@ class FileConfigDataTable extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isMobile ? 8 : 16),
       child: Column(
         children: [
           // 表头工具栏
@@ -100,9 +107,9 @@ class FileConfigDataTable extends StatelessWidget {
           // 表格
           Expanded(
             child: DataTable2(
-              columnSpacing: 12,
-              horizontalMargin: 12,
-              minWidth: 900,
+              columnSpacing: isMobile ? 8 : 12,
+              horizontalMargin: isMobile ? 8 : 12,
+              minWidth: isMobile ? 600 : 900,
               smRatio: 0.75,
               lmRatio: 1.5,
               headingRowColor: WidgetStateProperty.resolveWith(
@@ -172,7 +179,7 @@ class FileConfigDataTable extends StatelessWidget {
                     DataCell(Text(config.remark ?? '-')),
                     DataCell(_buildMasterCell(config)),
                     DataCell(Text(config.createTime ?? '-')),
-                    DataCell(_buildActionButtons(context, config)),
+                    DataCell(_buildActionButtons(context, config, isMobile)),
                   ],
                 );
               }).toList(),
@@ -180,50 +187,100 @@ class FileConfigDataTable extends StatelessWidget {
           ),
           // 分页控件
           const SizedBox(height: 8),
+          _buildPagination(context, isMobile),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPagination(BuildContext context, bool isMobile) {
+    if (isMobile) {
+      return Column(
+        children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Row(
-                children: [
-                  Text('${S.current.pageSize}: '),
-                  DropdownButton<int>(
-                    value: pageSize,
-                    items: [10, 20, 50, 100].map((value) {
-                      return DropdownMenuItem(
-                        value: value,
-                        child: Text('$value'),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        onPageSizeChanged(value);
-                      }
-                    },
-                  ),
-                ],
+              IconButton(
+                icon: const Icon(Icons.chevron_left),
+                onPressed: currentPage > 1
+                    ? () => onPageChanged(currentPage - 1)
+                    : null,
               ),
-              const SizedBox(width: 24),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left),
-                    onPressed: currentPage > 1
-                        ? () => onPageChanged(currentPage - 1)
-                        : null,
-                  ),
-                  Text('$currentPage / ${(totalCount / pageSize).ceil()}'),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right),
-                    onPressed: currentPage * pageSize < totalCount
-                        ? () => onPageChanged(currentPage + 1)
-                        : null,
-                  ),
-                ],
+              Text('$currentPage / ${(totalCount / pageSize).ceil()}'),
+              IconButton(
+                icon: const Icon(Icons.chevron_right),
+                onPressed: currentPage * pageSize < totalCount
+                    ? () => onPageChanged(currentPage + 1)
+                    : null,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('${S.current.pageSize}: '),
+              DropdownButton<int>(
+                value: pageSize,
+                items: [10, 20, 50, 100].map((value) {
+                  return DropdownMenuItem(
+                    value: value,
+                    child: Text('$value'),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    onPageSizeChanged(value);
+                  }
+                },
               ),
             ],
           ),
         ],
-      ),
+      );
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Row(
+          children: [
+            Text('${S.current.pageSize}: '),
+            DropdownButton<int>(
+              value: pageSize,
+              items: [10, 20, 50, 100].map((value) {
+                return DropdownMenuItem(
+                  value: value,
+                  child: Text('$value'),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  onPageSizeChanged(value);
+                }
+              },
+            ),
+          ],
+        ),
+        const SizedBox(width: 24),
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.chevron_left),
+              onPressed: currentPage > 1
+                  ? () => onPageChanged(currentPage - 1)
+                  : null,
+            ),
+            Text('$currentPage / ${(totalCount / pageSize).ceil()}'),
+            IconButton(
+              icon: const Icon(Icons.chevron_right),
+              onPressed: currentPage * pageSize < totalCount
+                  ? () => onPageChanged(currentPage + 1)
+                  : null,
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -264,7 +321,61 @@ class FileConfigDataTable extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, FileConfig config) {
+  Widget _buildActionButtons(BuildContext context, FileConfig config, bool isMobile) {
+    if (isMobile) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.edit, size: 20),
+            onPressed: () => onEdit(config),
+            tooltip: S.current.edit,
+          ),
+          IconButton(
+            icon: const Icon(Icons.science, size: 20),
+            onPressed: () => onTest(config),
+            tooltip: S.current.test,
+          ),
+          PopupMenuButton<String>(
+            tooltip: S.current.more,
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'master',
+                enabled: !config.master,
+                child: Row(
+                  children: [
+                    const Icon(Icons.star, size: 18),
+                    const SizedBox(width: 8),
+                    Text(S.current.setMasterConfig),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    const Icon(Icons.delete, size: 18, color: Colors.red),
+                    const SizedBox(width: 8),
+                    Text(S.current.delete, style: const TextStyle(color: Colors.red)),
+                  ],
+                ),
+              ),
+            ],
+            onSelected: (value) {
+              switch (value) {
+                case 'master':
+                  if (!config.master) onSetMaster(config);
+                  break;
+                case 'delete':
+                  if (config.id != null) onDelete(config);
+                  break;
+              }
+            },
+          ),
+        ],
+      );
+    }
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [

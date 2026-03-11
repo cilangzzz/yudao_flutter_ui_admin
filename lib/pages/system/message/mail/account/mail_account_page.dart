@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:data_table_2/data_table_2.dart';
-import '/../../api/system/mail_account_api.dart';
-import '/../../models/system/mail_account.dart';
+import 'package:yudao_flutter_ui_admin/api/system/mail_account_api.dart';
+import 'package:yudao_flutter_ui_admin/models/system/mail_account.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 邮箱账号管理页面
 class MailAccountPage extends ConsumerStatefulWidget {
@@ -194,14 +195,10 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          _buildSearchBar(context),
-          const Divider(height: 1),
-          _buildToolbar(context),
-          const Divider(height: 1),
-          Expanded(child: _buildDataTable(context)),
-        ],
+      body: DeviceUIMode.builder(
+        context,
+        mobile: (context) => _buildMobileLayout(context),
+        desktop: (context) => _buildDesktopLayout(context),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAccountDialog(),
@@ -211,7 +208,31 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
     );
   }
 
-  Widget _buildSearchBar(BuildContext context) {
+  Widget _buildDesktopLayout(BuildContext context) {
+    return Column(
+      children: [
+        _buildDesktopSearchBar(context),
+        const Divider(height: 1),
+        _buildToolbar(context),
+        const Divider(height: 1),
+        Expanded(child: _buildDataTable(context)),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context) {
+    return Column(
+      children: [
+        _buildMobileSearchBar(context),
+        const Divider(height: 1),
+        Expanded(child: _buildMobileList(context)),
+      ],
+    );
+  }
+
+  Widget _buildDesktopSearchBar(BuildContext context) {
+    final searchWidth = DeviceUIMode.select(context, mobile: () => 150.0, desktop: () => 200.0);
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Wrap(
@@ -220,7 +241,7 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           SizedBox(
-            width: 200,
+            width: searchWidth,
             child: TextField(
               controller: _searchMailController,
               decoration: const InputDecoration(
@@ -233,7 +254,7 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
             ),
           ),
           SizedBox(
-            width: 200,
+            width: searchWidth,
             child: TextField(
               controller: _searchUsernameController,
               decoration: const InputDecoration(
@@ -254,6 +275,65 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
             onPressed: _reset,
             icon: const Icon(Icons.refresh),
             label: const Text('重置'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileSearchBar(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _searchMailController,
+                  decoration: const InputDecoration(
+                    hintText: '邮箱',
+                    prefixIcon: Icon(Icons.email, size: 20),
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onSubmitted: (_) => _search(),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _searchUsernameController,
+                  decoration: const InputDecoration(
+                    hintText: '用户名',
+                    prefixIcon: Icon(Icons.person, size: 20),
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onSubmitted: (_) => _search(),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _search,
+                  icon: const Icon(Icons.search, size: 20),
+                  label: const Text('搜索'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _reset,
+                  icon: const Icon(Icons.refresh, size: 20),
+                  label: const Text('重置'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -423,7 +503,122 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
     );
   }
 
-  Widget _buildBoolTag(bool value) {
+  Widget _buildMobileList(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('加载失败: $_error', style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _loadData, child: const Text('重试')),
+          ],
+        ),
+      );
+    }
+
+    if (_dataList.isEmpty) {
+      return const Center(child: Text('暂无数据'));
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadData,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(12),
+        itemCount: _dataList.length,
+        itemBuilder: (context, index) {
+          final item = _dataList[index];
+          return _buildAccountCard(item);
+        },
+      ),
+    );
+  }
+
+  Widget _buildAccountCard(MailAccount item) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.email, color: Colors.blue),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    item.mail,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 24),
+            _buildInfoRow(Icons.person, '用户名', item.username),
+            _buildInfoRow(Icons.dns, 'SMTP服务器', item.host),
+            _buildInfoRow(Icons.numbers, '端口', item.port.toString()),
+            Row(
+              children: [
+                _buildBoolTag(item.sslEnable, label: 'SSL'),
+                const SizedBox(width: 8),
+                _buildBoolTag(item.starttlsEnable, label: 'STARTTLS'),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
+                const SizedBox(width: 4),
+                Text(
+                  item.createTime ?? '-',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: () => _showAccountDialog(item),
+                  icon: const Icon(Icons.edit, size: 18),
+                  label: const Text('编辑'),
+                ),
+                TextButton.icon(
+                  onPressed: () => _deleteAccount(item),
+                  icon: const Icon(Icons.delete, size: 18, color: Colors.red),
+                  label: const Text('删除'),
+                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: Colors.grey[600]),
+          const SizedBox(width: 8),
+          Text('$label: ', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+          Expanded(child: Text(value, style: const TextStyle(fontSize: 13))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBoolTag(bool value, {String? label}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -431,7 +626,7 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
-        value ? '是' : '否',
+        label ?? (value ? '是' : '否'),
         style: TextStyle(color: value ? Colors.green : Colors.grey, fontSize: 12),
       ),
     );
@@ -595,7 +790,7 @@ class _MailAccountFormDialogState extends State<_MailAccountFormDialog> {
     return AlertDialog(
       title: Text(widget.account == null ? '添加邮箱账号' : '编辑邮箱账号'),
       content: SizedBox(
-        width: 500,
+        width: DeviceUIMode.select(context, mobile: () => double.maxFinite, desktop: () => 500.0),
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
@@ -649,24 +844,30 @@ class _MailAccountFormDialogState extends State<_MailAccountFormDialog> {
                   validator: (v) => v?.isEmpty == true ? '请输入端口' : null,
                 ),
                 const SizedBox(height: 16),
-                Row(
+                Wrap(
+                  spacing: 24,
                   children: [
-                    const Text('是否开启SSL'),
-                    const SizedBox(width: 16),
-                    Switch(
-                      value: _sslEnable,
-                      onChanged: (v) => setState(() => _sslEnable = v),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('SSL'),
+                        const SizedBox(width: 8),
+                        Switch(
+                          value: _sslEnable,
+                          onChanged: (v) => setState(() => _sslEnable = v),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Text('是否开启STARTTLS'),
-                    const SizedBox(width: 16),
-                    Switch(
-                      value: _starttlsEnable,
-                      onChanged: (v) => setState(() => _starttlsEnable = v),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('STARTTLS'),
+                        const SizedBox(width: 8),
+                        Switch(
+                          value: _starttlsEnable,
+                          onChanged: (v) => setState(() => _starttlsEnable = v),
+                        ),
+                      ],
                     ),
                   ],
                 ),

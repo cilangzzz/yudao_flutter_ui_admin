@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yudao_flutter_ui_admin/api/infra/job_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/job.dart';
-import 'package:yudao_flutter_ui_admin/models/common/api_response.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/models/common/api_response.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 定时任务表单对话框（新增/编辑任务）
 class JobFormDialog extends StatefulWidget {
@@ -121,10 +122,14 @@ class _JobFormDialogState extends State<JobFormDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+    final screenWidth = DeviceUIMode.widthOf(context);
+    final dialogWidth = isMobile ? screenWidth - 32 : 500.0;
+
     return AlertDialog(
       title: Text(widget.job == null ? S.current.addJob : S.current.editJob),
       content: SizedBox(
-        width: 500,
+        width: dialogWidth,
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,

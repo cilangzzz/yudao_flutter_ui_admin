@@ -3,12 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yudao_flutter_ui_admin/api/infra/demo03_student_erp_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/demo03_student.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
-import '../demo03-normal/widgets/demo03_search_form.dart';
-import '../demo03-normal/widgets/demo03_action_buttons.dart';
-import '../demo03-normal/widgets/demo03_data_table.dart';
-import 'dialogs/demo03_erp_form_dialog.dart';
-import 'widgets/demo03_course_list.dart';
-import 'widgets/demo03_grade_list.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo03-normal/widgets/demo03_search_form.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo03-normal/widgets/demo03_action_buttons.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo03-normal/widgets/demo03_data_table.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo03-erp/dialogs/demo03_erp_form_dialog.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo03-erp/widgets/demo03_course_list.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo03-erp/widgets/demo03_grade_list.dart';
 
 /// 学生管理页面 - Demo03 ERP模式（主表在上，子表在下）
 class Demo03ErpPage extends ConsumerStatefulWidget {
@@ -250,6 +251,13 @@ class _Demo03ErpPageState extends ConsumerState<Demo03ErpPage>
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+    final uiMode = DeviceUIMode.of(context);
+
+    // ERP模式：桌面端上下分割，移动端只显示主表
+    final mainTableFlex = DeviceUIMode.select(context, mobile: () => 1, tablet: () => 2, desktop: () => 2);
+    final subTableFlex = DeviceUIMode.select(context, mobile: () => 0, tablet: () => 3, desktop: () => 3);
+
     return Scaffold(
       body: Column(
         children: [
@@ -276,73 +284,82 @@ class _Demo03ErpPageState extends ConsumerState<Demo03ErpPage>
           ),
           const Divider(height: 1),
 
-          // 主表
+          // 主表 - 使用 LayoutBuilder 确保布局适配
           Expanded(
-            flex: 2,
-            child: Demo03DataTable(
-              studentList: _studentList,
-              totalCount: _totalCount,
-              currentPage: _currentPage,
-              pageSize: _pageSize,
-              isLoading: _isLoading,
-              error: _error,
-              onReload: _loadStudentList,
-              onPageSizeChanged: (value) {
-                setState(() {
-                  _pageSize = value;
-                  _currentPage = 1;
-                });
-                _loadStudentList();
+            flex: mainTableFlex,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Demo03DataTable(
+                  studentList: _studentList,
+                  totalCount: _totalCount,
+                  currentPage: _currentPage,
+                  pageSize: _pageSize,
+                  isLoading: _isLoading,
+                  error: _error,
+                  onReload: _loadStudentList,
+                  onPageSizeChanged: (value) {
+                    setState(() {
+                      _pageSize = value;
+                      _currentPage = 1;
+                    });
+                    _loadStudentList();
+                  },
+                  onPageChanged: (page) {
+                    setState(() => _currentPage = page);
+                    _loadStudentList();
+                  },
+                  onEdit: (student) => showDemo03ErpFormDialog(
+                    context,
+                    student: student,
+                    ref: ref,
+                    onSuccess: _loadStudentList,
+                  ),
+                  onDelete: _deleteStudent,
+                  selectedIds: _selectedIds,
+                  onSelectionChanged: (ids) => setState(() => _selectedIds = ids),
+                  onRowTap: _selectStudent,
+                  selectedStudentId: _selectedStudent?.id,
+                  isMobile: isMobile,
+                  availableWidth: constraints.maxWidth,
+                );
               },
-              onPageChanged: (page) {
-                setState(() => _currentPage = page);
-                _loadStudentList();
-              },
-              onEdit: (student) => showDemo03ErpFormDialog(
-                context,
-                student: student,
-                ref: ref,
-                onSuccess: _loadStudentList,
+            ),
+          ),
+
+          // 移动端不显示子表区域
+          if (uiMode != UIMode.mobile) ...[
+            const Divider(height: 1),
+
+            // 子表 Tab
+            Container(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              child: TabBar(
+                controller: _tabController,
+                tabs: [
+                  Tab(text: S.current.courseList),
+                  Tab(text: S.current.gradeInfo),
+                ],
               ),
-              onDelete: _deleteStudent,
-              selectedIds: _selectedIds,
-              onSelectionChanged: (ids) => setState(() => _selectedIds = ids),
-              onRowTap: _selectStudent,
-              selectedStudentId: _selectedStudent?.id,
             ),
-          ),
 
-          const Divider(height: 1),
-
-          // 子表 Tab
-          Container(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
-            child: TabBar(
-              controller: _tabController,
-              tabs: [
-                Tab(text: S.current.courseList),
-                Tab(text: S.current.gradeInfo),
-              ],
+            // 子表内容
+            Expanded(
+              flex: subTableFlex,
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  // 课程列表
+                  Demo03CourseList(
+                    studentId: _selectedStudent?.id,
+                  ),
+                  // 班级列表
+                  Demo03GradeList(
+                    studentId: _selectedStudent?.id,
+                  ),
+                ],
+              ),
             ),
-          ),
-
-          // 子表内容
-          Expanded(
-            flex: 3,
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                // 课程列表
-                Demo03CourseList(
-                  studentId: _selectedStudent?.id,
-                ),
-                // 班级列表
-                Demo03GradeList(
-                  studentId: _selectedStudent?.id,
-                ),
-              ],
-            ),
-          ),
+          ],
         ],
       ),
     );

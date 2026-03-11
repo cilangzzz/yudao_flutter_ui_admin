@@ -4,6 +4,7 @@ import 'package:yudao_flutter_ui_admin/api/infra/file_config_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/file_config.dart';
 import 'package:yudao_flutter_ui_admin/models/common/api_response.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 文件配置表单对话框（新增/编辑）
 class FileConfigFormDialog extends StatefulWidget {
@@ -172,10 +173,14 @@ class _FileConfigFormDialogState extends State<FileConfigFormDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+    final screenWidth = DeviceUIMode.widthOf(context);
+    final dialogWidth = isMobile ? screenWidth - 32 : 600.0;
+
     return AlertDialog(
       title: Text(_isEdit ? S.current.editFileConfig : S.current.addFileConfig),
       content: SizedBox(
-        width: 600,
+        width: dialogWidth,
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(

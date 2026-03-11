@@ -3,9 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yudao_flutter_ui_admin/api/infra/job_log_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/job_log.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
-import 'widgets/job_log_search_form.dart';
-import 'widgets/job_log_data_table.dart';
-import 'dialogs/job_log_detail_dialog.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/job/widgets/job_log_search_form.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/job/widgets/job_log_data_table.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/job/dialogs/job_log_detail_dialog.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 任务日志页面
 class JobLogPage extends ConsumerStatefulWidget {
@@ -94,6 +95,8 @@ class _JobLogPageState extends ConsumerState<JobLogPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(S.current.jobLogList),

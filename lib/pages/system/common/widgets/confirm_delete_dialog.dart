@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 确认删除对话框
 ///
@@ -38,9 +39,31 @@ class ConfirmDeleteDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final textScaleFactor = MediaQuery.of(context).textScaleFactor;
+
+    // 响应式对话框宽度
+    final dialogWidth = isMobile
+        ? screenWidth * 0.9 // 移动端使用90%宽度
+        : (screenWidth * 0.4).clamp(300.0, 400.0); // 桌面端40%宽度，限制在300-400之间
+
     return AlertDialog(
-      title: Text(title.isNotEmpty ? title : S.current.confirmDelete),
-      content: Text(message),
+      title: Text(
+        title.isNotEmpty ? title : S.current.confirmDelete,
+        overflow: TextOverflow.ellipsis,
+        maxLines: 2,
+      ),
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: dialogWidth / textScaleFactor,
+        ),
+        child: Text(
+          message,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 5,
+        ),
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
@@ -52,6 +75,8 @@ class ConfirmDeleteDialog extends StatelessWidget {
           child: Text(confirmText.isNotEmpty ? confirmText : S.current.delete),
         ),
       ],
+      actionsAlignment: MainAxisAlignment.end,
+      actionsOverflowAlignment: OverflowBarAlignment.end,
     );
   }
 }
@@ -110,11 +135,33 @@ Future<bool?> showConfirmDialog({
   String? confirmText,
   bool isDestructive = false,
 }) {
+  final isMobile = DeviceUIMode.isMobile(context);
+  final screenWidth = MediaQuery.of(context).size.width;
+  final textScaleFactor = MediaQuery.of(context).textScaleFactor;
+
+  // 响应式对话框宽度
+  final dialogWidth = isMobile
+      ? screenWidth * 0.9
+      : (screenWidth * 0.4).clamp(300.0, 400.0);
+
   return showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: Text(title ?? S.current.confirm),
-      content: Text(message),
+      title: Text(
+        title ?? S.current.confirm,
+        overflow: TextOverflow.ellipsis,
+        maxLines: 2,
+      ),
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: dialogWidth / textScaleFactor,
+        ),
+        child: Text(
+          message,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 5,
+        ),
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
@@ -128,6 +175,8 @@ Future<bool?> showConfirmDialog({
           child: Text(confirmText ?? S.current.confirm),
         ),
       ],
+      actionsAlignment: MainAxisAlignment.end,
+      actionsOverflowAlignment: OverflowBarAlignment.end,
     ),
   );
 }
@@ -150,10 +199,29 @@ class BatchDeleteDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final textScaleFactor = MediaQuery.of(context).textScaleFactor;
+
+    // 响应式对话框宽度
+    final dialogWidth = isMobile
+        ? screenWidth * 0.9
+        : (screenWidth * 0.4).clamp(300.0, 400.0);
+
     return AlertDialog(
-      title: Text(S.current.confirmDelete),
-      content: Text(
-        customMessage ?? '${S.current.confirmDeleteSelected} ($count) ?',
+      title: Text(
+        S.current.confirmDelete,
+        overflow: TextOverflow.ellipsis,
+      ),
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: dialogWidth / textScaleFactor,
+        ),
+        child: Text(
+          customMessage ?? '${S.current.confirmDeleteSelected} ($count) ?',
+          overflow: TextOverflow.ellipsis,
+          maxLines: 3,
+        ),
       ),
       actions: [
         TextButton(
@@ -166,6 +234,8 @@ class BatchDeleteDialog extends StatelessWidget {
           child: Text(S.current.delete),
         ),
       ],
+      actionsAlignment: MainAxisAlignment.end,
+      actionsOverflowAlignment: OverflowBarAlignment.end,
     );
   }
 }

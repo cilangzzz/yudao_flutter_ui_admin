@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:data_table_2/data_table_2.dart';
-import '../../../../models/system/dept.dart';
-import '../../../../models/system/user.dart';
-import '../../../../i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/models/system/dept.dart';
+import 'package:yudao_flutter_ui_admin/models/system/user.dart';
+import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
 import 'dept_action_buttons.dart';
 
 /// 扁平化的部门数据，用于展示

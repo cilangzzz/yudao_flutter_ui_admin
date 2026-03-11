@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/demo02_category.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 示例分类树形数据表格组件
 class Demo02TreeTable extends StatelessWidget {
@@ -14,6 +15,8 @@ class Demo02TreeTable extends StatelessWidget {
   final void Function(Demo02Category category) onAddChild;
   final void Function(bool expanded) onExpandAll;
   final bool isExpanded;
+  final bool isMobile;
+  final double availableWidth;
 
   const Demo02TreeTable({
     super.key,
@@ -26,6 +29,8 @@ class Demo02TreeTable extends StatelessWidget {
     required this.onAddChild,
     required this.onExpandAll,
     required this.isExpanded,
+    this.isMobile = false,
+    this.availableWidth = double.infinity,
   });
 
   @override
@@ -54,8 +59,13 @@ class Demo02TreeTable extends StatelessWidget {
       return Center(child: Text(S.current.noData));
     }
 
+    // 响应式适配：根据可用宽度调整最小宽度
+    final minWidth = isMobile ? availableWidth : 800.0;
+    final columnSpacing = isMobile ? 8.0 : 12.0;
+    final horizontalMargin = isMobile ? 8.0 : 12.0;
+
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isMobile ? 8 : 16),
       child: Column(
         children: [
           // 表头工具栏
@@ -65,12 +75,12 @@ class Demo02TreeTable extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          // 树形表格
-          Expanded(
+          // 树形表格 - 使用 Flexible 防止溢出
+          Flexible(
             child: DataTable2(
-              columnSpacing: 12,
-              horizontalMargin: 12,
-              minWidth: 800,
+              columnSpacing: columnSpacing,
+              horizontalMargin: horizontalMargin,
+              minWidth: minWidth,
               smRatio: 0.75,
               lmRatio: 1.5,
               headingRowColor: WidgetStateProperty.resolveWith(

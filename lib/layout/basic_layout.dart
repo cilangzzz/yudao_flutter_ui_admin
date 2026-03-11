@@ -1,30 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../router/router.dart';
-import '../stores/stores.dart';
-import '../api/core/auth_api.dart';
-import '../i18n/i18n.dart';
-
-/// 响应式断点
-class Breakpoints {
-  Breakpoints._();
-
-  /// sm: 768
-  static const double sm = 768;
-
-  /// lg: 1200
-  static const double lg = 1200;
-
-  /// 判断是否为移动端
-  static bool isMobile(double width) => width < sm;
-
-  /// 判断是否为平板
-  static bool isTablet(double width) => width >= sm && width < lg;
-
-  /// 判断是否为桌面端
-  static bool isDesktop(double width) => width >= lg;
-}
+import 'package:yudao_flutter_ui_admin/router/router.dart';
+import 'package:yudao_flutter_ui_admin/stores/stores.dart';
+import 'package:yudao_flutter_ui_admin/api/core/auth_api.dart';
+import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 主布局页面
 class BasicLayout extends ConsumerStatefulWidget {
@@ -38,6 +19,8 @@ class BasicLayout extends ConsumerStatefulWidget {
 
 class _BasicLayoutState extends ConsumerState<BasicLayout> {
   bool _extended = true;
+  // 移动端抽屉控制器
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void didChangeDependencies() {
@@ -101,6 +84,14 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
     });
   }
 
+  /// 响应式侧边栏宽度
+  double _getSidebarWidth(bool extended, bool isDesktop) {
+    if (!extended || !isDesktop) {
+      return 72; // 收起状态或平板模式
+    }
+    return 256; // 展开状态
+  }
+
   @override
   Widget build(BuildContext context) {
     final userInfo = ref.watch(userStoreProvider).userInfo;
@@ -108,13 +99,15 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
     final width = MediaQuery.of(context).size.width;
     final isMobile = Breakpoints.isMobile(width);
     final isDesktop = Breakpoints.isDesktop(width);
+    final isTablet = !isMobile && !isDesktop;
 
     // 移动端布局
     if (isMobile) {
       return Scaffold(
+        key: _scaffoldKey,
         appBar: AppBar(
           title: Text(S.current.appName),
-          actions: _buildActions(userInfo),
+          actions: _buildActions(userInfo, isMobile: true),
         ),
         body: widget.child,
         bottomNavigationBar: _buildBottomNavigation(menuState.menuItems),
@@ -122,7 +115,7 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
       );
     }
 
-    // 桌面端布局
+    // 桌面端/平板端布局
     return Scaffold(
       body: Row(
         children: [
@@ -131,6 +124,7 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
             menuItems: menuState.menuItems,
             expandedIds: menuState.expandedIds,
             extended: _extended && isDesktop,
+            isTablet: isTablet,
           ),
           // 主内容区
           Expanded(
@@ -139,7 +133,7 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
                 _buildTopAppBar(userInfo, isMobile),
                 const Divider(height: 1),
                 // Tab 栏
-                _buildTabBar(),
+                _buildTabBar(isMobile: isMobile),
                 const Divider(height: 1),
                 // 主内容区（使用 IndexedStack 保持页面状态）
                 Expanded(child: _buildContent()),
@@ -152,7 +146,7 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
   }
 
   /// 构建 Tab 栏
-  Widget _buildTabBar() {
+  Widget _buildTabBar({bool isMobile = false}) {
     final tabState = ref.watch(tabProvider);
     final visibleTabs = tabState.visibleTabs;
 
@@ -162,6 +156,9 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
 
     return Container(
       height: 40,
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.of(context).size.width - 100, // 防止溢出
+      ),
       color: Theme.of(context).colorScheme.surfaceContainerHighest,
       child: Row(
         children: [
@@ -172,7 +169,7 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
               itemBuilder: (context, index) {
                 final tab = visibleTabs[index];
                 final isActive = tab.path == tabState.activePath;
-                return _buildTabItem(tab, isActive);
+                return _buildTabItem(tab, isActive, isMobile: isMobile);
               },
             ),
           ),
@@ -227,12 +224,17 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
   }
 
   /// 构建单个 Tab 项
-  Widget _buildTabItem(TabItem tab, bool isActive) {
+  Widget _buildTabItem(TabItem tab, bool isActive, {bool isMobile = false}) {
+    // 移动端使用更紧凑的Tab宽度
+    final minWidth = isMobile ? 80.0 : 100.0;
+    final maxWidth = isMobile ? 150.0 : 200.0;
+    final horizontalPadding = isMobile ? 12.0 : 16.0;
+
     return InkWell(
       onTap: () => _onTabTap(tab),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        constraints: const BoxConstraints(minWidth: 100, maxWidth: 200),
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+        constraints: BoxConstraints(minWidth: minWidth, maxWidth: maxWidth),
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
@@ -253,6 +255,7 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
               child: Text(
                 tab.title,
                 overflow: TextOverflow.ellipsis,
+                maxLines: 1,
                 style: TextStyle(
                   fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                   color: isActive
@@ -262,12 +265,12 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
               ),
             ),
             if (!tab.affix) ...[
-              const SizedBox(width: 8),
+              const SizedBox(width: 4),
               GestureDetector(
                 onTap: () => _onTabClose(tab),
                 child: Icon(
                   Icons.close,
-                  size: 16,
+                  size: 14,
                   color: isActive
                       ? Theme.of(context).colorScheme.primary
                       : Theme.of(context).colorScheme.onSurfaceVariant,
@@ -314,6 +317,7 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
     required List<NavigationItem> menuItems,
     required Set<String> expandedIds,
     required bool extended,
+    bool isTablet = false,
   }) {
     // 如果菜单为空，显示加载或空状态
     if (menuItems.isEmpty) {
@@ -324,6 +328,7 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
       menuItems: menuItems,
       expandedIds: expandedIds,
       extended: extended,
+      isTablet: isTablet,
     );
   }
 
@@ -332,11 +337,17 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
     required List<NavigationItem> menuItems,
     required Set<String> expandedIds,
     required bool extended,
+    bool isTablet = false,
   }) {
     final currentPath = GoRouterState.of(context).matchedLocation;
+    final sidebarWidth = _getSidebarWidth(extended, !isTablet);
 
     return Container(
-      width: extended ? 256 : 72,
+      width: sidebarWidth,
+      constraints: BoxConstraints(
+        minWidth: 72,
+        maxWidth: 256,
+      ),
       decoration: BoxDecoration(
         border: Border(
           right: BorderSide(
@@ -362,6 +373,7 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
                             fontWeight: FontWeight.bold,
                           ),
                       overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
                   ),
                 IconButton(
@@ -406,6 +418,10 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
   }) {
     final currentPath = GoRouterState.of(context).matchedLocation;
     final isExpanded = expandedIds.contains(item.id);
+    // 防止缩进溢出
+    final maxLevel = extended ? 4 : 0;
+    final safeLevel = level.clamp(0, maxLevel);
+    final indentWidth = extended ? 16.0 + (safeLevel * 12.0) : 16.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -420,10 +436,10 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
             }
           },
           child: Container(
-            height: 56,
+            height: 48, // 稍微减小高度，更适合缩放
             padding: EdgeInsets.only(
-              left: extended ? 16.0 + (level * 16.0) : 16.0,
-              right: 16.0,
+              left: indentWidth,
+              right: 12.0,
             ),
             child: Row(
               mainAxisAlignment:
@@ -433,7 +449,7 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
                   isSelected
                       ? (item.selectedIcon ?? item.icon ?? Icons.folder_outlined)
                       : (item.icon ?? Icons.folder_outlined),
-                  size: 24,
+                  size: 20, // 稍微减小图标大小
                   color: isSelected
                       ? Theme.of(context).colorScheme.primary
                       : null,
@@ -444,7 +460,9 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
                     child: Text(
                       item.label,
                       overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                       style: TextStyle(
+                        fontSize: 14,
                         fontWeight:
                             isSelected ? FontWeight.bold : FontWeight.normal,
                         color: isSelected
@@ -518,23 +536,26 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
   /// 构建移动端抽屉菜单
   Widget _buildDrawer(List<NavigationItem> menuItems) {
     return Drawer(
-      child: Column(
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer,
-            ),
-            child: Center(
-              child: Text(
-                S.current.appName,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+      child: SafeArea(
+        child: Column(
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+              ),
+              child: Center(
+                child: Text(
+                  S.current.appName,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: _buildDrawerMenuItems(menuItems),
-          ),
-        ],
+            Expanded(
+              child: _buildDrawerMenuItems(menuItems),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -570,6 +591,9 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
   }) {
     final menuState = ref.read(menuProvider);
     final currentPath = GoRouterState.of(context).matchedLocation;
+    // 防止缩进溢出
+    final safeLevel = level.clamp(0, 4);
+    final indentWidth = 16.0 + (safeLevel * 12.0);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -588,7 +612,7 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
           },
           child: Container(
             padding: EdgeInsets.only(
-              left: 16.0 + (level * 16.0),
+              left: indentWidth,
               right: 16.0,
               top: 12.0,
               bottom: 12.0,
@@ -611,7 +635,10 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
                 Expanded(
                   child: Text(
                     item.label,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                     style: TextStyle(
+                      fontSize: 14,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                       color: isSelected
                           ? Theme.of(context).colorScheme.primary
@@ -647,11 +674,11 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
   PreferredSizeWidget _buildTopAppBar(UserInfoStore? userInfo, bool isMobile) {
     return AppBar(
       title: isMobile ? Text(S.current.appName) : null,
-      actions: _buildActions(userInfo),
+      actions: _buildActions(userInfo, isMobile: isMobile),
     );
   }
 
-  List<Widget> _buildActions(UserInfoStore? userInfo) {
+  List<Widget> _buildActions(UserInfoStore? userInfo, {bool isMobile = false}) {
     return [
       // 通知
       IconButton(
@@ -666,7 +693,12 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
               ? NetworkImage(userInfo!.avatar!)
               : null,
           child: userInfo?.avatar == null
-              ? Text(userInfo?.nickname.substring(0, 1) ?? 'U')
+              ? Text(
+                  userInfo?.nickname?.isNotEmpty == true
+                      ? userInfo!.nickname!.substring(0, 1)
+                      : 'U',
+                  style: const TextStyle(fontSize: 14),
+                )
               : null,
         ),
         offset: const Offset(0, 40),
@@ -694,15 +726,19 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
             enabled: false,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   userInfo?.nickname ?? S.current.notLoggedIn,
                   style: Theme.of(context).textTheme.titleSmall,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                Text(
-                  userInfo?.email ?? '',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+                if (userInfo?.email != null)
+                  Text(
+                    userInfo!.email!,
+                    style: Theme.of(context).textTheme.bodySmall,
+                    overflow: TextOverflow.ellipsis,
+                  ),
               ],
             ),
           ),
@@ -711,7 +747,7 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
             value: 'profile',
             child: Row(
               children: [
-                const Icon(Icons.person_outline),
+                const Icon(Icons.person_outline, size: 20),
                 const SizedBox(width: 8),
                 Text(S.current.personalCenter),
               ],
@@ -721,7 +757,7 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
             value: 'settings',
             child: Row(
               children: [
-                const Icon(Icons.settings_outlined),
+                const Icon(Icons.settings_outlined, size: 20),
                 const SizedBox(width: 8),
                 Text(S.current.settings),
               ],
@@ -732,7 +768,7 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
             value: 'logout',
             child: Row(
               children: [
-                const Icon(Icons.logout, color: Colors.red),
+                const Icon(Icons.logout, color: Colors.red, size: 20),
                 const SizedBox(width: 8),
                 Text(S.current.logout, style: const TextStyle(color: Colors.red)),
               ],
@@ -756,8 +792,8 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
     final destinations = <NavigationDestination>[];
     for (final item in displayItems) {
       destinations.add(NavigationDestination(
-        icon: Icon(item.icon ?? Icons.folder_outlined),
-        selectedIcon: Icon(item.selectedIcon ?? item.icon ?? Icons.folder),
+        icon: Icon(item.icon ?? Icons.folder_outlined, size: 24),
+        selectedIcon: Icon(item.selectedIcon ?? item.icon ?? Icons.folder, size: 24),
         label: item.label,
       ));
     }

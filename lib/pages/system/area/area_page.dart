@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:data_table_2/data_table_2.dart';
-import '../../../api/system/area_api.dart';
-import '../../../models/system/area.dart';
-import '../../../i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/api/system/area_api.dart';
+import 'package:yudao_flutter_ui_admin/models/system/area.dart';
+import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 地区管理页面
 class AreaPage extends ConsumerStatefulWidget {
@@ -221,6 +222,8 @@ class _AreaPageState extends ConsumerState<AreaPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+
     return Scaffold(
       body: Column(
         children: [
@@ -229,7 +232,9 @@ class _AreaPageState extends ConsumerState<AreaPage> {
           const Divider(height: 1),
           // 地区树形表格
           Expanded(
-            child: _buildAreaTree(context),
+            child: isMobile
+                ? _buildMobileAreaTree(context)
+                : _buildAreaTree(context),
           ),
         ],
       ),
@@ -237,8 +242,10 @@ class _AreaPageState extends ConsumerState<AreaPage> {
   }
 
   Widget _buildToolbar(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isMobile ? 12 : 16),
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
@@ -246,17 +253,17 @@ class _AreaPageState extends ConsumerState<AreaPage> {
         children: [
           ElevatedButton.icon(
             onPressed: _showIpQueryDialog,
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.search, size: 18),
             label: Text(S.current.ipQuery),
           ),
           ElevatedButton.icon(
             onPressed: _loadAreaTree,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, size: 18),
             label: Text(S.current.refresh),
           ),
           OutlinedButton.icon(
             onPressed: _toggleAll,
-            icon: Icon(_isExpanded ? Icons.unfold_less : Icons.unfold_more),
+            icon: Icon(_isExpanded ? Icons.unfold_less : Icons.unfold_more, size: 18),
             label: Text(_isExpanded ? S.current.collapseAll : S.current.expandAll),
           ),
           const SizedBox(width: 16),
@@ -296,111 +303,237 @@ class _AreaPageState extends ConsumerState<AreaPage> {
 
     final flatAreas = _flattenAreaTree(_areaTree, 0);
 
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
             children: [
-              Text(S.current.areaList),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: DataTable2(
-              columnSpacing: 12,
-              horizontalMargin: 12,
-              minWidth: 600,
-              smRatio: 0.75,
-              lmRatio: 1.5,
-              headingRowColor: WidgetStateProperty.resolveWith(
-                (states) => Theme.of(context).colorScheme.surfaceContainerHighest,
+              Row(
+                children: [
+                  Text(S.current.areaList),
+                ],
               ),
-              headingTextStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-              columns: [
-                DataColumn2(
-                  label: Text(S.current.areaCode),
-                  size: ColumnSize.M,
-                ),
-                DataColumn2(
-                  label: Text(S.current.areaName),
-                  size: ColumnSize.L,
-                ),
-                DataColumn2(
-                  label: Text(S.current.sort),
-                  size: ColumnSize.S,
-                ),
-                DataColumn2(
-                  label: Text(S.current.status),
-                  size: ColumnSize.S,
-                ),
-              ],
-              rows: flatAreas.map((flatArea) {
-                final area = flatArea.area;
-                final hasChildren = flatArea.hasChildren;
-                final isExpanded = _expandedMap[area.id] ?? true;
-                final level = flatArea.level;
-
-                return DataRow2(
-                  cells: [
-                    DataCell(
-                      InkWell(
-                        onTap: hasChildren ? () => _toggleExpand(area.id!) : null,
-                        child: Padding(
-                          padding: EdgeInsets.only(left: level * 24.0),
-                          child: Row(
-                            children: [
-                              if (hasChildren)
-                                Icon(
-                                  isExpanded ? Icons.expand_more : Icons.chevron_right,
-                                  size: 20,
-                                )
-                              else
-                                const SizedBox(width: 20),
-                              const SizedBox(width: 4),
-                              Icon(
-                                hasChildren ? Icons.folder : Icons.location_on,
-                                size: 20,
-                                color: hasChildren ? Colors.amber : Theme.of(context).colorScheme.primary,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(area.code),
-                            ],
-                          ),
-                        ),
-                      ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: DataTable2(
+                  columnSpacing: 12,
+                  horizontalMargin: 12,
+                  minWidth: constraints.maxWidth < 600 ? constraints.maxWidth : 600,
+                  smRatio: 0.75,
+                  lmRatio: 1.5,
+                  headingRowColor: WidgetStateProperty.resolveWith(
+                    (states) => Theme.of(context).colorScheme.surfaceContainerHighest,
+                  ),
+                  headingTextStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  columns: [
+                    DataColumn2(
+                      label: Text(S.current.areaCode),
+                      size: ColumnSize.M,
                     ),
-                    DataCell(Text(area.name)),
-                    DataCell(Text(area.sort?.toString() ?? '0')),
-                    DataCell(
-                      area.status == null
-                          ? const Text('-')
-                          : Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: area.status == 0
-                                    ? Colors.green.withValues(alpha: 0.1)
-                                    : Colors.red.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                area.status == 0 ? S.current.enabled : S.current.disabled,
-                                style: TextStyle(
-                                  color: area.status == 0 ? Colors.green : Colors.red,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
+                    DataColumn2(
+                      label: Text(S.current.areaName),
+                      size: ColumnSize.L,
+                    ),
+                    DataColumn2(
+                      label: Text(S.current.sort),
+                      size: ColumnSize.S,
+                    ),
+                    DataColumn2(
+                      label: Text(S.current.status),
+                      size: ColumnSize.S,
                     ),
                   ],
-                );
-              }).toList(),
-            ),
+                  rows: flatAreas.map((flatArea) {
+                    final area = flatArea.area;
+                    final hasChildren = flatArea.hasChildren;
+                    final isExpanded = _expandedMap[area.id] ?? true;
+                    final level = flatArea.level;
+
+                    return DataRow2(
+                      cells: [
+                        DataCell(
+                          InkWell(
+                            onTap: hasChildren ? () => _toggleExpand(area.id!) : null,
+                            child: Padding(
+                              padding: EdgeInsets.only(left: level * 24.0),
+                              child: Row(
+                                children: [
+                                  if (hasChildren)
+                                    Icon(
+                                      isExpanded ? Icons.expand_more : Icons.chevron_right,
+                                      size: 20,
+                                    )
+                                  else
+                                    const SizedBox(width: 20),
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    hasChildren ? Icons.folder : Icons.location_on,
+                                    size: 20,
+                                    color: hasChildren ? Colors.amber : Theme.of(context).colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      area.code,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          Text(
+                            area.name,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        DataCell(Text(area.sort?.toString() ?? '0')),
+                        DataCell(
+                          area.status == null
+                              ? const Text('-')
+                              : Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: area.status == 0
+                                        ? Colors.green.withValues(alpha: 0.1)
+                                        : Colors.red.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    area.status == 0 ? S.current.enabled : S.current.disabled,
+                                    style: TextStyle(
+                                      color: area.status == 0 ? Colors.green : Colors.red,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
+    );
+  }
+
+  /// 移动端地区树形列表 - 使用 ExpansionTile
+  Widget _buildMobileAreaTree(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('${S.current.loadFailed}: $_error', style: const TextStyle(color: Colors.red)),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadAreaTree,
+                child: Text(S.current.retry),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_areaTree.isEmpty) {
+      return Center(child: Text(S.current.noData));
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(8),
+      itemCount: _areaTree.length,
+      itemBuilder: (context, index) {
+        return _buildMobileAreaTile(_areaTree[index], 0);
+      },
+    );
+  }
+
+  /// 移动端地区层级项
+  Widget _buildMobileAreaTile(Area area, int level) {
+    final hasChildren = area.children != null && area.children!.isNotEmpty;
+
+    return Card(
+      margin: EdgeInsets.only(left: level * 12.0, bottom: 4, top: 4),
+      child: hasChildren
+          ? ExpansionTile(
+              leading: Icon(
+                Icons.folder,
+                color: Colors.amber,
+              ),
+              title: Text(
+                area.name,
+                style: const TextStyle(fontWeight: FontWeight.w500),
+              ),
+              subtitle: Text(
+                area.code,
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+              ),
+              trailing: area.status != null
+                  ? Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: area.status == 0
+                            ? Colors.green.withValues(alpha: 0.1)
+                            : Colors.red.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        area.status == 0 ? S.current.enabled : S.current.disabled,
+                        style: TextStyle(
+                          color: area.status == 0 ? Colors.green : Colors.red,
+                          fontSize: 12,
+                        ),
+                      ),
+                    )
+                  : null,
+              children: area.children!.map((child) {
+                return _buildMobileAreaTile(child, level + 1);
+              }).toList(),
+            )
+          : ListTile(
+              leading: Icon(
+                Icons.location_on,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              title: Text(area.name),
+              subtitle: Text(
+                '${area.code} | ${S.current.sort}: ${area.sort ?? 0}',
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+              ),
+              trailing: area.status != null
+                  ? Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: area.status == 0
+                            ? Colors.green.withValues(alpha: 0.1)
+                            : Colors.red.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        area.status == 0 ? S.current.enabled : S.current.disabled,
+                        style: TextStyle(
+                          color: area.status == 0 ? Colors.green : Colors.red,
+                          fontSize: 12,
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
     );
   }
 }

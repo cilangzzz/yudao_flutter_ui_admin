@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 文件配置操作按钮组件（工具栏）
 class FileConfigActionButtons extends StatelessWidget {
@@ -14,8 +15,10 @@ class FileConfigActionButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16, vertical: 8),
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
@@ -23,13 +26,13 @@ class FileConfigActionButtons extends StatelessWidget {
         children: [
           ElevatedButton.icon(
             onPressed: onAdd,
-            icon: const Icon(Icons.add),
+            icon: isMobile ? null : const Icon(Icons.add),
             label: Text(S.current.addFileConfig),
           ),
           if (onDeleteBatch != null)
             ElevatedButton.icon(
               onPressed: onDeleteBatch,
-              icon: const Icon(Icons.delete),
+              icon: isMobile ? null : const Icon(Icons.delete),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 foregroundColor: Colors.white,

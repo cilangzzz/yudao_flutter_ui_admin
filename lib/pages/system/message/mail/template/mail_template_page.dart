@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:data_table_2/data_table_2.dart';
-import '/../../api/system/mail_account_api.dart';
-import '/../../api/system/mail_template_api.dart';
-import '/../../models/system/mail_account.dart';
-import '/../../models/system/mail_template.dart';
+import 'package:yudao_flutter_ui_admin/api/system/mail_account_api.dart';
+import 'package:yudao_flutter_ui_admin/api/system/mail_template_api.dart';
+import 'package:yudao_flutter_ui_admin/models/system/mail_account.dart';
+import 'package:yudao_flutter_ui_admin/models/system/mail_template.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 邮件模板管理页面
 class MailTemplatePage extends ConsumerStatefulWidget {
@@ -244,14 +245,10 @@ class _MailTemplatePageState extends ConsumerState<MailTemplatePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          _buildSearchBar(context),
-          const Divider(height: 1),
-          _buildToolbar(context),
-          const Divider(height: 1),
-          Expanded(child: _buildDataTable(context)),
-        ],
+      body: DeviceUIMode.builder(
+        context,
+        mobile: (context) => _buildMobileLayout(context),
+        desktop: (context) => _buildDesktopLayout(context),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showTemplateDialog(),
@@ -261,7 +258,31 @@ class _MailTemplatePageState extends ConsumerState<MailTemplatePage> {
     );
   }
 
-  Widget _buildSearchBar(BuildContext context) {
+  Widget _buildDesktopLayout(BuildContext context) {
+    return Column(
+      children: [
+        _buildDesktopSearchBar(context),
+        const Divider(height: 1),
+        _buildToolbar(context),
+        const Divider(height: 1),
+        Expanded(child: _buildDataTable(context)),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context) {
+    return Column(
+      children: [
+        _buildMobileSearchBar(context),
+        const Divider(height: 1),
+        Expanded(child: _buildMobileList(context)),
+      ],
+    );
+  }
+
+  Widget _buildDesktopSearchBar(BuildContext context) {
+    final searchWidth = DeviceUIMode.select(context, mobile: () => 120.0, desktop: () => 150.0);
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Wrap(
@@ -270,7 +291,7 @@ class _MailTemplatePageState extends ConsumerState<MailTemplatePage> {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           SizedBox(
-            width: 150,
+            width: searchWidth,
             child: TextField(
               controller: _searchNameController,
               decoration: const InputDecoration(
@@ -283,7 +304,7 @@ class _MailTemplatePageState extends ConsumerState<MailTemplatePage> {
             ),
           ),
           SizedBox(
-            width: 150,
+            width: searchWidth,
             child: TextField(
               controller: _searchCodeController,
               decoration: const InputDecoration(
@@ -296,7 +317,7 @@ class _MailTemplatePageState extends ConsumerState<MailTemplatePage> {
             ),
           ),
           SizedBox(
-            width: 150,
+            width: DeviceUIMode.select(context, mobile: () => 100.0, desktop: () => 150.0),
             child: DropdownButtonFormField<int>(
               value: _selectedStatus,
               decoration: const InputDecoration(
@@ -316,7 +337,7 @@ class _MailTemplatePageState extends ConsumerState<MailTemplatePage> {
             ),
           ),
           SizedBox(
-            width: 200,
+            width: DeviceUIMode.select(context, mobile: () => 150.0, desktop: () => 200.0),
             child: DropdownButtonFormField<int>(
               value: _selectedAccountId,
               decoration: const InputDecoration(
@@ -346,6 +367,65 @@ class _MailTemplatePageState extends ConsumerState<MailTemplatePage> {
             onPressed: _reset,
             icon: const Icon(Icons.refresh),
             label: const Text('重置'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileSearchBar(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _searchNameController,
+                  decoration: const InputDecoration(
+                    hintText: '模板名称',
+                    prefixIcon: Icon(Icons.text_fields, size: 20),
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onSubmitted: (_) => _search(),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _searchCodeController,
+                  decoration: const InputDecoration(
+                    hintText: '模板编码',
+                    prefixIcon: Icon(Icons.code, size: 20),
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onSubmitted: (_) => _search(),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _search,
+                  icon: const Icon(Icons.search, size: 20),
+                  label: const Text('搜索'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _reset,
+                  icon: const Icon(Icons.refresh, size: 20),
+                  label: const Text('重置'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -530,6 +610,105 @@ class _MailTemplatePageState extends ConsumerState<MailTemplatePage> {
     );
   }
 
+  Widget _buildMobileList(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('加载失败: $_error', style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _loadData, child: const Text('重试')),
+          ],
+        ),
+      );
+    }
+
+    if (_dataList.isEmpty) {
+      return const Center(child: Text('暂无数据'));
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadData,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(12),
+        itemCount: _dataList.length,
+        itemBuilder: (context, index) {
+          final item = _dataList[index];
+          return _buildTemplateCard(item);
+        },
+      ),
+    );
+  }
+
+  Widget _buildTemplateCard(MailTemplate item) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.email, color: Colors.blue),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    item.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                _buildStatusTag(item.status),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text('编码: ${item.code}', style: const TextStyle(color: Colors.grey)),
+            Text('标题: ${item.title}', style: const TextStyle(color: Colors.grey)),
+            const Divider(height: 24),
+            Row(
+              children: [
+                Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
+                const SizedBox(width: 4),
+                Text(
+                  item.createTime ?? '-',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: () => _showTemplateDialog(item),
+                  icon: const Icon(Icons.edit, size: 18),
+                  label: const Text('编辑'),
+                ),
+                TextButton.icon(
+                  onPressed: () => _showSendMailDialog(item),
+                  icon: const Icon(Icons.send, size: 18, color: Colors.blue),
+                  label: const Text('测试'),
+                ),
+                TextButton.icon(
+                  onPressed: () => _deleteTemplate(item),
+                  icon: const Icon(Icons.delete, size: 18, color: Colors.red),
+                  label: const Text('删除'),
+                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildStatusTag(int status) {
     final isEnabled = status == 0;
     return Container(
@@ -699,7 +878,7 @@ class _MailTemplateFormDialogState extends State<_MailTemplateFormDialog> {
     return AlertDialog(
       title: Text(widget.template == null ? '添加邮件模板' : '编辑邮件模板'),
       content: SizedBox(
-        width: 600,
+        width: DeviceUIMode.select(context, mobile: () => double.maxFinite, desktop: () => 600.0),
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
@@ -772,23 +951,31 @@ class _MailTemplateFormDialogState extends State<_MailTemplateFormDialog> {
                   validator: (v) => v?.isEmpty == true ? '请输入模板内容' : null,
                 ),
                 const SizedBox(height: 16),
-                Row(
+                Wrap(
+                  spacing: 24,
                   children: [
-                    const Text('状态：'),
-                    const SizedBox(width: 16),
-                    Radio<int>(
-                      value: 0,
-                      groupValue: _status,
-                      onChanged: (v) => setState(() => _status = v ?? 0),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Radio<int>(
+                          value: 0,
+                          groupValue: _status,
+                          onChanged: (v) => setState(() => _status = v ?? 0),
+                        ),
+                        const Text('开启'),
+                      ],
                     ),
-                    const Text('开启'),
-                    const SizedBox(width: 16),
-                    Radio<int>(
-                      value: 1,
-                      groupValue: _status,
-                      onChanged: (v) => setState(() => _status = v ?? 1),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Radio<int>(
+                          value: 1,
+                          groupValue: _status,
+                          onChanged: (v) => setState(() => _status = v ?? 1),
+                        ),
+                        const Text('关闭'),
+                      ],
                     ),
-                    const Text('关闭'),
                   ],
                 ),
               ],
@@ -834,7 +1021,6 @@ class _SendMailDialogState extends State<_SendMailDialog> {
   @override
   void initState() {
     super.initState();
-    // 动态创建参数输入框
     for (final param in widget.template.params) {
       _paramControllers[param] = TextEditingController();
     }
@@ -857,13 +1043,11 @@ class _SendMailDialogState extends State<_SendMailDialog> {
     setState(() => _isLoading = true);
 
     try {
-      // 构建参数对象
       final templateParams = <String, dynamic>{};
       for (final entry in _paramControllers.entries) {
         templateParams[entry.key] = entry.value.text;
       }
 
-      // 解析邮箱列表
       final toMails = _toMailsController.text
           .split(',')
           .map((e) => e.trim())
@@ -918,7 +1102,7 @@ class _SendMailDialogState extends State<_SendMailDialog> {
     return AlertDialog(
       title: const Text('测试发送邮件'),
       content: SizedBox(
-        width: 500,
+        width: DeviceUIMode.select(context, mobile: () => double.maxFinite, desktop: () => 500.0),
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
@@ -926,7 +1110,6 @@ class _SendMailDialogState extends State<_SendMailDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 模板内容预览
                 const Text('模板内容：', style: TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 Container(
@@ -943,7 +1126,6 @@ class _SendMailDialogState extends State<_SendMailDialog> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // 动态参数输入
                 if (widget.template.params.isNotEmpty) ...[
                   const Text('模板参数：', style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
@@ -960,7 +1142,6 @@ class _SendMailDialogState extends State<_SendMailDialog> {
                       )),
                   const SizedBox(height: 8),
                 ],
-                // 收件邮箱
                 TextFormField(
                   controller: _toMailsController,
                   decoration: const InputDecoration(

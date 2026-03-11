@@ -3,10 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yudao_flutter_ui_admin/api/infra/demo03_student_normal_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/demo03_student.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
-import 'widgets/demo03_search_form.dart';
-import 'widgets/demo03_action_buttons.dart';
-import 'widgets/demo03_data_table.dart';
-import 'dialogs/demo03_form_dialog.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo03-normal/widgets/demo03_search_form.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo03-normal/widgets/demo03_action_buttons.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo03-normal/widgets/demo03_data_table.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo03-normal/dialogs/demo03_form_dialog.dart';
 
 /// 学生管理页面 - Demo03 (主子表)
 class Demo03Page extends ConsumerStatefulWidget {
@@ -220,6 +221,8 @@ class _Demo03PageState extends ConsumerState<Demo03Page> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+
     return Scaffold(
       body: Column(
         children: [
@@ -246,36 +249,42 @@ class _Demo03PageState extends ConsumerState<Demo03Page> {
           ),
           const Divider(height: 1),
 
-          // 数据表格
+          // 数据表格 - 使用 LayoutBuilder 确保布局适配
           Expanded(
-            child: Demo03DataTable(
-              studentList: _studentList,
-              totalCount: _totalCount,
-              currentPage: _currentPage,
-              pageSize: _pageSize,
-              isLoading: _isLoading,
-              error: _error,
-              onReload: _loadStudentList,
-              onPageSizeChanged: (value) {
-                setState(() {
-                  _pageSize = value;
-                  _currentPage = 1;
-                });
-                _loadStudentList();
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Demo03DataTable(
+                  studentList: _studentList,
+                  totalCount: _totalCount,
+                  currentPage: _currentPage,
+                  pageSize: _pageSize,
+                  isLoading: _isLoading,
+                  error: _error,
+                  onReload: _loadStudentList,
+                  onPageSizeChanged: (value) {
+                    setState(() {
+                      _pageSize = value;
+                      _currentPage = 1;
+                    });
+                    _loadStudentList();
+                  },
+                  onPageChanged: (page) {
+                    setState(() => _currentPage = page);
+                    _loadStudentList();
+                  },
+                  onEdit: (student) => showDemo03FormDialog(
+                    context,
+                    student: student,
+                    ref: ref,
+                    onSuccess: _loadStudentList,
+                  ),
+                  onDelete: _deleteStudent,
+                  selectedIds: _selectedIds,
+                  onSelectionChanged: (ids) => setState(() => _selectedIds = ids),
+                  isMobile: isMobile,
+                  availableWidth: constraints.maxWidth,
+                );
               },
-              onPageChanged: (page) {
-                setState(() => _currentPage = page);
-                _loadStudentList();
-              },
-              onEdit: (student) => showDemo03FormDialog(
-                context,
-                student: student,
-                ref: ref,
-                onSuccess: _loadStudentList,
-              ),
-              onDelete: _deleteStudent,
-              selectedIds: _selectedIds,
-              onSelectionChanged: (ids) => setState(() => _selectedIds = ids),
             ),
           ),
         ],

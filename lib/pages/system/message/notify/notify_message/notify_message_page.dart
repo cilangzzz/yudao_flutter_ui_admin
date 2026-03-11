@@ -4,6 +4,7 @@ import 'package:data_table_2/data_table_2.dart';
 import 'package:yudao_flutter_ui_admin/api/system/notify_message_api.dart';
 import 'package:yudao_flutter_ui_admin/models/system/notify_message.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 站内信消息管理页面 - 管理员视角
 class NotifyMessagePage extends ConsumerStatefulWidget {
@@ -151,7 +152,7 @@ class _NotifyMessagePageState extends ConsumerState<NotifyMessagePage> {
           ],
         ),
         content: SizedBox(
-          width: 500,
+          width: DeviceUIMode.select(context, mobile: () => double.maxFinite, desktop: () => 500.0),
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -216,13 +217,12 @@ class _NotifyMessagePageState extends ConsumerState<NotifyMessagePage> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 800;
-
     return Scaffold(
-      body: isMobile
-          ? _buildMobileLayout(context)
-          : _buildDesktopLayout(context),
+      body: DeviceUIMode.builder(
+        context,
+        mobile: (context) => _buildMobileLayout(context),
+        desktop: (context) => _buildDesktopLayout(context),
+      ),
     );
   }
 
@@ -247,6 +247,8 @@ class _NotifyMessagePageState extends ConsumerState<NotifyMessagePage> {
   }
 
   Widget _buildDesktopSearchBar(BuildContext context) {
+    final searchWidth = DeviceUIMode.select(context, mobile: () => 120.0, desktop: () => 150.0);
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Wrap(
@@ -255,7 +257,7 @@ class _NotifyMessagePageState extends ConsumerState<NotifyMessagePage> {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           SizedBox(
-            width: 150,
+            width: searchWidth,
             child: TextField(
               controller: _userIdController,
               decoration: InputDecoration(
@@ -269,7 +271,7 @@ class _NotifyMessagePageState extends ConsumerState<NotifyMessagePage> {
             ),
           ),
           SizedBox(
-            width: 150,
+            width: searchWidth,
             child: DropdownButtonFormField<int?>(
               value: _selectedUserType,
               decoration: const InputDecoration(
@@ -290,7 +292,7 @@ class _NotifyMessagePageState extends ConsumerState<NotifyMessagePage> {
             ),
           ),
           SizedBox(
-            width: 180,
+            width: DeviceUIMode.select(context, mobile: () => 150.0, desktop: () => 180.0),
             child: TextField(
               controller: _templateCodeController,
               decoration: InputDecoration(
@@ -303,7 +305,7 @@ class _NotifyMessagePageState extends ConsumerState<NotifyMessagePage> {
             ),
           ),
           SizedBox(
-            width: 150,
+            width: searchWidth,
             child: DropdownButtonFormField<int?>(
               value: _selectedTemplateType,
               decoration: const InputDecoration(
@@ -324,7 +326,6 @@ class _NotifyMessagePageState extends ConsumerState<NotifyMessagePage> {
               },
             ),
           ),
-          // 创建时间范围选择
           InkWell(
             onTap: () async {
               final range = await showDateRangePicker(
@@ -340,7 +341,7 @@ class _NotifyMessagePageState extends ConsumerState<NotifyMessagePage> {
               }
             },
             child: Container(
-              width: 240,
+              width: DeviceUIMode.select(context, mobile: () => 180.0, desktop: () => 240.0),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.grey),
@@ -351,12 +352,15 @@ class _NotifyMessagePageState extends ConsumerState<NotifyMessagePage> {
                 children: [
                   const Icon(Icons.date_range, size: 18, color: Colors.grey),
                   const SizedBox(width: 8),
-                  Text(
-                    _createTimeRange != null
-                        ? '${_formatDate(_createTimeRange!.start)} - ${_formatDate(_createTimeRange!.end)}'
-                        : S.current.createTime,
-                    style: TextStyle(
-                      color: _createTimeRange != null ? null : Colors.grey[600],
+                  Flexible(
+                    child: Text(
+                      _createTimeRange != null
+                          ? '${_formatDate(_createTimeRange!.start)} - ${_formatDate(_createTimeRange!.end)}'
+                          : S.current.createTime,
+                      style: TextStyle(
+                        color: _createTimeRange != null ? null : Colors.grey[600],
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -464,7 +468,6 @@ class _NotifyMessagePageState extends ConsumerState<NotifyMessagePage> {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          // 表头工具栏
           Row(
             children: [
               Checkbox(
@@ -486,7 +489,6 @@ class _NotifyMessagePageState extends ConsumerState<NotifyMessagePage> {
             ],
           ),
           const SizedBox(height: 8),
-          // 表格
           Expanded(
             child: DataTable2(
               columnSpacing: 12,
@@ -506,48 +508,17 @@ class _NotifyMessagePageState extends ConsumerState<NotifyMessagePage> {
                 }
                 return null;
               }),
-              columns: [
-                DataColumn2(
-                  label: Text('编号'),
-                  size: ColumnSize.S,
-                ),
-                DataColumn2(
-                  label: Text('用户类型'),
-                  size: ColumnSize.M,
-                ),
-                DataColumn2(
-                  label: Text('用户编号'),
-                  size: ColumnSize.S,
-                ),
-                DataColumn2(
-                  label: Text('模板编码'),
-                  size: ColumnSize.M,
-                ),
-                DataColumn2(
-                  label: Text('发送人名称'),
-                  size: ColumnSize.M,
-                ),
-                DataColumn2(
-                  label: Text('模版内容'),
-                  size: ColumnSize.L,
-                ),
-                DataColumn2(
-                  label: Text('模版类型'),
-                  size: ColumnSize.S,
-                ),
-                DataColumn2(
-                  label: Text('是否已读'),
-                  size: ColumnSize.S,
-                ),
-                DataColumn2(
-                  label: Text('创建时间'),
-                  size: ColumnSize.L,
-                ),
-                DataColumn2(
-                  label: Text(S.current.operation),
-                  size: ColumnSize.S,
-                  fixedWidth: 80,
-                ),
+              columns: const [
+                DataColumn2(label: Text('编号'), size: ColumnSize.S),
+                DataColumn2(label: Text('用户类型'), size: ColumnSize.M),
+                DataColumn2(label: Text('用户编号'), size: ColumnSize.S),
+                DataColumn2(label: Text('模板编码'), size: ColumnSize.M),
+                DataColumn2(label: Text('发送人名称'), size: ColumnSize.M),
+                DataColumn2(label: Text('模版内容'), size: ColumnSize.L),
+                DataColumn2(label: Text('模版类型'), size: ColumnSize.S),
+                DataColumn2(label: Text('是否已读'), size: ColumnSize.S),
+                DataColumn2(label: Text('创建时间'), size: ColumnSize.L),
+                DataColumn2(label: Text('操作'), size: ColumnSize.S),
               ],
               rows: _messageList.map((message) {
                 final isSelected = message.id != null && _selectedIds.contains(message.id);
@@ -622,60 +593,8 @@ class _NotifyMessagePageState extends ConsumerState<NotifyMessagePage> {
               }).toList(),
             ),
           ),
-          // 分页控件
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Row(
-                children: [
-                  Text('${S.current.pageSize}: '),
-                  DropdownButton<int>(
-                    value: _pageSize,
-                    items: [10, 20, 50, 100].map((value) {
-                      return DropdownMenuItem(
-                        value: value,
-                        child: Text('$value'),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _pageSize = value;
-                          _currentPage = 1;
-                        });
-                        _loadMessageList();
-                      }
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(width: 24),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left),
-                    onPressed: _currentPage > 1
-                        ? () {
-                            setState(() => _currentPage--);
-                            _loadMessageList();
-                          }
-                        : null,
-                  ),
-                  Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right),
-                    onPressed: _currentPage * _pageSize < _totalCount
-                        ? () {
-                            setState(() => _currentPage++);
-                            _loadMessageList();
-                          }
-                        : null,
-                  ),
-                ],
-              ),
-            ],
-          ),
+          _buildPagination(),
         ],
       ),
     );
@@ -851,6 +770,61 @@ class _NotifyMessagePageState extends ConsumerState<NotifyMessagePage> {
           Expanded(child: Text(value, style: const TextStyle(fontSize: 13))),
         ],
       ),
+    );
+  }
+
+  Widget _buildPagination() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Row(
+          children: [
+            Text('${S.current.pageSize}: '),
+            DropdownButton<int>(
+              value: _pageSize,
+              items: [10, 20, 50, 100].map((value) {
+                return DropdownMenuItem(
+                  value: value,
+                  child: Text('$value'),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _pageSize = value;
+                    _currentPage = 1;
+                  });
+                  _loadMessageList();
+                }
+              },
+            ),
+          ],
+        ),
+        const SizedBox(width: 24),
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.chevron_left),
+              onPressed: _currentPage > 1
+                  ? () {
+                      setState(() => _currentPage--);
+                      _loadMessageList();
+                    }
+                  : null,
+            ),
+            Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
+            IconButton(
+              icon: const Icon(Icons.chevron_right),
+              onPressed: _currentPage * _pageSize < _totalCount
+                  ? () {
+                      setState(() => _currentPage++);
+                      _loadMessageList();
+                    }
+                  : null,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

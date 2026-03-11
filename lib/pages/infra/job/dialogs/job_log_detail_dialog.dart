@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yudao_flutter_ui_admin/api/infra/job_log_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/job_log.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 任务日志详情对话框
 class JobLogDetailDialog extends StatefulWidget {
@@ -53,11 +54,15 @@ class _JobLogDetailDialogState extends State<JobLogDetailDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+    final screenWidth = DeviceUIMode.widthOf(context);
+    final dialogWidth = isMobile ? screenWidth - 32 : 500.0;
+
     return AlertDialog(
       title: Text(S.current.jobLogDetail),
       content: SizedBox(
-        width: 500,
-        child: _buildContent(),
+        width: dialogWidth,
+        child: _buildContent(context, isMobile),
       ),
       actions: [
         TextButton(
@@ -68,7 +73,7 @@ class _JobLogDetailDialogState extends State<JobLogDetailDialog> {
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent(BuildContext context, bool isMobile) {
     if (_isLoading) {
       return const Padding(
         padding: EdgeInsets.all(32),
@@ -96,19 +101,19 @@ class _JobLogDetailDialogState extends State<JobLogDetailDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildItem(S.current.logId, _log!.id?.toString() ?? '-'),
-          _buildItem(S.current.jobId, _log!.jobId.toString()),
-          _buildItem(S.current.handlerName, _log!.handlerName),
+          _buildItem(S.current.logId, _log!.id?.toString() ?? '-', isMobile),
+          _buildItem(S.current.jobId, _log!.jobId.toString(), isMobile),
+          _buildItem(S.current.handlerName, _log!.handlerName, isMobile),
           _buildItem(S.current.handlerParam, _log!.handlerParam.isEmpty
               ? '-'
-              : _log!.handlerParam),
-          _buildItem(S.current.executeIndex, _log!.executeIndex),
-          _buildItem(S.current.executeTime, _formatExecuteTime()),
-          _buildItem(S.current.duration, '${_log!.duration} ${S.current.milliseconds}'),
+              : _log!.handlerParam, isMobile),
+          _buildItem(S.current.executeIndex, _log!.executeIndex, isMobile),
+          _buildItem(S.current.executeTime, _formatExecuteTime(), isMobile),
+          _buildItem(S.current.duration, '${_log!.duration} ${S.current.milliseconds}', isMobile),
           _buildItem(S.current.status, _log!.status == JobLogStatus.success
               ? S.current.jobLogStatusSuccess
-              : S.current.jobLogStatusFailure),
-          _buildItem(S.current.result, _log!.result ?? '-'),
+              : S.current.jobLogStatusFailure, isMobile),
+          _buildItem(S.current.result, _log!.result ?? '-', isMobile),
         ],
       ),
     );
@@ -121,24 +126,36 @@ class _JobLogDetailDialogState extends State<JobLogDetailDialog> {
     return _log!.beginTime ?? '-';
   }
 
-  Widget _buildItem(String label, String value) {
+  Widget _buildItem(String label, String value, bool isMobile) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+      child: isMobile
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                SelectableText(value),
+              ],
+            )
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 100,
+                  child: Text(
+                    label,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Expanded(
+                  child: SelectableText(value),
+                ),
+              ],
             ),
-          ),
-          Expanded(
-            child: SelectableText(value),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 通用状态标签组件
 ///
@@ -35,6 +36,9 @@ class StatusChip extends StatelessWidget {
   /// 边框圆角
   final BorderRadius borderRadius;
 
+  /// 最大宽度限制
+  final double? maxWidth;
+
   const StatusChip({
     super.key,
     required this.label,
@@ -43,6 +47,7 @@ class StatusChip extends StatelessWidget {
     this.fontSize = 12,
     this.padding = const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
     this.borderRadius = const BorderRadius.all(Radius.circular(4)),
+    this.maxWidth,
   });
 
   /// 创建启用/禁用状态标签
@@ -60,6 +65,7 @@ class StatusChip extends StatelessWidget {
     Color? enabledColor,
     Color? disabledColor,
     double fontSize = 12,
+    double? maxWidth,
   }) {
     final color = isEnabled ? (enabledColor ?? Colors.green) : (disabledColor ?? Colors.red);
     return StatusChip(
@@ -67,6 +73,7 @@ class StatusChip extends StatelessWidget {
       label: isEnabled ? (enabledText ?? S.current.enabled) : (disabledText ?? S.current.disabled),
       color: color,
       fontSize: fontSize,
+      maxWidth: maxWidth,
     );
   }
 
@@ -75,12 +82,14 @@ class StatusChip extends StatelessWidget {
     Key? key,
     String? label,
     double fontSize = 12,
+    double? maxWidth,
   }) {
     return StatusChip(
       key: key,
       label: label ?? S.current.success,
       color: Colors.green,
       fontSize: fontSize,
+      maxWidth: maxWidth,
     );
   }
 
@@ -89,12 +98,14 @@ class StatusChip extends StatelessWidget {
     Key? key,
     String? label,
     double fontSize = 12,
+    double? maxWidth,
   }) {
     return StatusChip(
       key: key,
       label: label ?? S.current.failed,
       color: Colors.red,
       fontSize: fontSize,
+      maxWidth: maxWidth,
     );
   }
 
@@ -103,12 +114,14 @@ class StatusChip extends StatelessWidget {
     Key? key,
     required String label,
     double fontSize = 12,
+    double? maxWidth,
   }) {
     return StatusChip(
       key: key,
       label: label,
       color: Colors.orange,
       fontSize: fontSize,
+      maxWidth: maxWidth,
     );
   }
 
@@ -117,28 +130,42 @@ class StatusChip extends StatelessWidget {
     Key? key,
     required String label,
     double fontSize = 12,
+    double? maxWidth,
   }) {
     return StatusChip(
       key: key,
       label: label,
       color: Colors.blue,
       fontSize: fontSize,
+      maxWidth: maxWidth,
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+    final actualFontSize = isMobile ? fontSize * 0.9 : fontSize;
+    final actualMaxWidth = maxWidth ?? (isMobile ? 80.0 : 120.0);
+
     return Container(
-      padding: padding,
+      constraints: BoxConstraints(
+        maxWidth: actualMaxWidth,
+      ),
+      padding: isMobile
+          ? EdgeInsets.symmetric(horizontal: 6, vertical: 3)
+          : padding,
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: borderRadius,
       ),
       child: Text(
         label,
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+        textAlign: TextAlign.center,
         style: TextStyle(
           color: textColor ?? color,
-          fontSize: fontSize,
+          fontSize: actualFontSize,
         ),
       ),
     );
@@ -177,12 +204,16 @@ class TypedStatusChip extends StatelessWidget {
   /// 字体大小
   final double fontSize;
 
+  /// 最大宽度限制
+  final double? maxWidth;
+
   const TypedStatusChip({
     super.key,
     required this.type,
     required this.label,
     this.customColor,
     this.fontSize = 12,
+    this.maxWidth,
   });
 
   @override
@@ -210,6 +241,74 @@ class TypedStatusChip extends StatelessWidget {
       label: label,
       color: color,
       fontSize: fontSize,
+      maxWidth: maxWidth,
+    );
+  }
+}
+
+/// 响应式状态标签
+///
+/// 根据屏幕宽度自动调整大小
+class ResponsiveStatusChip extends StatelessWidget {
+  /// 显示的文本
+  final String label;
+
+  /// 背景颜色
+  final Color color;
+
+  /// 文字颜色（可选）
+  final Color? textColor;
+
+  /// 桌面端字体大小
+  final double desktopFontSize;
+
+  /// 移动端字体大小
+  final double mobileFontSize;
+
+  /// 桌面端内边距
+  final EdgeInsetsGeometry desktopPadding;
+
+  /// 移动端内边距
+  final EdgeInsetsGeometry mobilePadding;
+
+  /// 边框圆角
+  final BorderRadius borderRadius;
+
+  const ResponsiveStatusChip({
+    super.key,
+    required this.label,
+    required this.color,
+    this.textColor,
+    this.desktopFontSize = 12,
+    this.mobileFontSize = 10,
+    this.desktopPadding = const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    this.mobilePadding = const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+    this.borderRadius = const BorderRadius.all(Radius.circular(4)),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+
+    return Container(
+      constraints: BoxConstraints(
+        maxWidth: isMobile ? 80.0 : 120.0,
+      ),
+      padding: isMobile ? mobilePadding : desktopPadding,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: borderRadius,
+      ),
+      child: Text(
+        label,
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: textColor ?? color,
+          fontSize: isMobile ? mobileFontSize : desktopFontSize,
+        ),
+      ),
     );
   }
 }

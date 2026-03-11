@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yudao_flutter_ui_admin/api/infra/job_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/job.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
-
 import 'package:yudao_flutter_ui_admin/models/common/api_response.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 定时任务详情对话框
 class JobDetailDialog extends StatefulWidget {
@@ -64,11 +64,15 @@ class _JobDetailDialogState extends State<JobDetailDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+    final screenWidth = DeviceUIMode.widthOf(context);
+    final dialogWidth = isMobile ? screenWidth - 32 : 500.0;
+
     return AlertDialog(
       title: Text(S.current.jobDetail),
       content: SizedBox(
-        width: 500,
-        child: _buildContent(),
+        width: dialogWidth,
+        child: _buildContent(context, isMobile),
       ),
       actions: [
         TextButton(
@@ -79,7 +83,7 @@ class _JobDetailDialogState extends State<JobDetailDialog> {
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent(BuildContext context, bool isMobile) {
     if (_isLoading) {
       return const Padding(
         padding: EdgeInsets.all(32),
@@ -107,51 +111,63 @@ class _JobDetailDialogState extends State<JobDetailDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildItem(S.current.jobId, _job!.id?.toString() ?? '-'),
-          _buildItem(S.current.jobName, _job!.name),
+          _buildItem(S.current.jobId, _job!.id?.toString() ?? '-', isMobile),
+          _buildItem(S.current.jobName, _job!.name, isMobile),
           _buildItem(S.current.status, _job!.status == JobStatus.normal
               ? S.current.jobStatusNormal
-              : S.current.jobStatusStop),
-          _buildItem(S.current.handlerName, _job!.handlerName),
+              : S.current.jobStatusStop, isMobile),
+          _buildItem(S.current.handlerName, _job!.handlerName, isMobile),
           _buildItem(S.current.handlerParam, _job!.handlerParam.isEmpty
               ? '-'
-              : _job!.handlerParam),
-          _buildItem(S.current.cronExpression, _job!.cronExpression),
-          _buildItem(S.current.retryCount, _job!.retryCount.toString()),
-          _buildItem(S.current.retryInterval, '${_job!.retryInterval} ${S.current.milliseconds}'),
+              : _job!.handlerParam, isMobile),
+          _buildItem(S.current.cronExpression, _job!.cronExpression, isMobile),
+          _buildItem(S.current.retryCount, _job!.retryCount.toString(), isMobile),
+          _buildItem(S.current.retryInterval, '${_job!.retryInterval} ${S.current.milliseconds}', isMobile),
           _buildItem(S.current.monitorTimeout, _job!.monitorTimeout != null && _job!.monitorTimeout! > 0
               ? '${_job!.monitorTimeout} ${S.current.milliseconds}'
-              : S.current.notEnabled),
-          _buildNextTimes(),
+              : S.current.notEnabled, isMobile),
+          _buildNextTimes(isMobile),
         ],
       ),
     );
   }
 
-  Widget _buildItem(String label, String value) {
+  Widget _buildItem(String label, String value, bool isMobile) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+      child: isMobile
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text(value),
+              ],
+            )
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 100,
+                  child: Text(
+                    label,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Expanded(
+                  child: Text(value),
+                ),
+              ],
             ),
-          ),
-          Expanded(
-            child: Text(value),
-          ),
-        ],
-      ),
     );
   }
 
-  Widget _buildNextTimes() {
+  Widget _buildNextTimes(bool isMobile) {
     if (_nextTimes == null || _nextTimes!.isEmpty) {
-      return _buildItem(S.current.nextExecuteTime, S.current.noNextExecuteTime);
+      return _buildItem(S.current.nextExecuteTime, S.current.noNextExecuteTime, isMobile);
     }
 
     return Padding(

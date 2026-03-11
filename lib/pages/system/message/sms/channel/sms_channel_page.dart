@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:data_table_2/data_table_2.dart';
-import '/../../api/system/sms_channel_api.dart';
-import '/../../core/api_client.dart';
-import '/../../models/system/sms_channel.dart';
+import 'package:yudao_flutter_ui_admin/api/system/sms_channel_api.dart';
+import 'package:yudao_flutter_ui_admin/models/system/sms_channel.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 短信渠道管理页面
 class SmsChannelPage extends ConsumerStatefulWidget {
@@ -206,7 +206,7 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
         builder: (context, setState) => AlertDialog(
           title: Text(isEdit ? '编辑短信渠道' : '添加短信渠道'),
           content: SizedBox(
-            width: 450,
+            width: DeviceUIMode.select(context, mobile: () => double.maxFinite, desktop: () => 450.0),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -351,14 +351,10 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          _buildSearchBar(context),
-          const Divider(height: 1),
-          _buildToolbar(context),
-          const Divider(height: 1),
-          Expanded(child: _buildDataTable(context)),
-        ],
+      body: DeviceUIMode.builder(
+        context,
+        mobile: (context) => _buildMobileLayout(context),
+        desktop: (context) => _buildDesktopLayout(context),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showChannelDialog(),
@@ -368,7 +364,29 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
     );
   }
 
-  Widget _buildSearchBar(BuildContext context) {
+  Widget _buildDesktopLayout(BuildContext context) {
+    return Column(
+      children: [
+        _buildDesktopSearchBar(context),
+        const Divider(height: 1),
+        _buildToolbar(context),
+        const Divider(height: 1),
+        Expanded(child: _buildDataTable(context)),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context) {
+    return Column(
+      children: [
+        _buildMobileSearchBar(context),
+        const Divider(height: 1),
+        Expanded(child: _buildMobileList(context)),
+      ],
+    );
+  }
+
+  Widget _buildDesktopSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Wrap(
@@ -377,7 +395,7 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           SizedBox(
-            width: 200,
+            width: DeviceUIMode.select(context, mobile: () => 150.0, desktop: () => 200.0),
             child: TextField(
               controller: _searchController,
               decoration: const InputDecoration(
@@ -390,7 +408,7 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
             ),
           ),
           SizedBox(
-            width: 150,
+            width: DeviceUIMode.select(context, mobile: () => 120.0, desktop: () => 150.0),
             child: DropdownButtonFormField<String>(
               value: _selectedCode,
               decoration: const InputDecoration(
@@ -412,7 +430,7 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
             ),
           ),
           SizedBox(
-            width: 120,
+            width: DeviceUIMode.select(context, mobile: () => 100.0, desktop: () => 120.0),
             child: DropdownButtonFormField<int>(
               value: _selectedStatus,
               decoration: const InputDecoration(
@@ -440,6 +458,90 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
             onPressed: _reset,
             icon: const Icon(Icons.refresh, size: 20),
             label: const Text('重置'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileSearchBar(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        children: [
+          TextField(
+            controller: _searchController,
+            decoration: const InputDecoration(
+              hintText: '短信签名',
+              prefixIcon: Icon(Icons.search, size: 20),
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
+            onSubmitted: (_) => _search(),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _selectedCode,
+                  decoration: const InputDecoration(
+                    hintText: '渠道',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: null, child: Text('全部')),
+                    DropdownMenuItem(value: 'aliyun', child: Text('阿里云')),
+                    DropdownMenuItem(value: 'tencent', child: Text('腾讯云')),
+                  ],
+                  onChanged: (value) {
+                    setState(() => _selectedCode = value);
+                    _search();
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: DropdownButtonFormField<int>(
+                  value: _selectedStatus,
+                  decoration: const InputDecoration(
+                    hintText: '状态',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: null, child: Text('全部')),
+                    DropdownMenuItem(value: 0, child: Text('开启')),
+                    DropdownMenuItem(value: 1, child: Text('关闭')),
+                  ],
+                  onChanged: (value) {
+                    setState(() => _selectedStatus = value);
+                    _search();
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _search,
+                  icon: const Icon(Icons.search, size: 20),
+                  label: const Text('搜索'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _reset,
+                  icon: const Icon(Icons.refresh, size: 20),
+                  label: const Text('重置'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -604,6 +706,102 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
           const SizedBox(height: 8),
           _buildPagination(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMobileList(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('加载失败: $_error', style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _loadChannelList, child: const Text('重试')),
+          ],
+        ),
+      );
+    }
+
+    if (_channelList.isEmpty) {
+      return const Center(child: Text('暂无数据'));
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadChannelList,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(12),
+        itemCount: _channelList.length,
+        itemBuilder: (context, index) {
+          final channel = _channelList[index];
+          return _buildChannelCard(channel);
+        },
+      ),
+    );
+  }
+
+  Widget _buildChannelCard(SmsChannel channel) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _buildChannelCodeTag(channel.code),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    channel.signature,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                _buildStatusTag(channel.status),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'API账号: ${channel.apiKey}',
+              style: const TextStyle(color: Colors.grey),
+            ),
+            const Divider(height: 24),
+            Row(
+              children: [
+                Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
+                const SizedBox(width: 4),
+                Text(
+                  channel.createTime ?? '-',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: () => _showChannelDialog(channel),
+                  icon: const Icon(Icons.edit, size: 18),
+                  label: const Text('编辑'),
+                ),
+                TextButton.icon(
+                  onPressed: () => _deleteChannel(channel),
+                  icon: const Icon(Icons.delete, size: 18, color: Colors.red),
+                  label: const Text('删除'),
+                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

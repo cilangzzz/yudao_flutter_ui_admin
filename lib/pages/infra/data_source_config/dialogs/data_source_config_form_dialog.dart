@@ -4,6 +4,7 @@ import 'package:yudao_flutter_ui_admin/api/infra/data_source_config_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/data_source_config.dart';
 import 'package:yudao_flutter_ui_admin/models/common/api_response.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 数据源配置表单对话框（新增/编辑数据源配置）
 class DataSourceConfigFormDialog extends StatefulWidget {
@@ -101,10 +102,14 @@ class _DataSourceConfigFormDialogState extends State<DataSourceConfigFormDialog>
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+    final screenWidth = DeviceUIMode.widthOf(context);
+    final dialogWidth = isMobile ? screenWidth - 32 : 450.0;
+
     return AlertDialog(
       title: Text(widget.dataSourceConfig == null ? S.current.addDataSourceConfig : S.current.editDataSourceConfig),
       content: SizedBox(
-        width: 450,
+        width: dialogWidth,
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,

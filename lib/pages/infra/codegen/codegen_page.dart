@@ -3,12 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yudao_flutter_ui_admin/api/infra/codegen_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/codegen.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
-import 'widgets/codegen_search_form.dart';
-import 'widgets/codegen_action_buttons.dart';
-import 'widgets/codegen_data_table.dart';
-import 'dialogs/import_table_dialog.dart';
-import 'dialogs/preview_code_dialog.dart';
-import 'dialogs/codegen_edit_dialog.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/codegen/widgets/codegen_search_form.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/codegen/widgets/codegen_action_buttons.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/codegen/widgets/codegen_data_table.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/codegen/dialogs/import_table_dialog.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/codegen/dialogs/preview_code_dialog.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/codegen/dialogs/codegen_edit_dialog.dart';
 
 /// 代码生成页面
 class CodegenPage extends ConsumerStatefulWidget {

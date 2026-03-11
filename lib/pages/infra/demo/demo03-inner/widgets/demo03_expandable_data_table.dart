@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/demo03_student.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
-import 'demo03_expandable_row.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo03-inner/widgets/demo03_expandable_row.dart';
 
 /// 可展开的学生数据表格组件 - Inner模式
 class Demo03ExpandableDataTable extends StatelessWidget {
@@ -21,6 +22,8 @@ class Demo03ExpandableDataTable extends StatelessWidget {
   final void Function(Set<int> ids) onSelectionChanged;
   final Set<int> expandedRows;
   final void Function(int id, bool isExpanded) onExpandChanged;
+  final bool isMobile;
+  final double availableWidth;
 
   const Demo03ExpandableDataTable({
     super.key,
@@ -39,6 +42,8 @@ class Demo03ExpandableDataTable extends StatelessWidget {
     required this.onSelectionChanged,
     required this.expandedRows,
     required this.onExpandChanged,
+    this.isMobile = false,
+    this.availableWidth = double.infinity,
   });
 
   @override
@@ -68,8 +73,13 @@ class Demo03ExpandableDataTable extends StatelessWidget {
       return Center(child: Text(S.current.noData));
     }
 
+    // 响应式适配：根据可用宽度调整最小宽度
+    final minWidth = isMobile ? availableWidth : 900.0;
+    final columnSpacing = isMobile ? 8.0 : 12.0;
+    final horizontalMargin = isMobile ? 8.0 : 12.0;
+
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isMobile ? 8 : 16),
       child: Column(
         children: [
           // 表头工具栏
@@ -81,12 +91,12 @@ class Demo03ExpandableDataTable extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          // 表格
-          Expanded(
+          // 表格 - 使用 Flexible 防止溢出
+          Flexible(
             child: DataTable2(
-              columnSpacing: 12,
-              horizontalMargin: 12,
-              minWidth: 900,
+              columnSpacing: columnSpacing,
+              horizontalMargin: horizontalMargin,
+              minWidth: minWidth,
               smRatio: 0.75,
               lmRatio: 1.5,
               headingRowColor: WidgetStateProperty.resolveWith(
@@ -185,7 +195,7 @@ class Demo03ExpandableDataTable extends StatelessWidget {
                     DataCell(Text(student.name)),
                     DataCell(_buildSexCell(student)),
                     DataCell(Text(_formatBirthday(student.birthday))),
-                    DataCell(Text(student.description ?? '-')),
+                    DataCell(Text(student.description ?? '-', overflow: TextOverflow.ellipsis)),
                     DataCell(Text(student.createTime ?? '-')),
                     DataCell(_buildActionButtons(context, student)),
                   ],
@@ -197,49 +207,52 @@ class Demo03ExpandableDataTable extends StatelessWidget {
           ...studentList.where((s) => expandedRows.contains(s.id)).map((student) {
             return Demo03ExpandableRow(student: student);
           }),
-          // 分页控件
+          // 分页控件 - 使用 SingleChildScrollView 防止溢出
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Row(
-                children: [
-                  Text('${S.current.pageSize}: '),
-                  DropdownButton<int>(
-                    value: pageSize,
-                    items: [10, 20, 50, 100].map((value) {
-                      return DropdownMenuItem(
-                        value: value,
-                        child: Text('$value'),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        onPageSizeChanged(value);
-                      }
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(width: 24),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left),
-                    onPressed: currentPage > 1
-                        ? () => onPageChanged(currentPage - 1)
-                        : null,
-                  ),
-                  Text('$currentPage / ${(totalCount / pageSize).ceil()}'),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right),
-                    onPressed: currentPage * pageSize < totalCount
-                        ? () => onPageChanged(currentPage + 1)
-                        : null,
-                  ),
-                ],
-              ),
-            ],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Row(
+                  children: [
+                    Text('${S.current.pageSize}: '),
+                    DropdownButton<int>(
+                      value: pageSize,
+                      items: [10, 20, 50, 100].map((value) {
+                        return DropdownMenuItem(
+                          value: value,
+                          child: Text('$value'),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          onPageSizeChanged(value);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 24),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.chevron_left),
+                      onPressed: currentPage > 1
+                          ? () => onPageChanged(currentPage - 1)
+                          : null,
+                    ),
+                    Text('$currentPage / ${(totalCount / pageSize).ceil()}'),
+                    IconButton(
+                      icon: const Icon(Icons.chevron_right),
+                      onPressed: currentPage * pageSize < totalCount
+                          ? () => onPageChanged(currentPage + 1)
+                          : null,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),

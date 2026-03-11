@@ -3,8 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:yudao_flutter_ui_admin/api/system/oauth2_client_api.dart';
 import 'package:yudao_flutter_ui_admin/models/system/oauth2_client.dart';
-import 'package:yudao_flutter_ui_admin/models/common/api_response.dart';
-
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// OAuth2 客户端管理页面
 class OAuth2ClientPage extends ConsumerStatefulWidget {
@@ -61,8 +60,8 @@ class _OAuth2ClientPageState extends ConsumerState<OAuth2ClientPage> {
         if (_searchController.text.isNotEmpty) 'name': _searchController.text,
         if (_selectedStatus != null) 'status': _selectedStatus,
       };
-      final response = await api.getOAuth2ClientPage(params);
 
+      final response = await api.getOAuth2ClientPage(params);
       if (response.isSuccess && response.data != null) {
         setState(() {
           _dataList = response.data!.list;
@@ -91,9 +90,7 @@ class _OAuth2ClientPageState extends ConsumerState<OAuth2ClientPage> {
 
   void _reset() {
     _searchController.clear();
-    setState(() {
-      _selectedStatus = null;
-    });
+    setState(() => _selectedStatus = null);
     _currentPage = 1;
     _loadData();
   }
@@ -101,7 +98,7 @@ class _OAuth2ClientPageState extends ConsumerState<OAuth2ClientPage> {
   Future<void> _deleteSelected() async {
     if (_selectedIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请选择要删除的数据')),
+        const SnackBar(content: Text('请选择要删除的客户端')),
       );
       return;
     }
@@ -110,7 +107,7 @@ class _OAuth2ClientPageState extends ConsumerState<OAuth2ClientPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('确认删除'),
-        content: Text('确定要删除选中的 ${_selectedIds.length} 条数据吗？'),
+        content: Text('确定要删除选中的 ${_selectedIds.length} 个客户端吗？'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -140,7 +137,7 @@ class _OAuth2ClientPageState extends ConsumerState<OAuth2ClientPage> {
         } else {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('删除失败: ${response.msg}')),
+              SnackBar(content: Text(response.msg.isNotEmpty ? response.msg : '删除失败')),
             );
           }
         }
@@ -154,7 +151,7 @@ class _OAuth2ClientPageState extends ConsumerState<OAuth2ClientPage> {
     }
   }
 
-  Future<void> _delete(OAuth2Client item) async {
+  Future<void> _deleteItem(OAuth2Client item) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -175,425 +172,280 @@ class _OAuth2ClientPageState extends ConsumerState<OAuth2ClientPage> {
     );
 
     if (confirmed == true && item.id != null) {
-      try {
-        final api = ref.read(oauth2ClientApiProvider);
-        final response = await api.deleteOAuth2Client(item.id!);
-
-        if (response.isSuccess) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('删除成功')),
-            );
-            _loadData();
-          }
-        } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('删除失败: ${response.msg}')),
-            );
-          }
-        }
-      } catch (e) {
+      final api = ref.read(oauth2ClientApiProvider);
+      final response = await api.deleteOAuth2Client(item.id!);
+      if (response.isSuccess) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('删除失败: $e')),
+            const SnackBar(content: Text('删除成功')),
+          );
+          _loadData();
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('删除失败: ${response.msg}')),
           );
         }
       }
     }
   }
 
+  /// 显示分步表单弹窗
   void _showFormDialog([OAuth2Client? item]) {
     final isEdit = item != null;
+
+    // 表单控制器
+    final nameController = TextEditingController(text: item?.name ?? '');
     final clientIdController = TextEditingController(text: item?.clientId ?? '');
     final secretController = TextEditingController(text: item?.secret ?? '');
-    final nameController = TextEditingController(text: item?.name ?? '');
-    final logoController = TextEditingController(text: item?.logo ?? '');
-    final descriptionController = TextEditingController(text: item?.description ?? '');
-    final accessTokenValidityController = TextEditingController(
-      text: (item?.accessTokenValiditySeconds ?? 3600).toString(),
+    final accessTokenValiditySecondsController = TextEditingController(
+      text: item?.accessTokenValiditySeconds?.toString() ?? '3600',
     );
-    final refreshTokenValidityController = TextEditingController(
-      text: (item?.refreshTokenValiditySeconds ?? 86400).toString(),
+    final refreshTokenValiditySecondsController = TextEditingController(
+      text: item?.refreshTokenValiditySeconds?.toString() ?? '86400',
     );
-    final additionalInfoController = TextEditingController(text: item?.additionalInformation ?? '');
-    final redirectUriController = TextEditingController();
+    final redirectUrisController = TextEditingController(text: item?.redirectUris?.join(',') ?? '');
+    final additionalInformationController = TextEditingController(text: item?.additionalInformation ?? '');
 
-    int status = item?.status ?? 0;
-    List<String> selectedGrantTypes = item?.authorizedGrantTypes ?? ['password', 'refresh_token'];
+    // 表单状态
+    int currentStep = 0;
+    List<String> selectedGrantTypes = item?.authorizedGrantTypes ?? ['password'];
     List<String> scopes = item?.scopes ?? [];
-    List<String> autoApproveScopes = [];
-    List<String> redirectUris = item?.redirectUris ?? [];
-    List<String> authorities = item?.authorities ?? [];
-    List<String> resourceIds = item?.resourceIds ?? [];
-    String newScope = '';
+    int status = item?.status ?? 0;
+    bool autoApprove = item?.autoApprove ?? false;
 
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(isEdit ? '编辑 OAuth2 客户端' : '新增 OAuth2 客户端'),
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(isEdit ? '编辑OAuth2客户端' : '新增OAuth2客户端'),
           content: SizedBox(
-            width: 600,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 基本信息
-                  _buildSectionTitle('基本信息'),
-                  const SizedBox(height: 12),
-                  Row(
+            width: 550,
+            height: 480,
+            child: Stepper(
+              type: StepperType.vertical,
+              currentStep: currentStep,
+              onStepContinue: () {
+                if (currentStep < 2) {
+                  setDialogState(() => currentStep++);
+                } else {
+                  _submitForm(
+                    item: item,
+                    nameController: nameController,
+                    clientIdController: clientIdController,
+                    secretController: secretController,
+                    accessTokenValiditySecondsController: accessTokenValiditySecondsController,
+                    refreshTokenValiditySecondsController: refreshTokenValiditySecondsController,
+                    redirectUrisController: redirectUrisController,
+                    additionalInformationController: additionalInformationController,
+                    selectedGrantTypes: selectedGrantTypes,
+                    scopes: scopes,
+                    status: status,
+                    autoApprove: autoApprove,
+                    isEdit: isEdit,
+                  );
+                }
+              },
+              onStepCancel: () {
+                if (currentStep > 0) {
+                  setDialogState(() => currentStep--);
+                }
+              },
+              onStepTapped: (step) {
+                setDialogState(() => currentStep = step);
+              },
+              controlsBuilder: (context, details) {
+                return Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: Row(
                     children: [
-                      Expanded(
-                        child: TextField(
-                          controller: clientIdController,
-                          decoration: const InputDecoration(
-                            labelText: '客户端编号 *',
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                          ),
+                      if (currentStep < 2)
+                        ElevatedButton(
+                          onPressed: details.onStepContinue,
+                          child: const Text('下一步'),
+                        ),
+                      if (currentStep == 2)
+                        ElevatedButton(
+                          onPressed: details.onStepContinue,
+                          child: const Text('提交'),
+                        ),
+                      if (currentStep > 0)
+                        TextButton(
+                          onPressed: details.onStepCancel,
+                          child: const Text('上一步'),
+                        ),
+                    ],
+                  ),
+                );
+              },
+              steps: [
+                // 步骤1：基本信息
+                Step(
+                  title: const Text('基本信息'),
+                  isActive: currentStep >= 0,
+                  content: Column(
+                    children: [
+                      TextField(
+                        controller: nameController,
+                        decoration: const InputDecoration(
+                          labelText: '客户端名称 *',
+                          border: OutlineInputBorder(),
+                          isDense: true,
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextField(
-                          controller: secretController,
-                          decoration: const InputDecoration(
-                            labelText: '客户端密钥 *',
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                          ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: clientIdController,
+                        decoration: const InputDecoration(
+                          labelText: '客户端编号 *',
+                          border: OutlineInputBorder(),
+                          isDense: true,
                         ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: secretController,
+                        decoration: const InputDecoration(
+                          labelText: '客户端密钥',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        obscureText: true,
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: additionalInformationController,
+                        decoration: const InputDecoration(
+                          labelText: '附加信息',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        maxLines: 2,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  Row(
+                ),
+                // 步骤2：授权配置
+                Step(
+                  title: const Text('授权配置'),
+                  isActive: currentStep >= 1,
+                  content: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: TextField(
-                          controller: nameController,
-                          decoration: const InputDecoration(
-                            labelText: '应用名称 *',
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                          ),
+                      const Text('授权类型', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: _grantTypes.map((gt) {
+                          final value = gt['value']!;
+                          final label = gt['label']!;
+                          final isSelected = selectedGrantTypes.contains(value);
+                          return FilterChip(
+                            label: Text(label),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              setDialogState(() {
+                                if (selected) {
+                                  selectedGrantTypes.add(value);
+                                } else {
+                                  selectedGrantTypes.remove(value);
+                                }
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: redirectUrisController,
+                        decoration: const InputDecoration(
+                          labelText: '回调地址',
+                          hintText: '多个地址用逗号分隔',
+                          border: OutlineInputBorder(),
+                          isDense: true,
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextField(
-                          controller: logoController,
-                          decoration: const InputDecoration(
-                            labelText: '应用图标URL',
-                            border: OutlineInputBorder(),
-                            isDense: true,
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: accessTokenValiditySecondsController,
+                              decoration: const InputDecoration(
+                                labelText: '访问令牌有效期(秒)',
+                                border: OutlineInputBorder(),
+                                isDense: true,
+                              ),
+                              keyboardType: TextInputType.number,
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextField(
+                              controller: refreshTokenValiditySecondsController,
+                              decoration: const InputDecoration(
+                                labelText: '刷新令牌有效期(秒)',
+                                border: OutlineInputBorder(),
+                                isDense: true,
+                              ),
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: descriptionController,
-                    decoration: const InputDecoration(
-                      labelText: '应用描述',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                    maxLines: 2,
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
+                ),
+                // 步骤3：范围和状态
+                Step(
+                  title: const Text('范围和状态'),
+                  isActive: currentStep >= 2,
+                  content: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('状态: '),
-                      Radio<int>(
-                        value: 0,
-                        groupValue: status,
-                        onChanged: (value) => setState(() => status = value!),
-                      ),
-                      const Text('开启'),
-                      Radio<int>(
-                        value: 1,
-                        groupValue: status,
-                        onChanged: (value) => setState(() => status = value!),
-                      ),
-                      const Text('禁用'),
-                    ],
-                  ),
-                  const Divider(height: 24),
-
-                  // 令牌配置
-                  _buildSectionTitle('令牌配置'),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: accessTokenValidityController,
-                          decoration: const InputDecoration(
-                            labelText: '访问令牌有效期(秒) *',
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                          ),
-                          keyboardType: TextInputType.number,
+                      TextField(
+                        controller: TextEditingController(text: scopes.join(',')),
+                        decoration: const InputDecoration(
+                          labelText: '授权范围',
+                          hintText: '多个范围用逗号分隔',
+                          border: OutlineInputBorder(),
+                          isDense: true,
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextField(
-                          controller: refreshTokenValidityController,
-                          decoration: const InputDecoration(
-                            labelText: '刷新令牌有效期(秒) *',
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                          ),
-                          keyboardType: TextInputType.number,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Divider(height: 24),
-
-                  // 授权配置
-                  _buildSectionTitle('授权配置'),
-                  const SizedBox(height: 12),
-                  const Text('授权类型 *', style: TextStyle(fontWeight: FontWeight.w500)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: _grantTypes.map((type) {
-                      final isSelected = selectedGrantTypes.contains(type['value']);
-                      return FilterChip(
-                        label: Text(type['label']!),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          setState(() {
-                            if (selected) {
-                              selectedGrantTypes.add(type['value']!);
-                            } else {
-                              selectedGrantTypes.remove(type['value']!);
-                            }
-                          });
+                        onChanged: (value) {
+                          scopes = value.split(',').where((e) => e.trim().isNotEmpty).toList();
                         },
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // 授权范围
-                  const Text('授权范围', style: TextStyle(fontWeight: FontWeight.w500)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: scopes.map((scope) {
-                      return Chip(
-                        label: Text(scope),
-                        onDeleted: () {
-                          setState(() {
-                            scopes.remove(scope);
-                            autoApproveScopes.remove(scope);
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          decoration: const InputDecoration(
-                            hintText: '输入授权范围',
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                          ),
-                          onChanged: (value) => newScope = value,
-                          onSubmitted: (value) {
-                            if (value.isNotEmpty && !scopes.contains(value)) {
-                              setState(() => scopes.add(value));
-                            }
-                          },
-                        ),
                       ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () {
-                          if (newScope.isNotEmpty && !scopes.contains(newScope)) {
-                            setState(() => scopes.add(newScope));
-                          }
+                      const SizedBox(height: 12),
+                      SwitchListTile(
+                        title: const Text('自动授权'),
+                        value: autoApprove,
+                        onChanged: (value) {
+                          setDialogState(() => autoApprove = value);
                         },
-                        child: const Text('添加'),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<int>(
+                        value: status,
+                        decoration: const InputDecoration(
+                          labelText: '状态',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        items: const [
+                          DropdownMenuItem(value: 0, child: Text('开启')),
+                          DropdownMenuItem(value: 1, child: Text('禁用')),
+                        ],
+                        onChanged: (value) {
+                          setDialogState(() => status = value ?? 0);
+                        },
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-
-                  // 自动授权范围
-                  if (scopes.isNotEmpty) ...[
-                    const Text('自动授权范围', style: TextStyle(fontWeight: FontWeight.w500)),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      children: scopes.map((scope) {
-                        final isSelected = autoApproveScopes.contains(scope);
-                        return FilterChip(
-                          label: Text(scope),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            setState(() {
-                              if (selected) {
-                                autoApproveScopes.add(scope);
-                              } else {
-                                autoApproveScopes.remove(scope);
-                              }
-                            });
-                          },
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-
-                  // 重定向URI
-                  const Text('可重定向的URI地址 *', style: TextStyle(fontWeight: FontWeight.w500)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: redirectUris.map((uri) {
-                      return Chip(
-                        label: Text(uri, style: const TextStyle(fontSize: 12)),
-                        onDeleted: () {
-                          setState(() => redirectUris.remove(uri));
-                        },
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: redirectUriController,
-                          decoration: const InputDecoration(
-                            hintText: '输入重定向URI',
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                          ),
-                          onSubmitted: (value) {
-                            if (value.isNotEmpty && !redirectUris.contains(value)) {
-                              setState(() => redirectUris.add(value));
-                              redirectUriController.clear();
-                            }
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () {
-                          final uri = redirectUriController.text;
-                          if (uri.isNotEmpty && !redirectUris.contains(uri)) {
-                            setState(() => redirectUris.add(uri));
-                            redirectUriController.clear();
-                          }
-                        },
-                        child: const Text('添加'),
-                      ),
-                    ],
-                  ),
-                  const Divider(height: 24),
-
-                  // 高级配置
-                  _buildSectionTitle('高级配置'),
-                  const SizedBox(height: 12),
-
-                  // 权限
-                  const Text('权限', style: TextStyle(fontWeight: FontWeight.w500)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: authorities.map((auth) {
-                      return Chip(
-                        label: Text(auth),
-                        onDeleted: () => setState(() => authorities.remove(auth)),
-                      );
-                    }).toList(),
-                  ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          decoration: const InputDecoration(
-                            hintText: '输入权限',
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                          ),
-                          onSubmitted: (value) {
-                            if (value.isNotEmpty && !authorities.contains(value)) {
-                              setState(() => authorities.add(value));
-                            }
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () {},
-                        child: const Text('添加'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // 资源ID
-                  const Text('资源', style: TextStyle(fontWeight: FontWeight.w500)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: resourceIds.map((id) {
-                      return Chip(
-                        label: Text(id),
-                        onDeleted: () => setState(() => resourceIds.remove(id)),
-                      );
-                    }).toList(),
-                  ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          decoration: const InputDecoration(
-                            hintText: '输入资源ID',
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                          ),
-                          onSubmitted: (value) {
-                            if (value.isNotEmpty && !resourceIds.contains(value)) {
-                              setState(() => resourceIds.add(value));
-                            }
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () {},
-                        child: const Text('添加'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // 附加信息
-                  TextField(
-                    controller: additionalInfoController,
-                    decoration: const InputDecoration(
-                      labelText: '附加信息(JSON格式)',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                    maxLines: 3,
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           actions: [
@@ -601,104 +453,84 @@ class _OAuth2ClientPageState extends ConsumerState<OAuth2ClientPage> {
               onPressed: () => Navigator.pop(context),
               child: const Text('取消'),
             ),
-            ElevatedButton(
-              onPressed: () async {
-                if (clientIdController.text.isEmpty ||
-                    secretController.text.isEmpty ||
-                    nameController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('请填写必填项')),
-                  );
-                  return;
-                }
-
-                if (selectedGrantTypes.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('请至少选择一种授权类型')),
-                  );
-                  return;
-                }
-
-                if (redirectUris.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('请至少添加一个重定向URI')),
-                  );
-                  return;
-                }
-
-                final data = OAuth2Client(
-                  id: item?.id,
-                  clientId: clientIdController.text,
-                  secret: secretController.text,
-                  name: nameController.text,
-                  logo: logoController.text.isEmpty ? null : logoController.text,
-                  description: descriptionController.text.isEmpty ? null : descriptionController.text,
-                  status: status,
-                  accessTokenValiditySeconds: int.tryParse(accessTokenValidityController.text) ?? 3600,
-                  refreshTokenValiditySeconds: int.tryParse(refreshTokenValidityController.text) ?? 86400,
-                  authorizedGrantTypes: selectedGrantTypes,
-                  scopes: scopes.isEmpty ? null : scopes,
-                  redirectUris: redirectUris,
-                  authorities: authorities.isEmpty ? null : authorities,
-                  resourceIds: resourceIds.isEmpty ? null : resourceIds,
-                  additionalInformation: additionalInfoController.text.isEmpty ? null : additionalInfoController.text,
-                );
-
-                try {
-                  final api = ref.read(oauth2ClientApiProvider);
-                  ApiResponse<void> response;
-
-                  if (isEdit) {
-                    response = await api.updateOAuth2Client(data);
-                  } else {
-                    response = await api.createOAuth2Client(data);
-                  }
-
-                  if (response.isSuccess) {
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(isEdit ? '更新成功' : '创建成功')),
-                      );
-                      _loadData();
-                    }
-                  } else {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('操作失败: ${response.msg}')),
-                      );
-                    }
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('操作失败: $e')),
-                    );
-                  }
-                }
-              },
-              child: const Text('确定'),
-            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-      ),
+  Future<void> _submitForm({
+    OAuth2Client? item,
+    required TextEditingController nameController,
+    required TextEditingController clientIdController,
+    required TextEditingController secretController,
+    required TextEditingController accessTokenValiditySecondsController,
+    required TextEditingController refreshTokenValiditySecondsController,
+    required TextEditingController redirectUrisController,
+    required TextEditingController additionalInformationController,
+    required List<String> selectedGrantTypes,
+    required List<String> scopes,
+    required int status,
+    required bool autoApprove,
+    required bool isEdit,
+  }) async {
+    if (nameController.text.isEmpty || clientIdController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请填写必填项')),
+      );
+      return;
+    }
+
+    if (selectedGrantTypes.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请至少选择一种授权类型')),
+      );
+      return;
+    }
+
+    final redirectUrisText = redirectUrisController.text.trim();
+    final redirectUrisList = redirectUrisText.isNotEmpty
+        ? redirectUrisText.split(',').where((e) => e.trim().isNotEmpty).toList()
+        : null;
+
+    final data = OAuth2Client(
+      id: item?.id,
+      name: nameController.text.trim(),
+      clientId: clientIdController.text.trim(),
+      secret: secretController.text.trim().isNotEmpty ? secretController.text.trim() : null,
+      accessTokenValiditySeconds: int.tryParse(accessTokenValiditySecondsController.text) ?? 3600,
+      refreshTokenValiditySeconds: int.tryParse(refreshTokenValiditySecondsController.text) ?? 86400,
+      redirectUris: redirectUrisList,
+      additionalInformation: additionalInformationController.text.trim().isNotEmpty ? additionalInformationController.text.trim() : null,
+      authorizedGrantTypes: selectedGrantTypes,
+      scopes: scopes.isNotEmpty ? scopes : null,
+      autoApprove: autoApprove,
+      status: status,
     );
+
+    final api = ref.read(oauth2ClientApiProvider);
+    final response = isEdit
+        ? await api.updateOAuth2Client(data)
+        : await api.createOAuth2Client(data);
+
+    if (mounted) {
+      if (response.isSuccess) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(isEdit ? '更新成功' : '创建成功')),
+        );
+        _loadData();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('操作失败: ${response.msg}')),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 800;
+    final isMobile = DeviceUIMode.isMobile(context);
 
     return Scaffold(
       body: Column(
@@ -708,71 +540,120 @@ class _OAuth2ClientPageState extends ConsumerState<OAuth2ClientPage> {
           if (!isMobile) _buildToolbar(context),
           if (!isMobile) const Divider(height: 1),
           Expanded(
-            child: isMobile ? _buildMobileList(context) : _buildDataTable(context),
+            child: DeviceUIMode.builder(
+              context,
+              mobile: (context) => _buildMobileList(context),
+              desktop: (context) => _buildDataTable(context),
+            ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showFormDialog(),
-        icon: const Icon(Icons.add),
-        label: const Text('新增客户端'),
-      ),
+      floatingActionButton: isMobile
+          ? FloatingActionButton(
+              onPressed: () => _showFormDialog(),
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 
   Widget _buildSearchBar(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 200,
-            child: TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                hintText: '应用名称',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-                isDense: true,
-              ),
-              onSubmitted: (_) => _search(),
-            ),
-          ),
-          const SizedBox(width: 16),
-          SizedBox(
-            width: 150,
-            child: DropdownButtonFormField<int>(
-              value: _selectedStatus,
-              decoration: const InputDecoration(
-                labelText: '状态',
-                border: OutlineInputBorder(),
-                isDense: true,
-              ),
-              items: const [
-                DropdownMenuItem(value: null, child: Text('全部')),
-                DropdownMenuItem(value: 0, child: Text('开启')),
-                DropdownMenuItem(value: 1, child: Text('禁用')),
+    return Container(
+      padding: const EdgeInsets.all(12),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < 768;
+
+          if (isMobile) {
+            return Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: const InputDecoration(
+                      hintText: '客户端名称',
+                      prefixIcon: Icon(Icons.search, size: 20),
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    onSubmitted: (_) => _search(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: _search,
+                  icon: const Icon(Icons.search),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                PopupMenuButton<int>(
+                  initialValue: _selectedStatus,
+                  onSelected: (value) {
+                    setState(() => _selectedStatus = value == -1 ? null : value);
+                    _search();
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(value: -1, child: Text('全部状态')),
+                    const PopupMenuItem(value: 0, child: Text('开启')),
+                    const PopupMenuItem(value: 1, child: Text('禁用')),
+                  ],
+                  child: const Icon(Icons.filter_list),
+                ),
               ],
-              onChanged: (value) {
-                setState(() => _selectedStatus = value);
-                _search();
-              },
-            ),
-          ),
-          const SizedBox(width: 16),
-          ElevatedButton.icon(
-            onPressed: _search,
-            icon: const Icon(Icons.search),
-            label: const Text('搜索'),
-          ),
-          const SizedBox(width: 8),
-          OutlinedButton.icon(
-            onPressed: _reset,
-            icon: const Icon(Icons.refresh),
-            label: const Text('重置'),
-          ),
-        ],
+            );
+          }
+
+          return Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            children: [
+              SizedBox(
+                width: 180,
+                child: TextField(
+                  controller: _searchController,
+                  decoration: const InputDecoration(
+                    hintText: '客户端名称',
+                    prefixIcon: Icon(Icons.search, size: 18),
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onSubmitted: (_) => _search(),
+                ),
+              ),
+              SizedBox(
+                width: 120,
+                child: DropdownButtonFormField<int>(
+                  value: _selectedStatus,
+                  decoration: const InputDecoration(
+                    labelText: '状态',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: null, child: Text('全部')),
+                    DropdownMenuItem(value: 0, child: Text('开启')),
+                    DropdownMenuItem(value: 1, child: Text('禁用')),
+                  ],
+                  onChanged: (value) {
+                    setState(() => _selectedStatus = value);
+                  },
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: _search,
+                icon: const Icon(Icons.search, size: 18),
+                label: const Text('搜索'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _reset,
+                icon: const Icon(Icons.refresh, size: 18),
+                label: const Text('重置'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -784,8 +665,8 @@ class _OAuth2ClientPageState extends ConsumerState<OAuth2ClientPage> {
         children: [
           ElevatedButton.icon(
             onPressed: () => _showFormDialog(),
-            icon: const Icon(Icons.add),
-            label: const Text('新增'),
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('新增客户端'),
           ),
           const SizedBox(width: 8),
           ElevatedButton.icon(
@@ -794,8 +675,198 @@ class _OAuth2ClientPageState extends ConsumerState<OAuth2ClientPage> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            icon: const Icon(Icons.delete),
-            label: const Text('批量删除'),
+            icon: const Icon(Icons.delete, size: 18),
+            label: Text('批量删除 (${_selectedIds.length})'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileList(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('加载失败: $_error', style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _loadData, child: const Text('重试')),
+          ],
+        ),
+      );
+    }
+
+    if (_dataList.isEmpty) {
+      return const Center(child: Text('暂无数据'));
+    }
+
+    return Column(
+      children: [
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: _loadData,
+            child: ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: _dataList.length,
+              itemBuilder: (context, index) => _buildClientCard(_dataList[index]),
+            ),
+          ),
+        ),
+        _buildMobilePagination(),
+      ],
+    );
+  }
+
+  Widget _buildClientCard(OAuth2Client item) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.key,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        item.clientId,
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: item.status == 0 ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    item.status == 0 ? '开启' : '禁用',
+                    style: TextStyle(color: item.status == 0 ? Colors.green : Colors.red, fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 20),
+            _buildMobileInfoRow(Icons.timer, '访问令牌有效期', '${item.accessTokenValiditySeconds ?? 0} 秒'),
+            _buildMobileInfoRow(Icons.timer_outlined, '刷新令牌有效期', '${item.refreshTokenValiditySeconds ?? 0} 秒'),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showFormDialog(item),
+                    icon: const Icon(Icons.edit, size: 18),
+                    label: const Text('编辑'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _deleteItem(item),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                    ),
+                    icon: const Icon(Icons.delete, size: 18),
+                    label: const Text('删除'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileInfoRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: Colors.grey[600]),
+          const SizedBox(width: 8),
+          Text('$label: ', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 13),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobilePagination() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 4,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('共 $_totalCount 条'),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left),
+                onPressed: _currentPage > 1
+                    ? () {
+                        setState(() => _currentPage--);
+                        _loadData();
+                      }
+                    : null,
+              ),
+              Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
+              IconButton(
+                icon: const Icon(Icons.chevron_right),
+                onPressed: _currentPage * _pageSize < _totalCount
+                    ? () {
+                        setState(() => _currentPage++);
+                        _loadData();
+                      }
+                    : null,
+              ),
+            ],
           ),
         ],
       ),
@@ -855,7 +926,7 @@ class _OAuth2ClientPageState extends ConsumerState<OAuth2ClientPage> {
             child: DataTable2(
               columnSpacing: 12,
               horizontalMargin: 12,
-              minWidth: 1000,
+              minWidth: 900,
               smRatio: 0.75,
               lmRatio: 1.5,
               headingRowColor: WidgetStateProperty.resolveWith(
@@ -870,17 +941,39 @@ class _OAuth2ClientPageState extends ConsumerState<OAuth2ClientPage> {
                 }
                 return null;
               }),
-              columns: const [
-                DataColumn2(label: Text('客户端编号'), size: ColumnSize.M),
-                DataColumn2(label: Text('客户端密钥'), size: ColumnSize.M),
-                DataColumn2(label: Text('应用名称'), size: ColumnSize.M),
-                DataColumn2(label: Text('应用图标'), size: ColumnSize.S),
-                DataColumn2(label: Text('状态'), size: ColumnSize.S),
-                DataColumn2(label: Text('访问令牌有效期'), size: ColumnSize.M),
-                DataColumn2(label: Text('刷新令牌有效期'), size: ColumnSize.M),
-                DataColumn2(label: Text('授权类型'), size: ColumnSize.L),
-                DataColumn2(label: Text('创建时间'), size: ColumnSize.L),
-                DataColumn2(label: Text('操作'), size: ColumnSize.M),
+              columns: [
+                DataColumn2(
+                  label: Text('ID'),
+                  size: ColumnSize.S,
+                ),
+                DataColumn2(
+                  label: const Text('客户端名称'),
+                  size: ColumnSize.M,
+                ),
+                DataColumn2(
+                  label: const Text('客户端编号'),
+                  size: ColumnSize.M,
+                ),
+                DataColumn2(
+                  label: const Text('授权类型'),
+                  size: ColumnSize.L,
+                ),
+                DataColumn2(
+                  label: const Text('访问令牌有效期'),
+                  size: ColumnSize.S,
+                ),
+                DataColumn2(
+                  label: const Text('状态'),
+                  size: ColumnSize.S,
+                ),
+                DataColumn2(
+                  label: const Text('创建时间'),
+                  size: ColumnSize.L,
+                ),
+                DataColumn2(
+                  label: const Text('操作'),
+                  size: ColumnSize.M,
+                ),
               ],
               rows: _dataList.map((item) {
                 final isSelected = item.id != null && _selectedIds.contains(item.id);
@@ -898,43 +991,29 @@ class _OAuth2ClientPageState extends ConsumerState<OAuth2ClientPage> {
                     }
                   },
                   cells: [
-                    DataCell(Text(item.clientId)),
-                    DataCell(Text(item.secret ?? '-')),
-                    DataCell(Text(item.name)),
+                    DataCell(Text(item.id?.toString() ?? '-')),
+                    DataCell(Text(item.name, overflow: TextOverflow.ellipsis)),
+                    DataCell(Text(item.clientId, overflow: TextOverflow.ellipsis)),
                     DataCell(
-                      item.logo != null && item.logo!.isNotEmpty
-                          ? Image.network(
-                              item.logo!,
-                              width: 32,
-                              height: 32,
-                              errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported, size: 24),
-                            )
-                          : const Icon(Icons.image_not_supported, size: 24),
+                      Tooltip(
+                        message: item.authorizedGrantTypes?.join(', ') ?? '',
+                        child: Text(
+                          _formatGrantTypes(item.authorizedGrantTypes),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     ),
+                    DataCell(Text('${item.accessTokenValiditySeconds ?? 0}秒')),
                     DataCell(
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: item.status == 0 ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                          color: item.status == 0 ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           item.status == 0 ? '开启' : '禁用',
-                          style: TextStyle(
-                            color: item.status == 0 ? Colors.green : Colors.red,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ),
-                    DataCell(Text('${item.accessTokenValiditySeconds ?? 0} 秒')),
-                    DataCell(Text('${item.refreshTokenValiditySeconds ?? 0} 秒')),
-                    DataCell(
-                      Tooltip(
-                        message: item.authorizedGrantTypes?.join(', ') ?? '-',
-                        child: Text(
-                          item.authorizedGrantTypes?.take(2).join(', ') ?? '-',
-                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: item.status == 0 ? Colors.green : Colors.red, fontSize: 12),
                         ),
                       ),
                     ),
@@ -948,8 +1027,9 @@ class _OAuth2ClientPageState extends ConsumerState<OAuth2ClientPage> {
                             child: const Text('编辑'),
                           ),
                           TextButton(
-                            onPressed: () => _delete(item),
-                            child: const Text('删除', style: TextStyle(color: Colors.red)),
+                            onPressed: () => _deleteItem(item),
+                            style: TextButton.styleFrom(foregroundColor: Colors.red),
+                            child: const Text('删除'),
                           ),
                         ],
                       ),
@@ -959,189 +1039,30 @@ class _OAuth2ClientPageState extends ConsumerState<OAuth2ClientPage> {
               }).toList(),
             ),
           ),
-          // 分页
+          // 分页控件
           const SizedBox(height: 8),
-          _buildPagination(),
+          _buildDesktopPagination(),
         ],
       ),
     );
   }
 
-  Widget _buildMobileList(BuildContext context) {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+  String _formatGrantTypes(List<String>? types) {
+    if (types == null || types.isEmpty) return '-';
 
-    if (_error != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('加载失败: $_error', style: const TextStyle(color: Colors.red)),
-            const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadData, child: const Text('重试')),
-          ],
-        ),
+    final labels = <String>[];
+    for (final type in types) {
+      final gt = _grantTypes.firstWhere(
+        (e) => e['value'] == type.trim(),
+        orElse: () => {'value': type.trim(), 'label': type.trim()},
       );
+      labels.add(gt['label']!);
     }
 
-    if (_dataList.isEmpty) {
-      return const Center(child: Text('暂无数据'));
-    }
-
-    return Column(
-      children: [
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: _loadData,
-            child: ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: _dataList.length,
-              itemBuilder: (context, index) => _buildClientCard(_dataList[index]),
-            ),
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 4,
-                offset: const Offset(0, -2),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('共 $_totalCount 条'),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left),
-                    onPressed: _currentPage > 1
-                        ? () {
-                            setState(() => _currentPage--);
-                            _loadData();
-                          }
-                        : null,
-                  ),
-                  Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right),
-                    onPressed: _currentPage * _pageSize < _totalCount
-                        ? () {
-                            setState(() => _currentPage++);
-                            _loadData();
-                          }
-                        : null,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+    return labels.join(', ');
   }
 
-  Widget _buildClientCard(OAuth2Client item) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: item.logo != null && item.logo!.isNotEmpty
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            item.logo!,
-                            errorBuilder: (_, __, ___) => const Icon(Icons.apps),
-                          ),
-                        )
-                      : const Icon(Icons.apps),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      Text(item.clientId, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: item.status == 0 ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    item.status == 0 ? '开启' : '禁用',
-                    style: TextStyle(
-                      color: item.status == 0 ? Colors.green : Colors.red,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const Divider(height: 24),
-            _buildInfoRow(Icons.timer, '访问令牌有效期', '${item.accessTokenValiditySeconds ?? 0} 秒'),
-            _buildInfoRow(Icons.timer_outlined, '刷新令牌有效期', '${item.refreshTokenValiditySeconds ?? 0} 秒'),
-            _buildInfoRow(Icons.vpn_key, '授权类型', item.authorizedGrantTypes?.join(', ') ?? '-'),
-            _buildInfoRow(Icons.access_time, '创建时间', item.createTime ?? '-'),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              children: [
-                TextButton.icon(
-                  onPressed: () => _showFormDialog(item),
-                  icon: const Icon(Icons.edit, size: 18),
-                  label: const Text('编辑'),
-                ),
-                TextButton.icon(
-                  onPressed: () => _delete(item),
-                  icon: const Icon(Icons.delete, size: 18, color: Colors.red),
-                  label: const Text('删除', style: TextStyle(color: Colors.red)),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: Colors.grey[600]),
-          const SizedBox(width: 8),
-          Text('$label: ', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
-          Expanded(child: Text(value, style: const TextStyle(fontSize: 13))),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPagination() {
+  Widget _buildDesktopPagination() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
@@ -1169,6 +1090,8 @@ class _OAuth2ClientPageState extends ConsumerState<OAuth2ClientPage> {
           ],
         ),
         const SizedBox(width: 24),
+        Text('共 $_totalCount 条'),
+        const SizedBox(width: 16),
         Row(
           children: [
             IconButton(

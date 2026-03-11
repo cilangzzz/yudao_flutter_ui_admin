@@ -5,6 +5,7 @@ import 'package:file_selector/file_selector.dart';
 import 'package:dio/dio.dart';
 import 'package:yudao_flutter_ui_admin/app/core/api_client.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 文件上传对话框
 class FileUploadDialog extends StatefulWidget {
@@ -123,10 +124,14 @@ class _FileUploadDialogState extends State<FileUploadDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+    final screenWidth = DeviceUIMode.widthOf(context);
+    final dialogWidth = isMobile ? screenWidth - 32 : 500.0;
+
     return AlertDialog(
       title: Text(S.current.uploadFile),
       content: SizedBox(
-        width: 500,
+        width: dialogWidth,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -135,7 +140,7 @@ class _FileUploadDialogState extends State<FileUploadDialog> {
               onTap: _isUploading ? null : _pickFile,
               child: Container(
                 width: double.infinity,
-                height: 200,
+                height: isMobile ? 150 : 200,
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey.shade400),
                   borderRadius: BorderRadius.circular(8),
@@ -145,7 +150,7 @@ class _FileUploadDialogState extends State<FileUploadDialog> {
                   children: [
                     Icon(
                       Icons.cloud_upload_outlined,
-                      size: 64,
+                      size: isMobile ? 48 : 64,
                       color: Colors.grey.shade400,
                     ),
                     const SizedBox(height: 16),

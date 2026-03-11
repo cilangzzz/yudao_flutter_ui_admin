@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/job_log.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 任务日志数据表格组件
 class JobLogDataTable extends StatelessWidget {
@@ -32,22 +33,28 @@ class JobLogDataTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     if (error != null) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('${S.current.loadFailed}: $error', style: const TextStyle(color: Colors.red)),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: onReload,
-              child: Text(S.current.retry),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('${S.current.loadFailed}: $error', style: const TextStyle(color: Colors.red)),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: onReload,
+                child: Text(S.current.retry),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -57,7 +64,7 @@ class JobLogDataTable extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isMobile ? 8 : 16),
       child: Column(
         children: [
           // 表头工具栏
@@ -72,9 +79,9 @@ class JobLogDataTable extends StatelessWidget {
           // 表格
           Expanded(
             child: DataTable2(
-              columnSpacing: 12,
-              horizontalMargin: 12,
-              minWidth: 1000,
+              columnSpacing: isMobile ? 8 : 12,
+              horizontalMargin: isMobile ? 8 : 12,
+              minWidth: isMobile ? 600 : 1000,
               smRatio: 0.75,
               lmRatio: 1.5,
               headingRowColor: WidgetStateProperty.resolveWith(
@@ -133,7 +140,7 @@ class JobLogDataTable extends StatelessWidget {
                     DataCell(Text(_formatExecuteTime(log))),
                     DataCell(Text('${log.duration} ${S.current.milliseconds}')),
                     DataCell(_buildStatusCell(log)),
-                    DataCell(_buildActionButtons(context, log)),
+                    DataCell(_buildActionButtons(context, log, isMobile)),
                   ],
                 );
               }).toList(),
@@ -141,50 +148,100 @@ class JobLogDataTable extends StatelessWidget {
           ),
           // 分页控件
           const SizedBox(height: 8),
+          _buildPagination(context, isMobile),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPagination(BuildContext context, bool isMobile) {
+    if (isMobile) {
+      return Column(
+        children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Row(
-                children: [
-                  Text('${S.current.pageSize}: '),
-                  DropdownButton<int>(
-                    value: pageSize,
-                    items: [10, 20, 50, 100].map((value) {
-                      return DropdownMenuItem(
-                        value: value,
-                        child: Text('$value'),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        onPageSizeChanged(value);
-                      }
-                    },
-                  ),
-                ],
+              IconButton(
+                icon: const Icon(Icons.chevron_left),
+                onPressed: currentPage > 1
+                    ? () => onPageChanged(currentPage - 1)
+                    : null,
               ),
-              const SizedBox(width: 24),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left),
-                    onPressed: currentPage > 1
-                        ? () => onPageChanged(currentPage - 1)
-                        : null,
-                  ),
-                  Text('$currentPage / ${(totalCount / pageSize).ceil()}'),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right),
-                    onPressed: currentPage * pageSize < totalCount
-                        ? () => onPageChanged(currentPage + 1)
-                        : null,
-                  ),
-                ],
+              Text('$currentPage / ${(totalCount / pageSize).ceil()}'),
+              IconButton(
+                icon: const Icon(Icons.chevron_right),
+                onPressed: currentPage * pageSize < totalCount
+                    ? () => onPageChanged(currentPage + 1)
+                    : null,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('${S.current.pageSize}: '),
+              DropdownButton<int>(
+                value: pageSize,
+                items: [10, 20, 50, 100].map((value) {
+                  return DropdownMenuItem(
+                    value: value,
+                    child: Text('$value'),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    onPageSizeChanged(value);
+                  }
+                },
               ),
             ],
           ),
         ],
-      ),
+      );
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Row(
+          children: [
+            Text('${S.current.pageSize}: '),
+            DropdownButton<int>(
+              value: pageSize,
+              items: [10, 20, 50, 100].map((value) {
+                return DropdownMenuItem(
+                  value: value,
+                  child: Text('$value'),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  onPageSizeChanged(value);
+                }
+              },
+            ),
+          ],
+        ),
+        const SizedBox(width: 24),
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.chevron_left),
+              onPressed: currentPage > 1
+                  ? () => onPageChanged(currentPage - 1)
+                  : null,
+            ),
+            Text('$currentPage / ${(totalCount / pageSize).ceil()}'),
+            IconButton(
+              icon: const Icon(Icons.chevron_right),
+              onPressed: currentPage * pageSize < totalCount
+                  ? () => onPageChanged(currentPage + 1)
+                  : null,
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -215,7 +272,15 @@ class JobLogDataTable extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, JobLog log) {
+  Widget _buildActionButtons(BuildContext context, JobLog log, bool isMobile) {
+    if (isMobile) {
+      return IconButton(
+        icon: const Icon(Icons.info_outline, size: 20),
+        onPressed: () => onDetail(log),
+        tooltip: S.current.detail,
+      );
+    }
+
     return TextButton(
       onPressed: () => onDetail(log),
       child: Text(S.current.detail),

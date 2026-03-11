@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
-import '../../../api/system/user_api.dart';
-import '../../../api/system/dept_api.dart';
-import '../../../api/system/role_api.dart';
-import '../../../api/system/post_api.dart';
-import '../../../core/api_client.dart';
-import '../../../models/system/user.dart';
-import '../../../models/system/dept.dart';
-import '../../../models/system/role.dart';
-import '../../../models/system/post.dart';
-import '../../../models/common/api_response.dart';
-import '../../../i18n/i18n.dart';
-import '../../../router/route_registry.dart';
+import 'package:yudao_flutter_ui_admin/api/system/user_api.dart';
+import 'package:yudao_flutter_ui_admin/api/system/dept_api.dart';
+import 'package:yudao_flutter_ui_admin/api/system/role_api.dart';
+import 'package:yudao_flutter_ui_admin/api/system/post_api.dart';
+import 'package:yudao_flutter_ui_admin/app/core/api_client.dart';
+import 'package:yudao_flutter_ui_admin/models/system/user.dart';
+import 'package:yudao_flutter_ui_admin/models/system/dept.dart';
+import 'package:yudao_flutter_ui_admin/models/system/role.dart';
+import 'package:yudao_flutter_ui_admin/models/system/post.dart';
+import 'package:yudao_flutter_ui_admin/models/common/api_response.dart';
+import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/router/route_registry.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 // 导入提取的组件
 import 'widgets/dept_tree_widget.dart';
@@ -449,13 +450,15 @@ class _UserPageState extends ConsumerState<UserPage> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 800;
-
     return Scaffold(
-      body: isMobile
-          ? _buildMobileLayout(context)
-          : _buildDesktopLayout(context),
+      body: DeviceUIMode.layoutBuilder(
+        builder: (context, mode) {
+          if (mode == UIMode.mobile) {
+            return _buildMobileLayout(context);
+          }
+          return _buildDesktopLayout(context);
+        },
+      ),
     );
   }
 

@@ -3,10 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yudao_flutter_ui_admin/api/infra/demo01_contact_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/demo01_contact.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
-import 'widgets/demo01_search_form.dart';
-import 'widgets/demo01_action_buttons.dart';
-import 'widgets/demo01_data_table.dart';
-import 'dialogs/demo01_form_dialog.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo01-contact/widgets/demo01_search_form.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo01-contact/widgets/demo01_action_buttons.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo01-contact/widgets/demo01_data_table.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo01-contact/dialogs/demo01_form_dialog.dart';
 
 /// 示例联系人管理页面 - Demo01
 class Demo01Page extends ConsumerStatefulWidget {
@@ -228,6 +229,8 @@ class _Demo01PageState extends ConsumerState<Demo01Page> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+
     return Scaffold(
       body: Column(
         children: [
@@ -256,36 +259,42 @@ class _Demo01PageState extends ConsumerState<Demo01Page> {
           ),
           const Divider(height: 1),
 
-          // 数据表格
+          // 数据表格 - 使用 Expanded + Flex 确保布局适配
           Expanded(
-            child: Demo01DataTable(
-              contactList: _contactList,
-              totalCount: _totalCount,
-              currentPage: _currentPage,
-              pageSize: _pageSize,
-              isLoading: _isLoading,
-              error: _error,
-              onReload: _loadContactList,
-              onPageSizeChanged: (value) {
-                setState(() {
-                  _pageSize = value;
-                  _currentPage = 1;
-                });
-                _loadContactList();
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Demo01DataTable(
+                  contactList: _contactList,
+                  totalCount: _totalCount,
+                  currentPage: _currentPage,
+                  pageSize: _pageSize,
+                  isLoading: _isLoading,
+                  error: _error,
+                  onReload: _loadContactList,
+                  onPageSizeChanged: (value) {
+                    setState(() {
+                      _pageSize = value;
+                      _currentPage = 1;
+                    });
+                    _loadContactList();
+                  },
+                  onPageChanged: (page) {
+                    setState(() => _currentPage = page);
+                    _loadContactList();
+                  },
+                  onEdit: (contact) => showDemo01FormDialog(
+                    context,
+                    contact: contact,
+                    ref: ref,
+                    onSuccess: _loadContactList,
+                  ),
+                  onDelete: _deleteContact,
+                  selectedIds: _selectedIds,
+                  onSelectionChanged: (ids) => setState(() => _selectedIds = ids),
+                  isMobile: isMobile,
+                  availableWidth: constraints.maxWidth,
+                );
               },
-              onPageChanged: (page) {
-                setState(() => _currentPage = page);
-                _loadContactList();
-              },
-              onEdit: (contact) => showDemo01FormDialog(
-                context,
-                contact: contact,
-                ref: ref,
-                onSuccess: _loadContactList,
-              ),
-              onDelete: _deleteContact,
-              selectedIds: _selectedIds,
-              onSelectionChanged: (ids) => setState(() => _selectedIds = ids),
             ),
           ),
         ],

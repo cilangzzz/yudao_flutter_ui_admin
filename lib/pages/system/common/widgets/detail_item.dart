@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 详情项组件
 ///
@@ -36,6 +37,9 @@ class DetailItem extends StatelessWidget {
   /// 值样式
   final TextStyle? valueStyle;
 
+  /// 是否使用响应式布局
+  final bool responsive;
+
   const DetailItem({
     super.key,
     required this.label,
@@ -45,35 +49,86 @@ class DetailItem extends StatelessWidget {
     this.verticalPadding = 8,
     this.labelStyle,
     this.valueStyle,
+    this.responsive = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+    final actualLabelWidth = responsive && isMobile ? labelWidth * 0.8 : labelWidth;
+    final actualVerticalPadding = responsive && isMobile ? verticalPadding * 0.75 : verticalPadding;
+
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: verticalPadding),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: labelWidth,
-            child: Text(
-              '$label:',
-              style: labelStyle ??
-                  const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          Expanded(
-            child: selectable
-                ? SelectableText(
-                    value,
-                    style: valueStyle,
-                  )
-                : Text(
-                    value,
-                    style: valueStyle,
+      padding: EdgeInsets.symmetric(vertical: actualVerticalPadding),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // 移动端使用垂直布局
+          if (responsive && isMobile) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '$label:',
+                  style: labelStyle ??
+                      const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: constraints.maxWidth,
                   ),
-          ),
-        ],
+                  child: selectable
+                      ? SelectableText(
+                          value,
+                          style: valueStyle ?? const TextStyle(fontSize: 13),
+                        )
+                      : Text(
+                          value,
+                          style: valueStyle ?? const TextStyle(fontSize: 13),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 3,
+                        ),
+                ),
+              ],
+            );
+          }
+
+          // 桌面端使用水平布局
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: actualLabelWidth,
+                child: Text(
+                  '$label:',
+                  style: labelStyle ??
+                      const TextStyle(fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Expanded(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: constraints.maxWidth - actualLabelWidth - 8,
+                  ),
+                  child: selectable
+                      ? SelectableText(
+                          value,
+                          style: valueStyle,
+                        )
+                      : Text(
+                          value,
+                          style: valueStyle,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 3,
+                        ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -98,12 +153,16 @@ class DetailItemBuilder {
   /// 值样式
   final TextStyle? valueStyle;
 
+  /// 是否使用响应式布局
+  final bool responsive;
+
   DetailItemBuilder({
     this.labelWidth = 80,
     this.selectable = true,
     this.verticalPadding = 8,
     this.labelStyle,
     this.valueStyle,
+    this.responsive = true,
   });
 
   /// 构建详情项
@@ -116,6 +175,7 @@ class DetailItemBuilder {
       verticalPadding: verticalPadding,
       labelStyle: labelStyle,
       valueStyle: valueStyle,
+      responsive: responsive,
     );
   }
 
@@ -144,6 +204,9 @@ class DetailList extends StatelessWidget {
   /// 间距
   final double spacing;
 
+  /// 是否使用响应式布局
+  final bool responsive;
+
   const DetailList({
     super.key,
     this.items = const [],
@@ -151,6 +214,7 @@ class DetailList extends StatelessWidget {
     this.labelWidth = 80,
     this.selectable = true,
     this.spacing = 0,
+    this.responsive = true,
   });
 
   @override
@@ -168,6 +232,7 @@ class DetailList extends StatelessWidget {
           value: value,
           labelWidth: labelWidth,
           selectable: selectable,
+          responsive: responsive,
         ));
       }
     }
@@ -209,7 +274,7 @@ class DetailDialog extends StatelessWidget {
   /// 详情项组件列表
   final List<Widget>? children;
 
-  /// 对话框宽度
+  /// 对话框宽度（桌面端）
   final double width;
 
   /// 标签宽度
@@ -217,6 +282,9 @@ class DetailDialog extends StatelessWidget {
 
   /// 关闭按钮文本
   final String? closeText;
+
+  /// 是否使用响应式布局
+  final bool responsive;
 
   const DetailDialog({
     super.key,
@@ -226,25 +294,42 @@ class DetailDialog extends StatelessWidget {
     this.width = 500,
     this.labelWidth = 80,
     this.closeText,
+    this.responsive = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final textScaleFactor = MediaQuery.of(context).textScaleFactor;
+
+    // 响应式对话框宽度
+    final dialogWidth = isMobile
+        ? screenWidth * 0.9
+        : (width).clamp(300.0, screenWidth * 0.6);
+
     return AlertDialog(
-      title: Text(title),
+      title: Text(
+        title,
+        overflow: TextOverflow.ellipsis,
+        maxLines: 2,
+      ),
       content: SizedBox(
-        width: width,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ...data.map((item) => DetailItem(
-                  label: item.$1,
-                  value: item.$2,
-                  labelWidth: labelWidth,
-                )),
-            if (children != null) ...children!,
-          ],
+        width: dialogWidth / textScaleFactor,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ...data.map((item) => DetailItem(
+                    label: item.$1,
+                    value: item.$2,
+                    labelWidth: labelWidth,
+                    responsive: responsive,
+                  )),
+              if (children != null) ...children!,
+            ],
+          ),
         ),
       ),
       actions: [
@@ -265,6 +350,7 @@ Future<void> showDetailDialog({
   double width = 500,
   double labelWidth = 80,
   List<Widget>? children,
+  bool responsive = true,
 }) {
   return showDialog(
     context: context,
@@ -274,6 +360,7 @@ Future<void> showDetailDialog({
       width: width,
       labelWidth: labelWidth,
       children: children,
+      responsive: responsive,
     ),
   );
 }

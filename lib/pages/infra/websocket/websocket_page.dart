@@ -6,6 +6,7 @@ import 'package:yudao_flutter_ui_admin/api/system/user_api.dart';
 import 'package:yudao_flutter_ui_admin/app/core/constants/app_constants.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
 import 'package:yudao_flutter_ui_admin/models/system/user.dart' show SimpleUser;
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// WebSocket 消息类型
 enum MessageType {
@@ -204,302 +205,388 @@ class _WebSocketPageState extends ConsumerState<WebSocketPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+
     return Scaffold(
-      body: Row(
+      body: isMobile
+          ? _buildMobileLayout()
+          : _buildDesktopLayout(),
+    );
+  }
+
+  /// 移动端布局
+  Widget _buildMobileLayout() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(12),
+      child: Column(
         children: [
-          // 左侧：连接管理和发送消息
-          Expanded(
-            flex: 1,
-            child: Card(
-              margin: const EdgeInsets.all(16),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 连接状态
-                    Row(
-                      children: [
-                        Container(
-                          width: 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: _isConnected ? Colors.green : Colors.red,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          S.current.connectionManagement,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    // 连接状态显示
-                    Row(
-                      children: [
-                        Text('${S.current.connectionStatus}: '),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: _isConnected ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            _isConnected ? S.current.connected : S.current.disconnected,
-                            style: TextStyle(
-                              color: _isConnected ? Colors.green : Colors.red,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    // 服务地址
-                    Text(
-                      '${S.current.serverAddress}:',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '${AppConstants.baseUrl.replaceFirst('http', 'ws')}/infra/ws?token=xxx',
-                        style: const TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // 连接/断开按钮
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _isConnecting
-                            ? null
-                            : _isConnected
-                                ? _disconnect
-                                : _connect,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _isConnected ? Colors.red : Colors.blue,
-                          foregroundColor: Colors.white,
-                        ),
-                        child: Text(
-                          _isConnecting
-                              ? S.current.connecting
-                              : _isConnected
-                                  ? S.current.disconnect
-                                  : S.current.connect,
-                        ),
-                      ),
-                    ),
-
-                    const Divider(height: 32),
-
-                    // 消息发送区域
-                    Text(
-                      S.current.sendMessage,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // 接收人选择
-                    DropdownButtonFormField<String>(
-                      value: _selectedUserId,
-                      decoration: InputDecoration(
-                        labelText: S.current.selectReceiver,
-                        border: const OutlineInputBorder(),
-                      ),
-                      items: [
-                        DropdownMenuItem(
-                          value: 'all',
-                          child: Row(
-                            children: [
-                              const CircleAvatar(
-                                radius: 12,
-                                child: Text('A', style: TextStyle(fontSize: 10)),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(S.current.everyone),
-                            ],
-                          ),
-                        ),
-                        ..._userList.map((user) => DropdownMenuItem(
-                          value: user.id.toString(),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 12,
-                                child: Text(
-                                  (user.nickname?.isNotEmpty == true ? user.nickname![0] : 'U'),
-                                  style: const TextStyle(fontSize: 10),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(user.nickname ?? ''),
-                            ],
-                          ),
-                        )),
-                      ],
-                      onChanged: _isConnected
-                          ? (value) => setState(() => _selectedUserId = value)
-                          : null,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // 消息输入
-                    TextField(
-                      controller: _messageController,
-                      maxLines: 3,
-                      decoration: InputDecoration(
-                        labelText: S.current.messageContent,
-                        border: const OutlineInputBorder(),
-                      ),
-                      enabled: _isConnected,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // 发送按钮
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _isConnected ? _sendMessage : null,
-                        icon: const Icon(Icons.send),
-                        label: Text(S.current.sendMessage),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // 右侧：消息记录
-          Expanded(
-            flex: 1,
-            child: Card(
-              margin: const EdgeInsets.all(16),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.message),
-                        const SizedBox(width: 8),
-                        Text(
-                          S.current.messageHistory,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        if (_messages.isNotEmpty) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              '${_messages.length} ${S.current.messagesCount}',
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    const Divider(height: 24),
-
-                    // 消息列表
-                    Expanded(
-                      child: _messages.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.inbox, size: 64, color: Colors.grey[400]),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    S.current.noMessages,
-                                    style: TextStyle(color: Colors.grey[600]),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : ListView.builder(
-                              controller: _scrollController,
-                              itemCount: _messages.length,
-                              itemBuilder: (context, index) {
-                                final msg = _messages[index];
-                                return Card(
-                                  margin: const EdgeInsets.only(bottom: 8),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(12),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Container(
-                                              width: 8,
-                                              height: 8,
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                color: _getMessageColor(msg.type),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              _getMessageTypeText(msg.type),
-                                              style: TextStyle(
-                                                color: _getMessageColor(msg.type),
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            if (msg.userId != null) ...[
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                '${S.current.userId}: ${msg.userId}',
-                                                style: TextStyle(
-                                                  color: Colors.grey[600],
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            ],
-                                            const Spacer(),
-                                            Text(
-                                              _formatTime(msg.time),
-                                              style: TextStyle(
-                                                color: Colors.grey[500],
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(msg.text),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          // 连接管理卡片
+          _buildConnectionCard(),
+          const SizedBox(height: 12),
+          // 消息记录卡片
+          SizedBox(
+            height: 400,
+            child: _buildMessagesCard(),
           ),
         ],
+      ),
+    );
+  }
+
+  /// 桌面端布局
+  Widget _buildDesktopLayout() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 左侧：连接管理和发送消息
+        Expanded(
+          flex: 1,
+          child: _buildConnectionCard(),
+        ),
+        const SizedBox(width: 16),
+        // 右侧：消息记录
+        Expanded(
+          flex: 1,
+          child: _buildMessagesCard(),
+        ),
+      ],
+    );
+  }
+
+  /// 连接管理卡片
+  Widget _buildConnectionCard() {
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 连接状态
+            Row(
+              children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _isConnected ? Colors.green : Colors.red,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  S.current.connectionManagement,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // 连接状态显示
+            Row(
+              children: [
+                Text('${S.current.connectionStatus}: '),
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _isConnected ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      _isConnected ? S.current.connected : S.current.disconnected,
+                      style: TextStyle(
+                        color: _isConnected ? Colors.green : Colors.red,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // 服务地址
+            Text(
+              '${S.current.serverAddress}:',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '${AppConstants.baseUrl.replaceFirst('http', 'ws')}/infra/ws?token=xxx',
+                style: const TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // 连接/断开按钮
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isConnecting
+                    ? null
+                    : _isConnected
+                        ? _disconnect
+                        : _connect,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _isConnected ? Colors.red : Colors.blue,
+                  foregroundColor: Colors.white,
+                ),
+                child: Text(
+                  _isConnecting
+                      ? S.current.connecting
+                      : _isConnected
+                          ? S.current.disconnect
+                          : S.current.connect,
+                ),
+              ),
+            ),
+
+            const Divider(height: 32),
+
+            // 消息发送区域
+            Text(
+              S.current.sendMessage,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 16),
+
+            // 接收人选择
+            DropdownButtonFormField<String>(
+              value: _selectedUserId,
+              decoration: InputDecoration(
+                labelText: S.current.selectReceiver,
+                border: const OutlineInputBorder(),
+              ),
+              items: [
+                DropdownMenuItem(
+                  value: 'all',
+                  child: Row(
+                    children: [
+                      const CircleAvatar(
+                        radius: 12,
+                        child: Text('A', style: TextStyle(fontSize: 10)),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(S.current.everyone),
+                    ],
+                  ),
+                ),
+                ..._userList.map((user) => DropdownMenuItem(
+                  value: user.id.toString(),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 12,
+                        child: Text(
+                          (user.nickname?.isNotEmpty == true ? user.nickname![0] : 'U'),
+                          style: const TextStyle(fontSize: 10),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          user.nickname ?? '',
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                )),
+              ],
+              onChanged: _isConnected
+                  ? (value) => setState(() => _selectedUserId = value)
+                  : null,
+            ),
+            const SizedBox(height: 16),
+
+            // 消息输入
+            TextField(
+              controller: _messageController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                labelText: S.current.messageContent,
+                border: const OutlineInputBorder(),
+              ),
+              enabled: _isConnected,
+            ),
+            const SizedBox(height: 16),
+
+            // 发送按钮
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isConnected ? _sendMessage : null,
+                icon: const Icon(Icons.send),
+                label: Text(S.current.sendMessage),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 消息记录卡片
+  Widget _buildMessagesCard() {
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.message),
+                const SizedBox(width: 8),
+                Text(
+                  S.current.messageHistory,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                if (_messages.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${_messages.length} ${S.current.messagesCount}',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const Divider(height: 24),
+
+            // 消息列表
+            Expanded(
+              child: _messages.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.inbox, size: 64, color: Colors.grey[400]),
+                          const SizedBox(height: 16),
+                          Text(
+                            S.current.noMessages,
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: _scrollController,
+                      itemCount: _messages.length,
+                      // 使用 findChildIndexCallback 支持虚拟列表
+                      findChildIndexCallback: (Key key) {
+                        final index = _messages.indexWhere(
+                          (msg) => ValueKey(msg.time) == key,
+                        );
+                        return index >= 0 ? index : null;
+                      },
+                      itemBuilder: (context, index) {
+                        final msg = _messages[index];
+                        return _MessageItem(
+                          key: ValueKey(msg.time),
+                          message: msg,
+                          getMessageColor: _getMessageColor,
+                          getMessageTypeText: _getMessageTypeText,
+                          formatTime: _formatTime,
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 消息列表项组件（性能优化：使用 const 构造函数）
+class _MessageItem extends StatelessWidget {
+  final WebSocketMessage message;
+  final Color Function(MessageType) getMessageColor;
+  final String Function(MessageType) getMessageTypeText;
+  final String Function(DateTime) formatTime;
+
+  const _MessageItem({
+    super.key,
+    required this.message,
+    required this.getMessageColor,
+    required this.getMessageTypeText,
+    required this.formatTime,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: getMessageColor(message.type),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  getMessageTypeText(message.type),
+                  style: TextStyle(
+                    color: getMessageColor(message.type),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (message.userId != null) ...[
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      '${S.current.userId}: ${message.userId}',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+                const Spacer(),
+                Text(
+                  formatTime(message.time),
+                  style: TextStyle(
+                    color: Colors.grey[500],
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(message.text),
+          ],
+        ),
       ),
     );
   }

@@ -3,10 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yudao_flutter_ui_admin/api/infra/file_config_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/file_config.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
-import 'widgets/file_config_search_form.dart';
-import 'widgets/file_config_action_buttons.dart';
-import 'widgets/file_config_data_table.dart';
-import 'dialogs/file_config_form_dialog.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/file_config/widgets/file_config_search_form.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/file_config/widgets/file_config_action_buttons.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/file_config/widgets/file_config_data_table.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/file_config/dialogs/file_config_form_dialog.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 文件配置管理页面
 class FileConfigPage extends ConsumerStatefulWidget {

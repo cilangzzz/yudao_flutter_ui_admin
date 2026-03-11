@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 定时任务操作按钮组件（工具栏）
 class JobActionButtons extends StatelessWidget {
@@ -20,8 +21,10 @@ class JobActionButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16, vertical: 8),
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
@@ -29,17 +32,18 @@ class JobActionButtons extends StatelessWidget {
         children: [
           ElevatedButton.icon(
             onPressed: onAdd,
-            icon: const Icon(Icons.add),
+            icon: isMobile ? null : const Icon(Icons.add),
             label: Text(S.current.addJob),
           ),
-          ElevatedButton.icon(
-            onPressed: onExport,
-            icon: const Icon(Icons.download),
-            label: Text(S.current.export),
-          ),
+          if (!isMobile)
+            ElevatedButton.icon(
+              onPressed: onExport,
+              icon: const Icon(Icons.download),
+              label: Text(S.current.export),
+            ),
           ElevatedButton.icon(
             onPressed: onViewLog,
-            icon: const Icon(Icons.history),
+            icon: isMobile ? null : const Icon(Icons.history),
             label: Text(S.current.jobLog),
           ),
           OutlinedButton.icon(

@@ -3,10 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yudao_flutter_ui_admin/api/infra/file_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/file.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
-import 'widgets/file_search_form.dart';
-import 'widgets/file_action_buttons.dart';
-import 'widgets/file_data_table.dart';
-import 'dialogs/file_upload_dialog.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/file/widgets/file_search_form.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/file/widgets/file_action_buttons.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/file/widgets/file_data_table.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/file/dialogs/file_upload_dialog.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 文件管理页面
 class FilePage extends ConsumerStatefulWidget {

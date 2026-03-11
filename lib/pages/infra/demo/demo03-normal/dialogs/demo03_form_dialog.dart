@@ -4,8 +4,8 @@ import 'package:yudao_flutter_ui_admin/api/infra/demo03_student_normal_api.dart'
 import 'package:yudao_flutter_ui_admin/models/infra/demo03_student.dart';
 import 'package:yudao_flutter_ui_admin/models/common/api_response.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
-import '../widgets/demo03_course_table.dart';
-import '../widgets/demo03_grade_form.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo03-normal/widgets/demo03_course_table.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/demo/demo03-normal/widgets/demo03_grade_form.dart';
 
 /// 学生表单对话框（新增/编辑，包含主子表）
 class Demo03FormDialog extends StatefulWidget {

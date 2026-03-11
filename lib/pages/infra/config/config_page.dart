@@ -3,10 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yudao_flutter_ui_admin/api/infra/config_api.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/config.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
-import 'widgets/config_search_form.dart';
-import 'widgets/config_action_buttons.dart';
-import 'widgets/config_data_table.dart';
-import 'dialogs/config_form_dialog.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/config/widgets/config_search_form.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/config/widgets/config_action_buttons.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/config/widgets/config_data_table.dart';
+import 'package:yudao_flutter_ui_admin/pages/infra/config/dialogs/config_form_dialog.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 参数配置管理页面
 class ConfigPage extends ConsumerStatefulWidget {
@@ -155,6 +156,8 @@ class _ConfigPageState extends ConsumerState<ConfigPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+
     return Scaffold(
       body: Column(
         children: [

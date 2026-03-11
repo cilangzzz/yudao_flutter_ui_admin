@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:data_table_2/data_table_2.dart';
-import '/../../api/system/social_client_api.dart';
-import '/../../models/system/social_client.dart';
-import '/../../i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/api/system/social_client_api.dart';
+import 'package:yudao_flutter_ui_admin/models/system/social_client.dart';
+import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 社交客户端管理页面
 class SocialClientPage extends ConsumerStatefulWidget {
@@ -230,7 +231,7 @@ class _SocialClientPageState extends ConsumerState<SocialClientPage> {
         builder: (context, setState) => AlertDialog(
           title: Text(isEdit ? S.current.editSocialClient : S.current.addSocialClient),
           content: SizedBox(
-            width: 500,
+            width: 480,
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -240,49 +241,54 @@ class _SocialClientPageState extends ConsumerState<SocialClientPage> {
                     decoration: InputDecoration(
                       labelText: '${S.current.appName} *',
                       border: const OutlineInputBorder(),
+                      isDense: true,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
                     value: socialType,
                     decoration: InputDecoration(
                       labelText: '${S.current.socialPlatform} *',
                       border: const OutlineInputBorder(),
+                      isDense: true,
                     ),
                     items: _socialTypes.entries
                         .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))
                         .toList(),
                     onChanged: (value) => setState(() => socialType = value ?? 1),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
                     value: userType,
                     decoration: InputDecoration(
                       labelText: '${S.current.userType} *',
                       border: const OutlineInputBorder(),
+                      isDense: true,
                     ),
                     items: _userTypes.entries
                         .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))
                         .toList(),
                     onChanged: (value) => setState(() => userType = value ?? 1),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: clientIdController,
                     decoration: InputDecoration(
                       labelText: '${S.current.clientId} *',
                       border: const OutlineInputBorder(),
+                      isDense: true,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: clientSecretController,
                     decoration: InputDecoration(
                       labelText: S.current.clientSecret,
                       border: const OutlineInputBorder(),
+                      isDense: true,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   // agentId 仅企业微信时显示
                   if (socialType == 2)
                     Column(
@@ -292,9 +298,10 @@ class _SocialClientPageState extends ConsumerState<SocialClientPage> {
                           decoration: InputDecoration(
                             labelText: S.current.agentId,
                             border: const OutlineInputBorder(),
+                            isDense: true,
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
                       ],
                     ),
                   // publicKey 仅抖音时显示
@@ -306,10 +313,11 @@ class _SocialClientPageState extends ConsumerState<SocialClientPage> {
                           decoration: InputDecoration(
                             labelText: S.current.publicKey,
                             border: const OutlineInputBorder(),
+                            isDense: true,
                           ),
-                          maxLines: 3,
+                          maxLines: 2,
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
                       ],
                     ),
                   DropdownButtonFormField<int>(
@@ -317,6 +325,7 @@ class _SocialClientPageState extends ConsumerState<SocialClientPage> {
                     decoration: InputDecoration(
                       labelText: S.current.status,
                       border: const OutlineInputBorder(),
+                      isDense: true,
                     ),
                     items: [
                       DropdownMenuItem(value: 0, child: Text(S.current.enabled)),
@@ -386,127 +395,225 @@ class _SocialClientPageState extends ConsumerState<SocialClientPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          _buildSearchBar(context),
-          const Divider(height: 1),
-          _buildToolbar(context),
-          const Divider(height: 1),
-          Expanded(child: _buildDataTable(context)),
-        ],
+      body: DeviceUIMode.layoutBuilder(
+        builder: (context, uiMode) {
+          final isMobile = uiMode == UIMode.mobile;
+          return Column(
+            children: [
+              _buildSearchBar(context),
+              const Divider(height: 1),
+              if (!isMobile) _buildToolbar(context),
+              if (!isMobile) const Divider(height: 1),
+              Expanded(
+                child: DeviceUIMode.builder(
+                  context,
+                  mobile: (context) => _buildMobileList(context),
+                  desktop: (context) => _buildDataTable(context),
+                ),
+              ),
+            ],
+          );
+        },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showFormDialog(),
-        icon: const Icon(Icons.add),
-        label: Text(S.current.addSocialClient),
+      floatingActionButton: DeviceUIMode.select(
+        context,
+        mobile: () => FloatingActionButton(
+          onPressed: () => _showFormDialog(),
+          child: const Icon(Icons.add),
+        ),
+        desktop: () => null,
       ),
     );
   }
 
   Widget _buildSearchBar(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 180,
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: S.current.appName,
-                prefixIcon: const Icon(Icons.search),
-                border: const OutlineInputBorder(),
-                isDense: true,
-              ),
-              onSubmitted: (_) => _search(),
-            ),
-          ),
-          const SizedBox(width: 16),
-          SizedBox(
-            width: 180,
-            child: TextField(
-              controller: _clientIdController,
-              decoration: InputDecoration(
-                hintText: S.current.clientId,
-                prefixIcon: const Icon(Icons.vpn_key),
-                border: const OutlineInputBorder(),
-                isDense: true,
-              ),
-              onSubmitted: (_) => _search(),
-            ),
-          ),
-          const SizedBox(width: 16),
-          SizedBox(
-            width: 150,
-            child: DropdownButtonFormField<int>(
-              value: _selectedSocialType,
-              decoration: InputDecoration(
-                labelText: S.current.socialPlatform,
-                border: const OutlineInputBorder(),
-                isDense: true,
-              ),
-              items: [
-                DropdownMenuItem(value: null, child: Text(S.current.all)),
-                ..._socialTypes.entries.map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))),
+    return Container(
+      padding: const EdgeInsets.all(12),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < 768;
+
+          if (isMobile) {
+            return Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: S.current.appName,
+                          prefixIcon: const Icon(Icons.search, size: 20),
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        onSubmitted: (_) => _search(),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: _search,
+                      icon: const Icon(Icons.search),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        value: _selectedSocialType,
+                        decoration: InputDecoration(
+                          hintText: S.current.socialPlatform,
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        items: [
+                          DropdownMenuItem(value: null, child: Text(S.current.all)),
+                          ..._socialTypes.entries.map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))),
+                        ],
+                        onChanged: (value) {
+                          setState(() => _selectedSocialType = value);
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        value: _selectedStatus,
+                        decoration: InputDecoration(
+                          hintText: S.current.status,
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        items: [
+                          DropdownMenuItem(value: null, child: Text(S.current.all)),
+                          DropdownMenuItem(value: 0, child: Text(S.current.enabled)),
+                          DropdownMenuItem(value: 1, child: Text(S.current.disabled)),
+                        ],
+                        onChanged: (value) {
+                          setState(() => _selectedStatus = value);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton.icon(
+                      onPressed: _reset,
+                      icon: const Icon(Icons.refresh, size: 18),
+                      label: Text(S.current.reset),
+                    ),
+                  ],
+                ),
               ],
-              onChanged: (value) {
-                setState(() => _selectedSocialType = value);
-              },
-            ),
-          ),
-          const SizedBox(width: 16),
-          SizedBox(
-            width: 120,
-            child: DropdownButtonFormField<int>(
-              value: _selectedUserType,
-              decoration: InputDecoration(
-                labelText: S.current.userType,
-                border: const OutlineInputBorder(),
-                isDense: true,
+            );
+          }
+
+          return Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            children: [
+              SizedBox(
+                width: 160,
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: S.current.appName,
+                    prefixIcon: const Icon(Icons.search, size: 18),
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onSubmitted: (_) => _search(),
+                ),
               ),
-              items: [
-                DropdownMenuItem(value: null, child: Text(S.current.all)),
-                ..._userTypes.entries.map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))),
-              ],
-              onChanged: (value) {
-                setState(() => _selectedUserType = value);
-              },
-            ),
-          ),
-          const SizedBox(width: 16),
-          SizedBox(
-            width: 120,
-            child: DropdownButtonFormField<int>(
-              value: _selectedStatus,
-              decoration: InputDecoration(
-                labelText: S.current.status,
-                border: const OutlineInputBorder(),
-                isDense: true,
+              SizedBox(
+                width: 160,
+                child: TextField(
+                  controller: _clientIdController,
+                  decoration: InputDecoration(
+                    hintText: S.current.clientId,
+                    prefixIcon: const Icon(Icons.vpn_key, size: 18),
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onSubmitted: (_) => _search(),
+                ),
               ),
-              items: [
-                DropdownMenuItem(value: null, child: Text(S.current.all)),
-                DropdownMenuItem(value: 0, child: Text(S.current.enabled)),
-                DropdownMenuItem(value: 1, child: Text(S.current.disabled)),
-              ],
-              onChanged: (value) {
-                setState(() => _selectedStatus = value);
-              },
-            ),
-          ),
-          const SizedBox(width: 16),
-          ElevatedButton.icon(
-            onPressed: _search,
-            icon: const Icon(Icons.search),
-            label: Text(S.current.search),
-          ),
-          const SizedBox(width: 8),
-          OutlinedButton.icon(
-            onPressed: _reset,
-            icon: const Icon(Icons.refresh),
-            label: Text(S.current.reset),
-          ),
-        ],
+              SizedBox(
+                width: 130,
+                child: DropdownButtonFormField<int>(
+                  value: _selectedSocialType,
+                  decoration: InputDecoration(
+                    labelText: S.current.socialPlatform,
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  items: [
+                    DropdownMenuItem(value: null, child: Text(S.current.all)),
+                    ..._socialTypes.entries.map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))),
+                  ],
+                  onChanged: (value) {
+                    setState(() => _selectedSocialType = value);
+                  },
+                ),
+              ),
+              SizedBox(
+                width: 100,
+                child: DropdownButtonFormField<int>(
+                  value: _selectedUserType,
+                  decoration: InputDecoration(
+                    labelText: S.current.userType,
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  items: [
+                    DropdownMenuItem(value: null, child: Text(S.current.all)),
+                    ..._userTypes.entries.map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))),
+                  ],
+                  onChanged: (value) {
+                    setState(() => _selectedUserType = value);
+                  },
+                ),
+              ),
+              SizedBox(
+                width: 100,
+                child: DropdownButtonFormField<int>(
+                  value: _selectedStatus,
+                  decoration: InputDecoration(
+                    labelText: S.current.status,
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  items: [
+                    DropdownMenuItem(value: null, child: Text(S.current.all)),
+                    DropdownMenuItem(value: 0, child: Text(S.current.enabled)),
+                    DropdownMenuItem(value: 1, child: Text(S.current.disabled)),
+                  ],
+                  onChanged: (value) {
+                    setState(() => _selectedStatus = value);
+                  },
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: _search,
+                icon: const Icon(Icons.search, size: 18),
+                label: Text(S.current.search),
+              ),
+              OutlinedButton.icon(
+                onPressed: _reset,
+                icon: const Icon(Icons.refresh, size: 18),
+                label: Text(S.current.reset),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -518,7 +625,7 @@ class _SocialClientPageState extends ConsumerState<SocialClientPage> {
         children: [
           ElevatedButton.icon(
             onPressed: () => _showFormDialog(),
-            icon: const Icon(Icons.add),
+            icon: const Icon(Icons.add, size: 18),
             label: Text(S.current.addSocialClient),
           ),
           const SizedBox(width: 8),
@@ -528,8 +635,237 @@ class _SocialClientPageState extends ConsumerState<SocialClientPage> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            icon: const Icon(Icons.delete),
+            icon: const Icon(Icons.delete, size: 18),
             label: Text(S.current.deleteBatch),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileList(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('${S.current.loadFailed}: $_error', style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _loadData, child: Text(S.current.retry)),
+          ],
+        ),
+      );
+    }
+
+    if (_dataList.isEmpty) {
+      return Center(child: Text(S.current.noData));
+    }
+
+    return Column(
+      children: [
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: _loadData,
+            child: ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: _dataList.length,
+              itemBuilder: (context, index) => _buildClientCard(_dataList[index]),
+            ),
+          ),
+        ),
+        _buildMobilePagination(),
+      ],
+    );
+  }
+
+  Widget _buildClientCard(SocialClient item) {
+    final socialColor = _getSocialColor(item.socialType);
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: socialColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    _getSocialIcon(item.socialType),
+                    color: socialColor,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        _socialTypes[item.socialType] ?? '-',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: item.status == 0 ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    item.status == 0 ? S.current.enabled : S.current.disabled,
+                    style: TextStyle(color: item.status == 0 ? Colors.green : Colors.red, fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 24),
+            _buildMobileInfoRow(Icons.person, S.current.userType, _userTypes[item.userType] ?? '-'),
+            _buildMobileInfoRow(Icons.vpn_key, S.current.clientId, item.clientId),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showFormDialog(item),
+                    icon: const Icon(Icons.edit, size: 18),
+                    label: Text(S.current.edit),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _deleteItem(item),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                    ),
+                    icon: const Icon(Icons.delete, size: 18),
+                    label: Text(S.current.delete),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileInfoRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: Colors.grey[600]),
+          const SizedBox(width: 8),
+          Text('$label: ', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 13),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getSocialIcon(int? socialType) {
+    switch (socialType) {
+      case 1:
+        return Icons.chat; // 钉钉
+      case 2:
+        return Icons.business; // 企业微信
+      case 3:
+        return Icons.chat_bubble; // 微信
+      case 4:
+        return Icons.message; // QQ
+      case 5:
+        return Icons.public; // 微博
+      case 40:
+        return Icons.video_library; // 抖音
+      default:
+        return Icons.share;
+    }
+  }
+
+  Color _getSocialColor(int? socialType) {
+    switch (socialType) {
+      case 1:
+        return Colors.blue;
+      case 2:
+        return Colors.indigo;
+      case 3:
+        return Colors.green;
+      case 4:
+        return Colors.lightBlue;
+      case 5:
+        return Colors.orange;
+      case 40:
+        return Colors.black;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Widget _buildMobilePagination() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 4,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('${S.current.total}: $_totalCount'),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left),
+                onPressed: _currentPage > 1
+                    ? () {
+                        setState(() => _currentPage--);
+                        _loadData();
+                      }
+                    : null,
+              ),
+              Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
+              IconButton(
+                icon: const Icon(Icons.chevron_right),
+                onPressed: _currentPage * _pageSize < _totalCount
+                    ? () {
+                        setState(() => _currentPage++);
+                        _loadData();
+                      }
+                    : null,
+              ),
+            ],
           ),
         ],
       ),
@@ -589,7 +925,7 @@ class _SocialClientPageState extends ConsumerState<SocialClientPage> {
             child: DataTable2(
               columnSpacing: 12,
               horizontalMargin: 12,
-              minWidth: 900,
+              minWidth: 800,
               smRatio: 0.75,
               lmRatio: 1.5,
               headingRowColor: WidgetStateProperty.resolveWith(
@@ -655,15 +991,15 @@ class _SocialClientPageState extends ConsumerState<SocialClientPage> {
                   },
                   cells: [
                     DataCell(Text(item.id?.toString() ?? '-')),
-                    DataCell(Text(item.name)),
+                    DataCell(Text(item.name, overflow: TextOverflow.ellipsis)),
                     DataCell(Text(_socialTypes[item.socialType] ?? '-')),
                     DataCell(Text(_userTypes[item.userType] ?? '-')),
-                    DataCell(Text(item.clientId)),
+                    DataCell(Text(item.clientId, overflow: TextOverflow.ellipsis)),
                     DataCell(
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: item.status == 0 ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                          color: item.status == 0 ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -696,60 +1032,64 @@ class _SocialClientPageState extends ConsumerState<SocialClientPage> {
           ),
           // 分页控件
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Row(
-                children: [
-                  Text('${S.current.pageSize}: '),
-                  DropdownButton<int>(
-                    value: _pageSize,
-                    items: [10, 20, 50, 100].map((value) {
-                      return DropdownMenuItem(
-                        value: value,
-                        child: Text('$value'),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _pageSize = value;
-                          _currentPage = 1;
-                        });
-                        _loadData();
-                      }
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(width: 24),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left),
-                    onPressed: _currentPage > 1
-                        ? () {
-                            setState(() => _currentPage--);
-                            _loadData();
-                          }
-                        : null,
-                  ),
-                  Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right),
-                    onPressed: _currentPage * _pageSize < _totalCount
-                        ? () {
-                            setState(() => _currentPage++);
-                            _loadData();
-                          }
-                        : null,
-                  ),
-                ],
-              ),
-            ],
-          ),
+          _buildDesktopPagination(),
         ],
       ),
+    );
+  }
+
+  Widget _buildDesktopPagination() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Row(
+          children: [
+            Text('${S.current.pageSize}: '),
+            DropdownButton<int>(
+              value: _pageSize,
+              items: [10, 20, 50, 100].map((value) {
+                return DropdownMenuItem(
+                  value: value,
+                  child: Text('$value'),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _pageSize = value;
+                    _currentPage = 1;
+                  });
+                  _loadData();
+                }
+              },
+            ),
+          ],
+        ),
+        const SizedBox(width: 24),
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.chevron_left),
+              onPressed: _currentPage > 1
+                  ? () {
+                      setState(() => _currentPage--);
+                      _loadData();
+                    }
+                  : null,
+            ),
+            Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
+            IconButton(
+              icon: const Icon(Icons.chevron_right),
+              onPressed: _currentPage * _pageSize < _totalCount
+                  ? () {
+                      setState(() => _currentPage++);
+                      _loadData();
+                    }
+                  : null,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../models/system/dept.dart';
-import '../../../../i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/models/system/dept.dart';
+import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
 
 /// 部门行内操作按钮组件（表格每行的操作按钮）
 class DeptActionButtons extends StatelessWidget {

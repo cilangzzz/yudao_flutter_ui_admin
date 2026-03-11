@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:data_table_2/data_table_2.dart';
-import '../../../api/system/tenant_package_api.dart';
-import '../../../api/system/menu_api.dart';
-import '../../../models/system/tenant_package.dart';
-import '../../../models/system/menu.dart';
-import '../../../i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/api/system/tenant_package_api.dart';
+import 'package:yudao_flutter_ui_admin/api/system/menu_api.dart';
+import 'package:yudao_flutter_ui_admin/models/system/tenant_package.dart';
+import 'package:yudao_flutter_ui_admin/models/system/menu.dart';
+import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 租户套餐管理页面
 class TenantPackagePage extends ConsumerStatefulWidget {
@@ -243,8 +244,8 @@ class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
           builder: (context, setDialogState) => AlertDialog(
             title: Text(isEdit ? '编辑租户套餐' : '新增租户套餐'),
             content: SizedBox(
-              width: 600,
-              height: 500,
+              width: 550,
+              height: 480,
               child: Form(
                 key: formKey,
                 child: Column(
@@ -258,6 +259,7 @@ class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
                         labelText: '套餐名称 *',
                         hintText: '请输入套餐名称',
                         border: OutlineInputBorder(),
+                        isDense: true,
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -266,7 +268,7 @@ class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
 
                     // 状态
                     DropdownButtonFormField<int>(
@@ -274,6 +276,7 @@ class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
                       decoration: const InputDecoration(
                         labelText: '状态',
                         border: OutlineInputBorder(),
+                        isDense: true,
                       ),
                       items: const [
                         DropdownMenuItem(value: 0, child: Text('开启')),
@@ -283,7 +286,7 @@ class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
                         setDialogState(() => status = value ?? 0);
                       },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
 
                     // 备注
                     TextFormField(
@@ -293,10 +296,11 @@ class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
                         hintText: '请输入备注',
                         border: OutlineInputBorder(),
                         alignLabelWithHint: true,
+                        isDense: true,
                       ),
                       maxLines: 2,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
 
                     // 菜单权限树
                     const Text('菜单权限', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -319,7 +323,7 @@ class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
                             selectedMenuIds.length == allMenuIds.length
                                 ? Icons.check_box
                                 : Icons.check_box_outline_blank,
-                            size: 20,
+                            size: 18,
                           ),
                           label: const Text('全选'),
                         ),
@@ -337,17 +341,17 @@ class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
                             expandedMenuIds.length == allMenuIds.length
                                 ? Icons.unfold_less
                                 : Icons.unfold_more,
-                            size: 20,
+                            size: 18,
                           ),
                           label: Text(
                             expandedMenuIds.length == allMenuIds.length
-                                ? '收起全部'
-                                : '展开全部',
+                                ? '收起'
+                                : '展开',
                           ),
                         ),
                         const Spacer(),
                         Text(
-                          '已选择 ${selectedMenuIds.length} 项',
+                          '已选 ${selectedMenuIds.length} 项',
                           style: TextStyle(color: Colors.grey[600], fontSize: 12),
                         ),
                       ],
@@ -463,7 +467,7 @@ class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
               onTap: () => onSelect(node.id, !isSelected),
               child: Padding(
                 padding: EdgeInsets.only(
-                  left: node.depth * 20.0,
+                  left: node.depth * 16.0,
                   top: 4,
                   bottom: 4,
                 ),
@@ -476,7 +480,7 @@ class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
                           isExpanded
                               ? Icons.keyboard_arrow_down
                               : Icons.keyboard_arrow_right,
-                          size: 20,
+                          size: 18,
                         ),
                         onPressed: () => onExpand(node.id, !isExpanded),
                         padding: EdgeInsets.zero,
@@ -498,7 +502,8 @@ class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
                     Expanded(
                       child: Text(
                         node.name,
-                        style: const TextStyle(fontSize: 14),
+                        style: const TextStyle(fontSize: 13),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -527,7 +532,7 @@ class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: isOpen ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+        color: isOpen ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
@@ -543,6 +548,7 @@ class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
+    final isMobile = DeviceUIMode.isMobile(context);
 
     return Scaffold(
       body: Column(
@@ -552,111 +558,163 @@ class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
           const Divider(height: 1),
 
           // 工具栏
-          _buildToolbar(s),
+          if (!isMobile) _buildToolbar(s),
 
           // 数据表格
-          Expanded(child: _buildDataTable()),
+          Expanded(
+            child: DeviceUIMode.builder(
+              context,
+              mobile: (context) => _buildMobileCardList(s),
+              desktop: (context) => _buildDataTable(),
+            ),
+          ),
         ],
       ),
+      floatingActionButton: isMobile
+          ? FloatingActionButton(
+              onPressed: () => _showFormDialog(),
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 
   Widget _buildSearchBar(S s) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      child: Wrap(
-        spacing: 16,
-        runSpacing: 12,
-        children: [
-          // 套餐名称
-          SizedBox(
-            width: 200,
-            child: TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: '套餐名称',
-                hintText: '请输入套餐名称',
-                prefixIcon: Icon(Icons.search, size: 20),
-                border: OutlineInputBorder(),
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              ),
-              onSubmitted: (_) => _loadData(),
-            ),
-          ),
+      padding: const EdgeInsets.all(12),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < 768;
 
-          // 状态
-          SizedBox(
-            width: 140,
-            child: DropdownButtonFormField<int>(
-              value: _selectedStatus,
-              decoration: const InputDecoration(
-                labelText: '状态',
-                border: OutlineInputBorder(),
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              ),
-              items: const [
-                DropdownMenuItem(value: null, child: Text('全部')),
-                DropdownMenuItem(value: 0, child: Text('开启')),
-                DropdownMenuItem(value: 1, child: Text('禁用')),
-              ],
-              onChanged: (value) {
-                setState(() => _selectedStatus = value);
-              },
-            ),
-          ),
-
-          // 创建时间
-          SizedBox(
-            width: 260,
-            child: InkWell(
-              onTap: () async {
-                final range = await showDateRangePicker(
-                  context: context,
-                  firstDate: DateTime(2020),
-                  lastDate: DateTime(2030),
-                  initialDateRange: _createTimeRange,
-                );
-                if (range != null) {
-                  setState(() => _createTimeRange = range);
-                }
-              },
-              child: InputDecorator(
-                decoration: const InputDecoration(
-                  labelText: '创建时间',
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                  suffixIcon: Icon(Icons.calendar_today, size: 20),
+          if (isMobile) {
+            return Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(
+                      hintText: '套餐名称',
+                      prefixIcon: Icon(Icons.search, size: 20),
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    ),
+                    onSubmitted: (_) => _loadData(),
+                  ),
                 ),
-                child: Text(
-                  _createTimeRange != null
-                      ? '${_createTimeRange!.start.toString().substring(0, 10)} ~ ${_createTimeRange!.end.toString().substring(0, 10)}'
-                      : '请选择时间范围',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: _createTimeRange != null ? null : Colors.grey,
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: _loadData,
+                  icon: const Icon(Icons.search),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                IconButton(
+                  onPressed: _resetSearch,
+                  icon: const Icon(Icons.refresh),
+                ),
+              ],
+            );
+          }
+
+          return Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            children: [
+              // 套餐名称
+              SizedBox(
+                width: 180,
+                child: TextField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    labelText: '套餐名称',
+                    hintText: '请输入套餐名称',
+                    prefixIcon: Icon(Icons.search, size: 18),
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  ),
+                  onSubmitted: (_) => _loadData(),
+                ),
+              ),
+
+              // 状态
+              SizedBox(
+                width: 120,
+                child: DropdownButtonFormField<int>(
+                  value: _selectedStatus,
+                  decoration: const InputDecoration(
+                    labelText: '状态',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: null, child: Text('全部')),
+                    DropdownMenuItem(value: 0, child: Text('开启')),
+                    DropdownMenuItem(value: 1, child: Text('禁用')),
+                  ],
+                  onChanged: (value) {
+                    setState(() => _selectedStatus = value);
+                  },
+                ),
+              ),
+
+              // 创建时间
+              SizedBox(
+                width: 220,
+                child: InkWell(
+                  onTap: () async {
+                    final range = await showDateRangePicker(
+                      context: context,
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime(2030),
+                      initialDateRange: _createTimeRange,
+                    );
+                    if (range != null) {
+                      setState(() => _createTimeRange = range);
+                    }
+                  },
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      labelText: '创建时间',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      suffixIcon: Icon(Icons.calendar_today, size: 18),
+                    ),
+                    child: Text(
+                      _createTimeRange != null
+                          ? '${_createTimeRange!.start.toString().substring(0, 10)} ~ ${_createTimeRange!.end.toString().substring(0, 10)}'
+                          : '请选择时间范围',
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: _createTimeRange != null ? null : Colors.grey,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
 
-          // 搜索按钮
-          ElevatedButton.icon(
-            onPressed: _loadData,
-            icon: const Icon(Icons.search, size: 20),
-            label: Text(s.search),
-          ),
+              // 搜索按钮
+              ElevatedButton.icon(
+                onPressed: _loadData,
+                icon: const Icon(Icons.search, size: 18),
+                label: Text(s.search),
+              ),
 
-          // 重置按钮
-          OutlinedButton.icon(
-            onPressed: _resetSearch,
-            icon: const Icon(Icons.refresh, size: 20),
-            label: Text(s.reset),
-          ),
-        ],
+              // 重置按钮
+              OutlinedButton.icon(
+                onPressed: _resetSearch,
+                icon: const Icon(Icons.refresh, size: 18),
+                label: Text(s.reset),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -669,7 +727,7 @@ class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
           // 新增按钮
           ElevatedButton.icon(
             onPressed: () => _showFormDialog(),
-            icon: const Icon(Icons.add, size: 20),
+            icon: const Icon(Icons.add, size: 18),
             label: const Text('新增套餐'),
           ),
           const SizedBox(width: 12),
@@ -677,7 +735,7 @@ class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
           // 批量删除按钮
           OutlinedButton.icon(
             onPressed: _selectedIds.isEmpty ? null : _deleteTenantPackageBatch,
-            icon: const Icon(Icons.delete_outline, size: 20),
+            icon: const Icon(Icons.delete_outline, size: 18),
             label: Text('批量删除 (${_selectedIds.length})'),
             style: OutlinedButton.styleFrom(
               foregroundColor: _selectedIds.isEmpty ? null : Colors.red,
@@ -691,6 +749,229 @@ class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
             onPressed: _loadData,
             icon: const Icon(Icons.refresh),
             tooltip: '刷新',
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 移动端卡片式布局
+  Widget _buildMobileCardList(S s) {
+    if (_isLoading && _dataList.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('加载失败: $_error'),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _loadData, child: const Text('重试')),
+          ],
+        ),
+      );
+    }
+
+    if (_dataList.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text('暂无套餐数据', style: TextStyle(color: Colors.grey[600])),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: _loadData,
+            child: ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: _dataList.length,
+              itemBuilder: (context, index) => _buildPackageCard(_dataList[index]),
+            ),
+          ),
+        ),
+        _buildMobilePagination(),
+      ],
+    );
+  }
+
+  Widget _buildPackageCard(TenantPackage pkg) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 头部：图标和名称
+            Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Theme.of(context).colorScheme.primaryContainer,
+                        Theme.of(context).colorScheme.secondaryContainer,
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.inventory_2,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        pkg.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'ID: ${pkg.id ?? '-'}',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                _buildStatusBadge(pkg.status),
+              ],
+            ),
+            const Divider(height: 24),
+            // 备注
+            if (pkg.remark != null && pkg.remark!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.notes, size: 16, color: Colors.grey[600]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        pkg.remark!,
+                        style: TextStyle(color: Colors.grey[700], fontSize: 13),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            // 菜单数量
+            Row(
+              children: [
+                Icon(Icons.menu, size: 16, color: Colors.grey[600]),
+                const SizedBox(width: 8),
+                Text(
+                  '菜单权限: ${pkg.menuIds?.length ?? 0} 项',
+                  style: TextStyle(color: Colors.grey[700], fontSize: 13),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // 创建时间
+            Row(
+              children: [
+                Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
+                const SizedBox(width: 8),
+                Text(
+                  '创建: ${pkg.createTime ?? '-'}',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // 操作按钮
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showFormDialog(pkg),
+                    icon: const Icon(Icons.edit, size: 18),
+                    label: const Text('编辑'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _deleteTenantPackage(pkg),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                    ),
+                    icon: const Icon(Icons.delete, size: 18),
+                    label: const Text('删除'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobilePagination() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 4,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('共 $_totalCount 条'),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left),
+                onPressed: _currentPage > 1
+                    ? () {
+                        setState(() => _currentPage--);
+                        _loadData();
+                      }
+                    : null,
+              ),
+              Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
+              IconButton(
+                icon: const Icon(Icons.chevron_right),
+                onPressed: _currentPage * _pageSize < _totalCount
+                    ? () {
+                        setState(() => _currentPage++);
+                        _loadData();
+                      }
+                    : null,
+              ),
+            ],
           ),
         ],
       ),
@@ -715,102 +996,185 @@ class _TenantPackagePageState extends ConsumerState<TenantPackagePage> {
       );
     }
 
-    return DataTable2(
-      columns: [
-        DataColumn2(
-          label: Checkbox(
-            value: _selectedIds.length == _dataList.length && _dataList.isNotEmpty,
-            tristate: true,
-            onChanged: (value) {
-              setState(() {
-                if (value == true) {
-                  _selectedIds = _dataList.where((e) => e.id != null).map((e) => e.id!).toSet();
-                } else {
-                  _selectedIds.clear();
-                }
-              });
-            },
-          ),
-          size: ColumnSize.S,
-        ),
-        const DataColumn2(label: Text('套餐编号'), size: ColumnSize.S),
-        const DataColumn2(label: Text('套餐名称')),
-        const DataColumn2(label: Text('状态'), size: ColumnSize.S),
-        const DataColumn2(label: Text('备注')),
-        const DataColumn2(label: Text('创建时间')),
-        const DataColumn2(label: Text('操作'), fixedWidth: 120),
-      ],
-      rows: _dataList.map((pkg) {
-        return DataRow2(
-          selected: pkg.id != null && _selectedIds.contains(pkg.id),
-          onSelectChanged: pkg.id != null
-              ? (selected) {
-                  setState(() {
-                    if (selected == true) {
-                      _selectedIds.add(pkg.id!);
-                    } else {
-                      _selectedIds.remove(pkg.id!);
-                    }
-                  });
-                }
-              : null,
-          cells: [
-            DataCell(Checkbox(
-              value: pkg.id != null && _selectedIds.contains(pkg.id),
-              onChanged: pkg.id != null
-                  ? (value) {
-                      setState(() {
-                        if (value == true) {
-                          _selectedIds.add(pkg.id!);
-                        } else {
-                          _selectedIds.remove(pkg.id!);
-                        }
-                      });
-                    }
-                  : null,
-            )),
-            DataCell(Text(pkg.id?.toString() ?? '-')),
-            DataCell(Text(pkg.name)),
-            DataCell(_buildStatusBadge(pkg.status)),
-            DataCell(
-              Tooltip(
-                message: pkg.remark ?? '',
-                child: SizedBox(
-                  width: 200,
-                  child: Text(
-                    pkg.remark ?? '-',
-                    overflow: TextOverflow.ellipsis,
-                  ),
+    return Column(
+      children: [
+        Expanded(
+          child: DataTable2(
+            columnSpacing: 12,
+            horizontalMargin: 12,
+            minWidth: 700,
+            smRatio: 0.75,
+            lmRatio: 1.5,
+            headingRowColor: WidgetStateProperty.resolveWith(
+              (states) => Theme.of(context).colorScheme.surfaceContainerHighest,
+            ),
+            headingTextStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+            dataRowColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3);
+              }
+              return null;
+            }),
+            columns: [
+              DataColumn2(
+                label: Checkbox(
+                  value: _selectedIds.length == _dataList.length && _dataList.isNotEmpty,
+                  tristate: true,
+                  onChanged: (value) {
+                    setState(() {
+                      if (value == true) {
+                        _selectedIds = _dataList.where((e) => e.id != null).map((e) => e.id!).toSet();
+                      } else {
+                        _selectedIds.clear();
+                      }
+                    });
+                  },
                 ),
+                size: ColumnSize.S,
+              ),
+              const DataColumn2(label: Text('套餐编号'), size: ColumnSize.S),
+              const DataColumn2(label: Text('套餐名称')),
+              const DataColumn2(label: Text('状态'), size: ColumnSize.S),
+              const DataColumn2(label: Text('菜单权限'), size: ColumnSize.S),
+              const DataColumn2(label: Text('备注')),
+              const DataColumn2(label: Text('创建时间')),
+              const DataColumn2(label: Text('操作'), size: ColumnSize.M),
+            ],
+            rows: _dataList.map((pkg) {
+              return DataRow2(
+                selected: pkg.id != null && _selectedIds.contains(pkg.id),
+                onSelectChanged: pkg.id != null
+                    ? (selected) {
+                        setState(() {
+                          if (selected == true) {
+                            _selectedIds.add(pkg.id!);
+                          } else {
+                            _selectedIds.remove(pkg.id!);
+                          }
+                        });
+                      }
+                    : null,
+                cells: [
+                  DataCell(Checkbox(
+                    value: pkg.id != null && _selectedIds.contains(pkg.id),
+                    onChanged: pkg.id != null
+                        ? (value) {
+                            setState(() {
+                              if (value == true) {
+                                _selectedIds.add(pkg.id!);
+                              } else {
+                                _selectedIds.remove(pkg.id!);
+                              }
+                            });
+                          }
+                        : null,
+                  )),
+                  DataCell(Text(pkg.id?.toString() ?? '-')),
+                  DataCell(Text(pkg.name, overflow: TextOverflow.ellipsis)),
+                  DataCell(_buildStatusBadge(pkg.status)),
+                  DataCell(Text('${pkg.menuIds?.length ?? 0} 项')),
+                  DataCell(
+                    Tooltip(
+                      message: pkg.remark ?? '',
+                      child: Text(
+                        pkg.remark ?? '-',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  DataCell(Text(pkg.createTime ?? '-')),
+                  DataCell(Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextButton(
+                        onPressed: () => _showFormDialog(pkg),
+                        child: const Text('编辑'),
+                      ),
+                      TextButton(
+                        onPressed: () => _deleteTenantPackage(pkg),
+                        style: TextButton.styleFrom(foregroundColor: Colors.red),
+                        child: const Text('删除'),
+                      ),
+                    ],
+                  )),
+                ],
+              );
+            }).toList(),
+            empty: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  Text('暂无数据', style: TextStyle(color: Colors.grey[600])),
+                ],
               ),
             ),
-            DataCell(Text(pkg.createTime ?? '-')),
-            DataCell(Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextButton(
-                  onPressed: () => _showFormDialog(pkg),
-                  child: const Text('编辑'),
-                ),
-                TextButton(
-                  onPressed: () => _deleteTenantPackage(pkg),
-                  style: TextButton.styleFrom(foregroundColor: Colors.red),
-                  child: const Text('删除'),
-                ),
-              ],
-            )),
-          ],
-        );
-      }).toList(),
-      empty: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.inbox_outlined, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            Text('暂无数据', style: TextStyle(color: Colors.grey[600])),
-          ],
+          ),
         ),
+        _buildDesktopPagination(),
+      ],
+    );
+  }
+
+  Widget _buildDesktopPagination() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Row(
+            children: [
+              const Text('每页: '),
+              DropdownButton<int>(
+                value: _pageSize,
+                items: [10, 20, 50, 100].map((value) {
+                  return DropdownMenuItem(
+                    value: value,
+                    child: Text('$value'),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _pageSize = value;
+                      _currentPage = 1;
+                    });
+                    _loadData();
+                  }
+                },
+              ),
+            ],
+          ),
+          const SizedBox(width: 24),
+          Text('共 $_totalCount 条'),
+          const SizedBox(width: 16),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left),
+                onPressed: _currentPage > 1
+                    ? () {
+                        setState(() => _currentPage--);
+                        _loadData();
+                      }
+                    : null,
+              ),
+              Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
+              IconButton(
+                icon: const Icon(Icons.chevron_right),
+                onPressed: _currentPage * _pageSize < _totalCount
+                    ? () {
+                        setState(() => _currentPage++);
+                        _loadData();
+                      }
+                    : null,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

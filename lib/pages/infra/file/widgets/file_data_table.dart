@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/file.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/utils/device_ui_mode.dart';
 
 /// 文件数据表格组件
 class FileDataTable extends StatelessWidget {
@@ -55,22 +56,28 @@ class FileDataTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = DeviceUIMode.isMobile(context);
+
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     if (error != null) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('${S.current.loadFailed}: $error', style: const TextStyle(color: Colors.red)),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: onReload,
-              child: Text(S.current.retry),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('${S.current.loadFailed}: $error', style: const TextStyle(color: Colors.red)),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: onReload,
+                child: Text(S.current.retry),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -80,7 +87,7 @@ class FileDataTable extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isMobile ? 8 : 16),
       child: Column(
         children: [
           // 表头工具栏
@@ -95,9 +102,9 @@ class FileDataTable extends StatelessWidget {
           // 表格
           Expanded(
             child: DataTable2(
-              columnSpacing: 12,
-              horizontalMargin: 12,
-              minWidth: 1000,
+              columnSpacing: isMobile ? 8 : 12,
+              horizontalMargin: isMobile ? 8 : 12,
+              minWidth: isMobile ? 600 : 1000,
               smRatio: 0.75,
               lmRatio: 1.5,
               headingRowColor: WidgetStateProperty.resolveWith(
@@ -190,7 +197,7 @@ class FileDataTable extends StatelessWidget {
                     DataCell(Text(file.type ?? '-')),
                     DataCell(_buildFileContentCell(context, file)),
                     DataCell(Text(file.createTime ?? '-')),
-                    DataCell(_buildActionButtons(context, file)),
+                    DataCell(_buildActionButtons(context, file, isMobile)),
                   ],
                 );
               }).toList(),
@@ -198,50 +205,100 @@ class FileDataTable extends StatelessWidget {
           ),
           // 分页控件
           const SizedBox(height: 8),
+          _buildPagination(context, isMobile),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPagination(BuildContext context, bool isMobile) {
+    if (isMobile) {
+      return Column(
+        children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Row(
-                children: [
-                  Text('${S.current.pageSize}: '),
-                  DropdownButton<int>(
-                    value: pageSize,
-                    items: [10, 20, 50, 100].map((value) {
-                      return DropdownMenuItem(
-                        value: value,
-                        child: Text('$value'),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        onPageSizeChanged(value);
-                      }
-                    },
-                  ),
-                ],
+              IconButton(
+                icon: const Icon(Icons.chevron_left),
+                onPressed: currentPage > 1
+                    ? () => onPageChanged(currentPage - 1)
+                    : null,
               ),
-              const SizedBox(width: 24),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left),
-                    onPressed: currentPage > 1
-                        ? () => onPageChanged(currentPage - 1)
-                        : null,
-                  ),
-                  Text('$currentPage / ${(totalCount / pageSize).ceil()}'),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right),
-                    onPressed: currentPage * pageSize < totalCount
-                        ? () => onPageChanged(currentPage + 1)
-                        : null,
-                  ),
-                ],
+              Text('$currentPage / ${(totalCount / pageSize).ceil()}'),
+              IconButton(
+                icon: const Icon(Icons.chevron_right),
+                onPressed: currentPage * pageSize < totalCount
+                    ? () => onPageChanged(currentPage + 1)
+                    : null,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('${S.current.pageSize}: '),
+              DropdownButton<int>(
+                value: pageSize,
+                items: [10, 20, 50, 100].map((value) {
+                  return DropdownMenuItem(
+                    value: value,
+                    child: Text('$value'),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    onPageSizeChanged(value);
+                  }
+                },
               ),
             ],
           ),
         ],
-      ),
+      );
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Row(
+          children: [
+            Text('${S.current.pageSize}: '),
+            DropdownButton<int>(
+              value: pageSize,
+              items: [10, 20, 50, 100].map((value) {
+                return DropdownMenuItem(
+                  value: value,
+                  child: Text('$value'),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  onPageSizeChanged(value);
+                }
+              },
+            ),
+          ],
+        ),
+        const SizedBox(width: 24),
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.chevron_left),
+              onPressed: currentPage > 1
+                  ? () => onPageChanged(currentPage - 1)
+                  : null,
+            ),
+            Text('$currentPage / ${(totalCount / pageSize).ceil()}'),
+            IconButton(
+              icon: const Icon(Icons.chevron_right),
+              onPressed: currentPage * pageSize < totalCount
+                  ? () => onPageChanged(currentPage + 1)
+                  : null,
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -303,7 +360,26 @@ class FileDataTable extends StatelessWidget {
     // 使用 url_launcher 打开 URL
   }
 
-  Widget _buildActionButtons(BuildContext context, File file) {
+  Widget _buildActionButtons(BuildContext context, File file, bool isMobile) {
+    if (isMobile) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (file.url != null)
+            IconButton(
+              icon: const Icon(Icons.copy, size: 20),
+              onPressed: () => _copyUrl(context, file.url!),
+              tooltip: S.current.copyUrl,
+            ),
+          IconButton(
+            icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+            onPressed: file.id != null ? () => onDelete(file) : null,
+            tooltip: S.current.delete,
+          ),
+        ],
+      );
+    }
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
