@@ -298,11 +298,6 @@ class _UserPageState extends ConsumerState<UserPage> {
       body: isMobile
           ? _buildMobileLayout(context)
           : _buildDesktopLayout(context),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showUserDialog(context),
-        icon: const Icon(Icons.add),
-        label: Text(S.current.addUser),
-      ),
     );
   }
 
@@ -358,8 +353,33 @@ class _UserPageState extends ConsumerState<UserPage> {
       children: [
         _buildMobileSearchBar(context),
         const Divider(height: 1),
+        // 移动端工具栏
+        _buildMobileToolbar(context),
+        const Divider(height: 1),
         Expanded(child: _buildMobileList(context)),
       ],
+    );
+  }
+
+  Widget _buildMobileToolbar(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        children: [
+          ElevatedButton.icon(
+            onPressed: () => _showUserDialog(context),
+            icon: const Icon(Icons.add, size: 20),
+            label: Text(S.current.addUser),
+          ),
+          const Spacer(),
+          IconButton(
+            onPressed: _selectedIds.isEmpty ? null : _deleteSelected,
+            icon: const Icon(Icons.delete),
+            color: Colors.red,
+            tooltip: S.current.deleteBatch,
+          ),
+        ],
+      ),
     );
   }
 
@@ -428,10 +448,12 @@ class _UserPageState extends ConsumerState<UserPage> {
   }
 
   Widget _buildDesktopSearchBar(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
+    return Padding(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           SizedBox(
             width: 200,
@@ -439,28 +461,26 @@ class _UserPageState extends ConsumerState<UserPage> {
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: S.current.username,
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: const Icon(Icons.search, size: 20),
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
               onSubmitted: (_) => _search(),
             ),
           ),
-          const SizedBox(width: 16),
           SizedBox(
             width: 180,
             child: TextField(
               controller: _mobileController,
               decoration: InputDecoration(
                 hintText: S.current.mobile,
-                prefixIcon: const Icon(Icons.phone),
+                prefixIcon: const Icon(Icons.phone, size: 20),
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
               onSubmitted: (_) => _search(),
             ),
           ),
-          const SizedBox(width: 16),
           // 创建时间范围选择
           InkWell(
             onTap: () async {
@@ -484,6 +504,7 @@ class _UserPageState extends ConsumerState<UserPage> {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.date_range, size: 18, color: Colors.grey),
                   const SizedBox(width: 8),
@@ -499,16 +520,14 @@ class _UserPageState extends ConsumerState<UserPage> {
               ),
             ),
           ),
-          const SizedBox(width: 16),
           ElevatedButton.icon(
             onPressed: _search,
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.search, size: 20),
             label: Text(S.current.search),
           ),
-          const SizedBox(width: 8),
           OutlinedButton.icon(
             onPressed: _reset,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, size: 20),
             label: Text(S.current.reset),
           ),
         ],
@@ -1550,19 +1569,37 @@ class _ActionButtons extends StatelessWidget {
           child: Text(S.current.edit),
         ),
         PopupMenuButton<String>(
-          tooltip: S.current.operation,
+          tooltip: S.current.more,
           itemBuilder: (context) => [
             PopupMenuItem(
               value: 'resetPassword',
-              child: Text(S.current.resetPassword),
+              child: Row(
+                children: [
+                  const Icon(Icons.lock_reset, size: 18),
+                  const SizedBox(width: 8),
+                  Text(S.current.resetPassword),
+                ],
+              ),
             ),
             PopupMenuItem(
               value: 'assignRole',
-              child: Text(S.current.assignRole),
+              child: Row(
+                children: [
+                  const Icon(Icons.admin_panel_settings, size: 18),
+                  const SizedBox(width: 8),
+                  Text(S.current.assignRole),
+                ],
+              ),
             ),
             PopupMenuItem(
               value: 'delete',
-              child: Text(S.current.delete, style: const TextStyle(color: Colors.red)),
+              child: Row(
+                children: [
+                  const Icon(Icons.delete, size: 18, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Text(S.current.delete, style: const TextStyle(color: Colors.red)),
+                ],
+              ),
             ),
           ],
           onSelected: (value) {

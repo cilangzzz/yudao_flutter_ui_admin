@@ -215,8 +215,9 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Wrap(
-        spacing: 16,
-        runSpacing: 12,
+        spacing: 12,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           SizedBox(
             width: 200,
@@ -262,14 +263,16 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
   Widget _buildToolbar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           ElevatedButton.icon(
             onPressed: () => _showAccountDialog(),
             icon: const Icon(Icons.add),
             label: const Text('新增'),
           ),
-          const SizedBox(width: 8),
           ElevatedButton.icon(
             onPressed: _selectedIds.isEmpty ? null : _deleteSelected,
             style: ElevatedButton.styleFrom(
@@ -379,17 +382,32 @@ class _MailAccountPageState extends ConsumerState<MailAccountPage> {
                     DataCell(_buildBoolTag(item.sslEnable)),
                     DataCell(_buildBoolTag(item.starttlsEnable)),
                     DataCell(Text(item.createTime ?? '-')),
-                    DataCell(Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
+                    DataCell(Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         TextButton(
                           onPressed: () => _showAccountDialog(item),
                           child: const Text('编辑'),
                         ),
-                        TextButton(
-                          onPressed: () => _deleteAccount(item),
-                          child: const Text('删除', style: TextStyle(color: Colors.red)),
+                        PopupMenuButton<String>(
+                          tooltip: '更多',
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete, size: 18, color: Colors.red),
+                                  SizedBox(width: 8),
+                                  Text('删除', style: TextStyle(color: Colors.red)),
+                                ],
+                              ),
+                            ),
+                          ],
+                          onSelected: (value) {
+                            if (value == 'delete') {
+                              _deleteAccount(item);
+                            }
+                          },
                         ),
                       ],
                     )),

@@ -220,15 +220,17 @@ class _DictTypePageState extends ConsumerState<DictTypePage> {
     return Scaffold(
       body: Column(
         children: [
+          // 搜索栏
           _buildSearchBar(context),
           const Divider(height: 1),
+
+          // 工具栏
+          _buildToolbar(context),
+          const Divider(height: 1),
+
+          // 数据表格
           Expanded(child: _buildDataTable(context)),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showDictTypeDialog(),
-        icon: const Icon(Icons.add),
-        label: Text(S.current.addType),
       ),
     );
   }
@@ -278,6 +280,24 @@ class _DictTypePageState extends ConsumerState<DictTypePage> {
             onPressed: _loadData,
             icon: const Icon(Icons.refresh),
             label: Text(S.current.refresh),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToolbar(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          ElevatedButton.icon(
+            onPressed: () => _showDictTypeDialog(),
+            icon: const Icon(Icons.add),
+            label: Text(S.current.addType),
           ),
         ],
       ),
@@ -393,17 +413,48 @@ class _DictTypeDataSource extends DataTableSource {
           dictType.createTime?.toString().substring(0, 19) ?? '-',
         )),
         DataCell(
-          Wrap(
-            spacing: 0,
-            runSpacing: 4,
+          Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               TextButton(
                 onPressed: () => onEdit?.call(dictType),
                 child: Text(S.current.edit),
               ),
-              TextButton(
-                onPressed: () => onDelete?.call(dictType),
-                child: Text(S.current.delete, style: TextStyle(color: Colors.red)),
+              PopupMenuButton<String>(
+                tooltip: S.current.more,
+                itemBuilder: (context) => [
+                  if (onSelect != null)
+                    PopupMenuItem(
+                      value: 'select',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.list_alt, size: 18),
+                          const SizedBox(width: 8),
+                          Text(S.current.viewDictData),
+                        ],
+                      ),
+                    ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.delete, size: 18, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Text(S.current.delete, style: const TextStyle(color: Colors.red)),
+                      ],
+                    ),
+                  ),
+                ],
+                onSelected: (value) {
+                  switch (value) {
+                    case 'select':
+                      onSelect?.call(dictType.type);
+                      break;
+                    case 'delete':
+                      onDelete?.call(dictType);
+                      break;
+                  }
+                },
               ),
             ],
           ),

@@ -558,6 +558,53 @@ class _NoticeDataSource extends DataTableSource {
   @override
   int get rowCount => notices.length;
 
+  Widget _buildActionButtons(Notice notice) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextButton(
+          onPressed: () => onEdit(notice),
+          child: Text(S.current.strings.edit),
+        ),
+        PopupMenuButton<String>(
+          tooltip: S.current.more,
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'push',
+              child: Row(
+                children: [
+                  const Icon(Icons.send, size: 18),
+                  const SizedBox(width: 8),
+                  Text(S.current.strings.push),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  const Icon(Icons.delete, size: 18, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Text(S.current.strings.delete, style: const TextStyle(color: Colors.red)),
+                ],
+              ),
+            ),
+          ],
+          onSelected: (value) {
+            switch (value) {
+              case 'push':
+                onPush(notice);
+                break;
+              case 'delete':
+                onDelete(notice);
+                break;
+            }
+          },
+        ),
+      ],
+    );
+  }
+
   @override
   DataRow getRow(int index) {
     final notice = notices[index];
@@ -601,26 +648,7 @@ class _NoticeDataSource extends DataTableSource {
         ),
         DataCell(Text(notice.creator ?? '-')),
         DataCell(Text(notice.createTime ?? '-')),
-        DataCell(
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: [
-              TextButton(
-                onPressed: () => onEdit(notice),
-                child: Text(S.current.strings.edit),
-              ),
-              TextButton(
-                onPressed: () => onPush(notice),
-                child: Text(S.current.strings.push),
-              ),
-              TextButton(
-                onPressed: () => onDelete(notice),
-                child: Text(S.current.strings.delete, style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
-        ),
+        DataCell(_buildActionButtons(notice)),
       ],
     );
   }

@@ -239,26 +239,27 @@ class _AreaPageState extends ConsumerState<AreaPage> {
   Widget _buildToolbar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           ElevatedButton.icon(
             onPressed: _showIpQueryDialog,
             icon: const Icon(Icons.search),
             label: Text(S.current.ipQuery),
           ),
-          const SizedBox(width: 8),
           ElevatedButton.icon(
             onPressed: _loadAreaTree,
             icon: const Icon(Icons.refresh),
             label: Text(S.current.refresh),
           ),
-          const SizedBox(width: 8),
           OutlinedButton.icon(
             onPressed: _toggleAll,
             icon: Icon(_isExpanded ? Icons.unfold_less : Icons.unfold_more),
             label: Text(_isExpanded ? S.current.collapseAll : S.current.expandAll),
           ),
-          const Spacer(),
+          const SizedBox(width: 16),
           Text(
             '${S.current.total}: ${_countAllAreas(_areaTree)}',
             style: TextStyle(color: Colors.grey[600]),

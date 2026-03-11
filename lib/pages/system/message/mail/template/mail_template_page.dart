@@ -265,8 +265,9 @@ class _MailTemplatePageState extends ConsumerState<MailTemplatePage> {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Wrap(
-        spacing: 16,
-        runSpacing: 12,
+        spacing: 12,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           SizedBox(
             width: 150,
@@ -354,14 +355,16 @@ class _MailTemplatePageState extends ConsumerState<MailTemplatePage> {
   Widget _buildToolbar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           ElevatedButton.icon(
             onPressed: () => _showTemplateDialog(),
             icon: const Icon(Icons.add),
             label: const Text('新增'),
           ),
-          const SizedBox(width: 8),
           ElevatedButton.icon(
             onPressed: _selectedIds.isEmpty ? null : _deleteSelected,
             style: ElevatedButton.styleFrom(
@@ -471,21 +474,47 @@ class _MailTemplatePageState extends ConsumerState<MailTemplatePage> {
                     DataCell(Text(item.nickname ?? '-')),
                     DataCell(_buildStatusTag(item.status)),
                     DataCell(Text(item.createTime ?? '-')),
-                    DataCell(Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
+                    DataCell(Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         TextButton(
                           onPressed: () => _showTemplateDialog(item),
                           child: const Text('编辑'),
                         ),
-                        TextButton(
-                          onPressed: () => _showSendMailDialog(item),
-                          child: const Text('测试'),
-                        ),
-                        TextButton(
-                          onPressed: () => _deleteTemplate(item),
-                          child: const Text('删除', style: TextStyle(color: Colors.red)),
+                        PopupMenuButton<String>(
+                          tooltip: '更多',
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'test',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.send, size: 18),
+                                  SizedBox(width: 8),
+                                  Text('测试'),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete, size: 18, color: Colors.red),
+                                  SizedBox(width: 8),
+                                  Text('删除', style: TextStyle(color: Colors.red)),
+                                ],
+                              ),
+                            ),
+                          ],
+                          onSelected: (value) {
+                            switch (value) {
+                              case 'test':
+                                _showSendMailDialog(item);
+                                break;
+                              case 'delete':
+                                _deleteTemplate(item);
+                                break;
+                            }
+                          },
                         ),
                       ],
                     )),

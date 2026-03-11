@@ -651,7 +651,10 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
   Widget _buildToolbar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           ElevatedButton.icon(
             onPressed: _selectedIds.isEmpty ? null : _deleteSelected,
@@ -785,13 +788,40 @@ class _SmsTemplatePageState extends ConsumerState<SmsTemplatePage> {
                             onPressed: () => _showTemplateDialog(template),
                             child: const Text('编辑'),
                           ),
-                          TextButton(
-                            onPressed: () => _showSendSmsDialog(template),
-                            child: const Text('测试', style: TextStyle(color: Colors.blue)),
-                          ),
-                          TextButton(
-                            onPressed: () => _deleteTemplate(template),
-                            child: const Text('删除', style: TextStyle(color: Colors.red)),
+                          PopupMenuButton<String>(
+                            tooltip: '更多',
+                            itemBuilder: (context) => [
+                              const PopupMenuItem(
+                                value: 'test',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.send, size: 18, color: Colors.blue),
+                                    SizedBox(width: 8),
+                                    Text('测试', style: TextStyle(color: Colors.blue)),
+                                  ],
+                                ),
+                              ),
+                              const PopupMenuItem(
+                                value: 'delete',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.delete, size: 18, color: Colors.red),
+                                    SizedBox(width: 8),
+                                    Text('删除', style: TextStyle(color: Colors.red)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            onSelected: (value) {
+                              switch (value) {
+                                case 'test':
+                                  _showSendSmsDialog(template);
+                                  break;
+                                case 'delete':
+                                  _deleteTemplate(template);
+                                  break;
+                              }
+                            },
                           ),
                         ],
                       ),

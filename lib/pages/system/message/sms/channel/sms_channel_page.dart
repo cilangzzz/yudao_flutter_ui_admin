@@ -371,7 +371,10 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
   Widget _buildSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           SizedBox(
             width: 200,
@@ -379,14 +382,13 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
               controller: _searchController,
               decoration: const InputDecoration(
                 hintText: '短信签名',
-                prefixIcon: Icon(Icons.search),
+                prefixIcon: Icon(Icons.search, size: 20),
                 border: OutlineInputBorder(),
                 isDense: true,
               ),
               onSubmitted: (_) => _search(),
             ),
           ),
-          const SizedBox(width: 16),
           SizedBox(
             width: 150,
             child: DropdownButtonFormField<String>(
@@ -409,7 +411,6 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
               },
             ),
           ),
-          const SizedBox(width: 16),
           SizedBox(
             width: 120,
             child: DropdownButtonFormField<int>(
@@ -430,16 +431,14 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
               },
             ),
           ),
-          const SizedBox(width: 16),
           ElevatedButton.icon(
             onPressed: _search,
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.search, size: 20),
             label: const Text('搜索'),
           ),
-          const SizedBox(width: 8),
           OutlinedButton.icon(
             onPressed: _reset,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, size: 20),
             label: const Text('重置'),
           ),
         ],
@@ -450,7 +449,10 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
   Widget _buildToolbar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           ElevatedButton.icon(
             onPressed: _selectedIds.isEmpty ? null : _deleteSelected,
@@ -571,9 +573,25 @@ class _SmsChannelPageState extends ConsumerState<SmsChannelPage> {
                             onPressed: () => _showChannelDialog(channel),
                             child: const Text('编辑'),
                           ),
-                          TextButton(
-                            onPressed: () => _deleteChannel(channel),
-                            child: const Text('删除', style: TextStyle(color: Colors.red)),
+                          PopupMenuButton<String>(
+                            tooltip: '更多',
+                            itemBuilder: (context) => [
+                              const PopupMenuItem(
+                                value: 'delete',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.delete, size: 18, color: Colors.red),
+                                    SizedBox(width: 8),
+                                    Text('删除', style: TextStyle(color: Colors.red)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            onSelected: (value) {
+                              if (value == 'delete') {
+                                _deleteChannel(channel);
+                              }
+                            },
                           ),
                         ],
                       ),

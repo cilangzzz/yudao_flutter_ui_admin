@@ -661,7 +661,10 @@ class _TenantPageState extends ConsumerState<TenantPage> {
   Widget _buildToolbar(S s) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           // 新增按钮
           ElevatedButton.icon(
@@ -669,25 +672,15 @@ class _TenantPageState extends ConsumerState<TenantPage> {
             icon: const Icon(Icons.add, size: 20),
             label: const Text('新增租户'),
           ),
-          const SizedBox(width: 12),
-
           // 批量删除按钮
-          OutlinedButton.icon(
+          ElevatedButton.icon(
             onPressed: _selectedIds.isEmpty ? null : _deleteTenantBatch,
-            icon: const Icon(Icons.delete_outline, size: 20),
-            label: Text('批量删除 (${_selectedIds.length})'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: _selectedIds.isEmpty ? null : Colors.red,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _selectedIds.isEmpty ? null : Colors.red,
+              foregroundColor: _selectedIds.isEmpty ? null : Colors.white,
             ),
-          ),
-
-          const Spacer(),
-
-          // 刷新按钮
-          IconButton(
-            onPressed: _loadData,
-            icon: const Icon(Icons.refresh),
-            tooltip: '刷新',
+            icon: const Icon(Icons.delete, size: 20),
+            label: Text('批量删除 (${_selectedIds.length})'),
           ),
         ],
       ),

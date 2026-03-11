@@ -338,6 +338,7 @@
   "editDictType": "编辑字典类型",
   "addType": "新增类型",
   "confirmDeleteDictType": "确定要删除该字典类型吗？",
+  "viewDictData": "查看字典数据",
   "searchDictNameOrType": "搜索字典名称或类型",
   "dictTypeList": "字典类型列表",
   "dataLabel": "数据标签",

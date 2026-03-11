@@ -136,8 +136,9 @@ class _MailLogPageState extends ConsumerState<MailLogPage> {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Wrap(
-        spacing: 16,
-        runSpacing: 12,
+        spacing: 12,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           SizedBox(
             width: 150,

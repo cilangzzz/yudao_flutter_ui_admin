@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:data_table_2/data_table_2.dart';
 import '../../../api/system/post_api.dart';
 import '../../../models/system/post.dart';
-import '../../../models/common/page_result.dart';
 import '../../../models/common/api_response.dart';
 import '../../../i18n/i18n.dart';
 
@@ -101,18 +101,15 @@ class _PostPageState extends ConsumerState<PostPage> {
           _buildSearchBar(context),
           const Divider(height: 1),
 
+          // 工具栏
+          _buildToolbar(context),
+          const Divider(height: 1),
+
           // 数据表格
           Expanded(
             child: _buildDataTable(context),
           ),
         ],
-      ),
-
-      // 添加岗位按钮
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showPostDialog(context),
-        icon: const Icon(Icons.add),
-        label: Text(S.current.addPost),
       ),
     );
   }
@@ -132,7 +129,7 @@ class _PostPageState extends ConsumerState<PostPage> {
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: S.current.postName,
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: const Icon(Icons.search, size: 20),
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
@@ -146,7 +143,7 @@ class _PostPageState extends ConsumerState<PostPage> {
               controller: _codeSearchController,
               decoration: InputDecoration(
                 hintText: S.current.postCode,
-                prefixIcon: const Icon(Icons.code),
+                prefixIcon: const Icon(Icons.code, size: 20),
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
@@ -159,7 +156,7 @@ class _PostPageState extends ConsumerState<PostPage> {
             child: DropdownButtonFormField<int?>(
               value: _selectedStatus,
               decoration: InputDecoration(
-                labelText: S.current.status,
+                hintText: S.current.status,
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
@@ -178,14 +175,32 @@ class _PostPageState extends ConsumerState<PostPage> {
           // 搜索按钮
           ElevatedButton.icon(
             onPressed: _search,
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.search, size: 20),
             label: Text(S.current.search),
           ),
           // 重置按钮
           OutlinedButton.icon(
             onPressed: _reset,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, size: 20),
             label: Text(S.current.reset),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToolbar(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          ElevatedButton.icon(
+            onPressed: () => _showPostDialog(context),
+            icon: const Icon(Icons.add),
+            label: Text(S.current.addPost),
           ),
         ],
       ),
@@ -217,39 +232,191 @@ class _PostPageState extends ConsumerState<PostPage> {
       return Center(child: Text(S.current.noData));
     }
 
-    return SingleChildScrollView(
+    return Padding(
       padding: const EdgeInsets.all(16),
-      child: PaginatedDataTable(
-        header: Text(S.current.postList),
-        rowsPerPage: _pageSize,
-        availableRowsPerPage: const [10, 20, 50, 100],
-        onPageChanged: (page) {
-          setState(() {
-            _currentPage = page ~/ _pageSize + 1;
-          });
-          _loadPostList();
-        },
-        onRowsPerPageChanged: (value) {
-          if (value != null) {
-            setState(() {
-              _pageSize = value;
-              _currentPage = 1;
-            });
-            _loadPostList();
-          }
-        },
-        columns: [
-          DataColumn(label: Text(S.current.postId)),
-          DataColumn(label: Text(S.current.postName)),
-          DataColumn(label: Text(S.current.postCode)),
-          DataColumn(label: Text(S.current.postSort)),
-          DataColumn(label: Text(S.current.status)),
-          DataColumn(label: Text(S.current.remark)),
-          DataColumn(label: Text(S.current.createTime)),
-          DataColumn(label: Text(S.current.operation)),
+      child: Column(
+        children: [
+          // 表头工具栏
+          Row(
+            children: [
+              Text(S.current.postList),
+              const Spacer(),
+              Text('${S.current.total}: $_totalCount'),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // 表格
+          Expanded(
+            child: DataTable2(
+              columnSpacing: 12,
+              horizontalMargin: 12,
+              minWidth: 800,
+              smRatio: 0.75,
+              lmRatio: 1.5,
+              headingRowColor: WidgetStateProperty.resolveWith(
+                (states) => Theme.of(context).colorScheme.surfaceContainerHighest,
+              ),
+              headingTextStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              columns: [
+                DataColumn2(
+                  label: Text(S.current.postId),
+                  size: ColumnSize.S,
+                ),
+                DataColumn2(
+                  label: Text(S.current.postName),
+                  size: ColumnSize.M,
+                ),
+                DataColumn2(
+                  label: Text(S.current.postCode),
+                  size: ColumnSize.M,
+                ),
+                DataColumn2(
+                  label: Text(S.current.postSort),
+                  size: ColumnSize.S,
+                ),
+                DataColumn2(
+                  label: Text(S.current.status),
+                  size: ColumnSize.S,
+                ),
+                DataColumn2(
+                  label: Text(S.current.remark),
+                  size: ColumnSize.L,
+                ),
+                DataColumn2(
+                  label: Text(S.current.createTime),
+                  size: ColumnSize.L,
+                ),
+                DataColumn2(
+                  label: Text(S.current.operation),
+                  size: ColumnSize.L,
+                  numeric: true,
+                ),
+              ],
+              rows: _postList.map((post) {
+                return DataRow2(
+                  cells: [
+                    DataCell(Text(post.id?.toString() ?? '-')),
+                    DataCell(Text(post.name)),
+                    DataCell(Text(post.code)),
+                    DataCell(Text(post.sort.toString())),
+                    DataCell(
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: post.status == 0
+                              ? Colors.green.withValues(alpha: 0.1)
+                              : Colors.red.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          post.status == 0 ? S.current.enabled : S.current.disabled,
+                          style: TextStyle(
+                            color: post.status == 0 ? Colors.green : Colors.red,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+                    DataCell(Text(post.remark ?? '-')),
+                    DataCell(Text(post.createTime ?? '-')),
+                    DataCell(_buildActionButtons(post)),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+          // 分页控件
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Row(
+                children: [
+                  Text('${S.current.pageSize}: '),
+                  DropdownButton<int>(
+                    value: _pageSize,
+                    items: [10, 20, 50, 100].map((value) {
+                      return DropdownMenuItem(
+                        value: value,
+                        child: Text('$value'),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _pageSize = value;
+                          _currentPage = 1;
+                        });
+                        _loadPostList();
+                      }
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(width: 24),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left),
+                    onPressed: _currentPage > 1
+                        ? () {
+                            setState(() => _currentPage--);
+                            _loadPostList();
+                          }
+                        : null,
+                  ),
+                  Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right),
+                    onPressed: _currentPage * _pageSize < _totalCount
+                        ? () {
+                            setState(() => _currentPage++);
+                            _loadPostList();
+                          }
+                        : null,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ],
-        source: _PostDataSource(_postList, context, _editPost, _deletePost),
       ),
+    );
+  }
+
+  Widget _buildActionButtons(Post post) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextButton(
+          onPressed: () => _editPost(post),
+          child: Text(S.current.edit),
+        ),
+        PopupMenuButton<String>(
+          tooltip: S.current.more,
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  const Icon(Icons.delete, size: 18, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Text(S.current.delete, style: const TextStyle(color: Colors.red)),
+                ],
+              ),
+            ),
+          ],
+          onSelected: (value) {
+            switch (value) {
+              case 'delete':
+                _deletePost(post);
+                break;
+            }
+          },
+        ),
+      ],
     );
   }
 
@@ -443,72 +610,4 @@ class _PostPageState extends ConsumerState<PostPage> {
       }
     }
   }
-}
-
-/// 数据源
-class _PostDataSource extends DataTableSource {
-  final List<Post> posts;
-  final BuildContext context;
-  final void Function(Post) onEdit;
-  final Future<void> Function(Post) onDelete;
-
-  _PostDataSource(this.posts, this.context, this.onEdit, this.onDelete);
-
-  @override
-  int get rowCount => posts.length;
-
-  @override
-  DataRow getRow(int index) {
-    final post = posts[index];
-    return DataRow(
-      cells: [
-        DataCell(Text(post.id?.toString() ?? '-')),
-        DataCell(Text(post.name)),
-        DataCell(Text(post.code)),
-        DataCell(Text(post.sort.toString())),
-        DataCell(
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: post.status == 0
-                  ? Colors.green.withOpacity(0.1)
-                  : Colors.red.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              post.status == 0 ? S.current.enabled : S.current.disabled,
-              style: TextStyle(
-                color: post.status == 0 ? Colors.green : Colors.red,
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ),
-        DataCell(Text(post.remark ?? '-')),
-        DataCell(Text(post.createTime ?? '-')),
-        DataCell(
-          Wrap(
-            spacing: 4,
-            runSpacing: 4,
-            children: [
-              TextButton(
-                onPressed: () => onEdit(post),
-                child: Text(S.current.edit),
-              ),
-              TextButton(
-                onPressed: () => onDelete(post),
-                child: Text(S.current.delete, style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  @override
-  bool get isRowCountApproximate => false;
-
-  @override
-  int get selectedRowCount => 0;
 }

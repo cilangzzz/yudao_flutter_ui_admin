@@ -251,9 +251,31 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
           _buildSearchBar(context),
           const Divider(height: 1),
 
+          // 工具栏
+          _buildToolbar(context),
+          const Divider(height: 1),
+
           // 数据表格
           Expanded(
             child: _buildDataTable(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToolbar(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          ElevatedButton.icon(
+            onPressed: _exportLogs,
+            icon: const Icon(Icons.download, size: 20),
+            label: Text(S.current.export),
           ),
         ],
       ),
@@ -264,8 +286,9 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Wrap(
-        spacing: 16,
-        runSpacing: 16,
+        spacing: 12,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           // 操作人搜索
           SizedBox(
@@ -274,7 +297,7 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
               controller: _userNameController,
               decoration: InputDecoration(
                 hintText: S.current.operateLog_userName,
-                prefixIcon: const Icon(Icons.person),
+                prefixIcon: const Icon(Icons.person, size: 20),
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
@@ -289,7 +312,7 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
               controller: _typeController,
               decoration: InputDecoration(
                 hintText: S.current.operateLog_module,
-                prefixIcon: const Icon(Icons.folder),
+                prefixIcon: const Icon(Icons.folder, size: 20),
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
@@ -304,7 +327,7 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
               controller: _subTypeController,
               decoration: InputDecoration(
                 hintText: S.current.operateLog_actionName,
-                prefixIcon: const Icon(Icons.label),
+                prefixIcon: const Icon(Icons.label, size: 20),
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
@@ -319,7 +342,7 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
               controller: _actionController,
               decoration: InputDecoration(
                 hintText: S.current.operateLog_actionContent,
-                prefixIcon: const Icon(Icons.description),
+                prefixIcon: const Icon(Icons.description, size: 20),
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
@@ -334,7 +357,7 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
               controller: _bizIdController,
               decoration: InputDecoration(
                 hintText: S.current.operateLog_bizId,
-                prefixIcon: const Icon(Icons.tag),
+                prefixIcon: const Icon(Icons.tag, size: 20),
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
@@ -362,7 +385,7 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
               child: InputDecorator(
                 decoration: InputDecoration(
                   hintText: S.current.operateLog_operateTime,
-                  prefixIcon: const Icon(Icons.date_range),
+                  prefixIcon: const Icon(Icons.date_range, size: 20),
                   border: const OutlineInputBorder(),
                   isDense: true,
                 ),
@@ -381,22 +404,15 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
           // 搜索按钮
           ElevatedButton.icon(
             onPressed: _search,
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.search, size: 20),
             label: Text(S.current.search),
           ),
 
           // 重置按钮
           OutlinedButton.icon(
             onPressed: _reset,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, size: 20),
             label: Text(S.current.reset),
-          ),
-
-          // 导出按钮
-          ElevatedButton.icon(
-            onPressed: _exportLogs,
-            icon: const Icon(Icons.download),
-            label: Text(S.current.export),
           ),
         ],
       ),
@@ -487,7 +503,8 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
                 ),
                 DataColumn2(
                   label: Text(S.current.operation),
-                  size: ColumnSize.S,
+                  size: ColumnSize.M,
+                  numeric: true,
                 ),
               ],
               rows: _logs.map((log) {
@@ -513,10 +530,9 @@ class _OperateLogPageState extends ConsumerState<OperateLogPage> {
                     DataCell(Text(log.bizId?.toString() ?? '-')),
                     DataCell(Text(log.userIp ?? '-')),
                     DataCell(
-                      IconButton(
-                        icon: const Icon(Icons.visibility, size: 20),
-                        tooltip: S.current.detail,
+                      TextButton(
                         onPressed: () => _showDetail(log),
+                        child: Text(S.current.detail),
                       ),
                     ),
                   ],

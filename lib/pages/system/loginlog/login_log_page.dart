@@ -221,6 +221,10 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
           _buildSearchBar(context),
           const Divider(height: 1),
 
+          // 工具栏
+          _buildToolbar(context),
+          const Divider(height: 1),
+
           // 数据表格
           Expanded(
             child: _buildDataTable(context),
@@ -230,10 +234,31 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
     );
   }
 
+  Widget _buildToolbar(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          ElevatedButton.icon(
+            onPressed: _exportLogs,
+            icon: const Icon(Icons.download, size: 20),
+            label: Text(S.current.export),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           // 用户名称搜索
           SizedBox(
@@ -242,14 +267,13 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
               controller: _usernameController,
               decoration: InputDecoration(
                 hintText: S.current.loginLog_username,
-                prefixIcon: const Icon(Icons.person),
+                prefixIcon: const Icon(Icons.person, size: 20),
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
               onSubmitted: (_) => _search(),
             ),
           ),
-          const SizedBox(width: 16),
 
           // 登录地址搜索
           SizedBox(
@@ -258,14 +282,13 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
               controller: _userIpController,
               decoration: InputDecoration(
                 hintText: S.current.loginLog_loginAddress,
-                prefixIcon: const Icon(Icons.location_on),
+                prefixIcon: const Icon(Icons.location_on, size: 20),
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
               onSubmitted: (_) => _search(),
             ),
           ),
-          const SizedBox(width: 16),
 
           // 时间范围选择
           SizedBox(
@@ -287,7 +310,7 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
               child: InputDecorator(
                 decoration: InputDecoration(
                   hintText: S.current.loginLog_loginTime,
-                  prefixIcon: const Icon(Icons.date_range),
+                  prefixIcon: const Icon(Icons.date_range, size: 20),
                   border: const OutlineInputBorder(),
                   isDense: true,
                 ),
@@ -302,29 +325,19 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
               ),
             ),
           ),
-          const SizedBox(width: 16),
 
           // 搜索按钮
           ElevatedButton.icon(
             onPressed: _search,
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.search, size: 20),
             label: Text(S.current.search),
           ),
-          const SizedBox(width: 8),
 
           // 重置按钮
           OutlinedButton.icon(
             onPressed: _reset,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, size: 20),
             label: Text(S.current.reset),
-          ),
-          const SizedBox(width: 8),
-
-          // 导出按钮
-          ElevatedButton.icon(
-            onPressed: _exportLogs,
-            icon: const Icon(Icons.download),
-            label: Text(S.current.export),
           ),
         ],
       ),
@@ -411,7 +424,8 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
                 ),
                 DataColumn2(
                   label: Text(S.current.operation),
-                  size: ColumnSize.S,
+                  size: ColumnSize.M,
+                  numeric: true,
                 ),
               ],
               rows: _logs.map((log) {
@@ -436,10 +450,9 @@ class _LoginLogPageState extends ConsumerState<LoginLogPage> {
                     DataCell(_buildResultCell(log.result)),
                     DataCell(Text(log.createTime ?? '-')),
                     DataCell(
-                      IconButton(
-                        icon: const Icon(Icons.visibility, size: 20),
-                        tooltip: S.current.detail,
+                      TextButton(
                         onPressed: () => _showDetail(log),
+                        child: Text(S.current.detail),
                       ),
                     ),
                   ],

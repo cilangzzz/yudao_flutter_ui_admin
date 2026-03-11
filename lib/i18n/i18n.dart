@@ -595,6 +595,7 @@ abstract class S {
   String get editDictType;
   String get addType;
   String get confirmDeleteDictType;
+  String get viewDictData;
   String get searchDictNameOrType;
   String get dictTypeList;
   String get dataLabel;
@@ -1854,6 +1855,8 @@ class _AppLocalizations extends S {
   String get addType => _get('addType', 'Add Type');
   @override
   String get confirmDeleteDictType => _get('confirmDeleteDictType', 'Are you sure to delete this dict type?');
+  @override
+  String get viewDictData => _get('viewDictData', 'View Dict Data');
   @override
   String get searchDictNameOrType => _get('searchDictNameOrType', 'Search dict name or type');
   @override

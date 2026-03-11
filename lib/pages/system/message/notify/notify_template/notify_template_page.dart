@@ -814,14 +814,16 @@ class _NotifyTemplatePageState extends ConsumerState<NotifyTemplatePage> {
   Widget _buildToolbar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           ElevatedButton.icon(
             onPressed: () => _showTemplateDialog(),
             icon: const Icon(Icons.add),
             label: const Text('新增'),
           ),
-          const SizedBox(width: 8),
           ElevatedButton.icon(
             onPressed: _selectedIds.isEmpty ? null : _deleteSelected,
             style: ElevatedButton.styleFrom(
@@ -833,6 +835,53 @@ class _NotifyTemplatePageState extends ConsumerState<NotifyTemplatePage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildActionButtons(NotifyTemplate template) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextButton(
+          onPressed: () => _showTemplateDialog(template),
+          child: Text(S.current.edit),
+        ),
+        PopupMenuButton<String>(
+          tooltip: S.current.more,
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'test',
+              child: Row(
+                children: [
+                  const Icon(Icons.send, size: 18, color: Colors.blue),
+                  const SizedBox(width: 8),
+                  const Text('测试', style: TextStyle(color: Colors.blue)),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  const Icon(Icons.delete, size: 18, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Text(S.current.delete, style: const TextStyle(color: Colors.red)),
+                ],
+              ),
+            ),
+          ],
+          onSelected: (value) {
+            switch (value) {
+              case 'test':
+                _showSendTestDialog(template);
+                break;
+              case 'delete':
+                _deleteTemplate(template);
+                break;
+            }
+          },
+        ),
+      ],
     );
   }
 
@@ -1007,24 +1056,7 @@ class _NotifyTemplatePageState extends ConsumerState<NotifyTemplatePage> {
                     )),
                     DataCell(Text(template.remark ?? '-')),
                     DataCell(Text('-')),
-                    DataCell(Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
-                      children: [
-                        TextButton(
-                          onPressed: () => _showTemplateDialog(template),
-                          child: Text(S.current.edit),
-                        ),
-                        TextButton(
-                          onPressed: () => _showSendTestDialog(template),
-                          child: const Text('测试', style: TextStyle(color: Colors.blue)),
-                        ),
-                        TextButton(
-                          onPressed: () => _deleteTemplate(template),
-                          child: Text(S.current.delete, style: const TextStyle(color: Colors.red)),
-                        ),
-                      ],
-                    )),
+                    DataCell(_buildActionButtons(template)),
                   ],
                 );
               }).toList(),

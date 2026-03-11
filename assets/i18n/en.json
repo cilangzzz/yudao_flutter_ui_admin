@@ -338,6 +338,7 @@
   "editDictType": "Edit Dict Type",
   "addType": "Add Type",
   "confirmDeleteDictType": "Are you sure to delete this dict type?",
+  "viewDictData": "View Dict Data",
   "searchDictNameOrType": "Search dict name or type",
   "dictTypeList": "Dict Type List",
   "dataLabel": "Data Label",

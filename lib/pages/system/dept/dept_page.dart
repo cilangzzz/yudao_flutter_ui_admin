@@ -458,11 +458,61 @@ class _DeptPageState extends ConsumerState<DeptPage> {
     }
   }
 
+  Widget _buildActionButtons(Dept dept) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextButton(
+          onPressed: () => _showDeptDialog(dept),
+          child: Text(S.current.edit),
+        ),
+        PopupMenuButton<String>(
+          tooltip: S.current.more,
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'addChild',
+              child: Row(
+                children: [
+                  const Icon(Icons.add, size: 18),
+                  const SizedBox(width: 8),
+                  Text(S.current.addChild),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  const Icon(Icons.delete, size: 18, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Text(S.current.delete, style: const TextStyle(color: Colors.red)),
+                ],
+              ),
+            ),
+          ],
+          onSelected: (value) {
+            switch (value) {
+              case 'addChild':
+                _showDeptDialog(null, dept.id);
+                break;
+              case 'delete':
+                _deleteDept(dept);
+                break;
+            }
+          },
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
         children: [
+          // 搜索栏
+          _buildSearchBar(context),
+          const Divider(height: 1),
           // 工具栏
           _buildToolbar(context),
           const Divider(height: 1),
@@ -470,30 +520,24 @@ class _DeptPageState extends ConsumerState<DeptPage> {
           Expanded(child: _buildDataTable(context)),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showDeptDialog(),
-        icon: const Icon(Icons.add),
-        label: Text(S.current.addDept),
-      ),
     );
   }
 
-  Widget _buildToolbar(BuildContext context) {
+  Widget _buildSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Wrap(
-        spacing: 8,
+        spacing: 12,
         runSpacing: 8,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          // 搜索框
           SizedBox(
-            width: 200,
+            width: 220,
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: S.current.searchDeptName,
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: const Icon(Icons.search, size: 20),
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
@@ -502,12 +546,38 @@ class _DeptPageState extends ConsumerState<DeptPage> {
           ),
           ElevatedButton.icon(
             onPressed: _loadDeptList,
-            icon: const Icon(Icons.refresh),
-            label: Text(S.current.refresh),
+            icon: const Icon(Icons.search, size: 20),
+            label: Text(S.current.search),
+          ),
+          OutlinedButton.icon(
+            onPressed: () {
+              _searchController.clear();
+              _loadDeptList();
+            },
+            icon: const Icon(Icons.refresh, size: 20),
+            label: Text(S.current.reset),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToolbar(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          ElevatedButton.icon(
+            onPressed: () => _showDeptDialog(),
+            icon: const Icon(Icons.add, size: 20),
+            label: Text(S.current.addDept),
           ),
           OutlinedButton.icon(
             onPressed: _toggleAll,
-            icon: Icon(_isExpanded ? Icons.unfold_less : Icons.unfold_more),
+            icon: Icon(_isExpanded ? Icons.unfold_less : Icons.unfold_more, size: 20),
             label: Text(_isExpanded ? S.current.collapseAll : S.current.expandAll),
           ),
           ElevatedButton.icon(
@@ -516,7 +586,7 @@ class _DeptPageState extends ConsumerState<DeptPage> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            icon: const Icon(Icons.delete),
+            icon: const Icon(Icons.delete, size: 20),
             label: Text(S.current.deleteBatch),
           ),
         ],
@@ -691,27 +761,7 @@ class _DeptPageState extends ConsumerState<DeptPage> {
                       ),
                     ),
                     DataCell(Text(dept.createTime?.toString().substring(0, 19) ?? '-')),
-                    DataCell(
-                      Wrap(
-                        spacing: 0,
-                        runSpacing: 4,
-                        children: [
-                          TextButton(
-                            onPressed: () => _showDeptDialog(null, dept.id),
-                            child: Text(S.current.addChild),
-                          ),
-                          TextButton(
-                            onPressed: () => _showDeptDialog(dept),
-                            child: Text(S.current.edit),
-                          ),
-                          TextButton(
-                            onPressed: () => _deleteDept(dept),
-                            style: TextButton.styleFrom(foregroundColor: Colors.red),
-                            child: Text(S.current.delete),
-                          ),
-                        ],
-                      ),
-                    ),
+                    DataCell(_buildActionButtons(dept)),
                   ],
                 );
               }).toList(),

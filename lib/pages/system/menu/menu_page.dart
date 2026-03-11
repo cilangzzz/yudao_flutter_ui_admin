@@ -619,11 +619,61 @@ class _MenuPageState extends ConsumerState<MenuPage> {
     }
   }
 
+  Widget _buildActionButtons(Menu menu) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextButton(
+          onPressed: () => _showMenuDialog(menu),
+          child: Text(S.current.edit),
+        ),
+        PopupMenuButton<String>(
+          tooltip: S.current.more,
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'add_child',
+              child: Row(
+                children: [
+                  const Icon(Icons.add, size: 18),
+                  const SizedBox(width: 8),
+                  Text(S.current.addChild),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  const Icon(Icons.delete, size: 18, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Text(S.current.delete, style: const TextStyle(color: Colors.red)),
+                ],
+              ),
+            ),
+          ],
+          onSelected: (value) {
+            switch (value) {
+              case 'add_child':
+                _showMenuDialog(null, menu.id);
+                break;
+              case 'delete':
+                _deleteMenu(menu);
+                break;
+            }
+          },
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
         children: [
+          // 搜索栏
+          _buildSearchBar(context),
+          const Divider(height: 1),
           // 工具栏
           _buildToolbar(context),
           const Divider(height: 1),
@@ -631,30 +681,25 @@ class _MenuPageState extends ConsumerState<MenuPage> {
           Expanded(child: _buildDataTable(context)),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showMenuDialog(),
-        icon: const Icon(Icons.add),
-        label: Text(S.current.addMenu),
-      ),
     );
   }
 
-  Widget _buildToolbar(BuildContext context) {
+  Widget _buildSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Wrap(
-        spacing: 8,
+        spacing: 12,
         runSpacing: 8,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           // 搜索框
           SizedBox(
-            width: 200,
+            width: 220,
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: S.current.searchMenuName,
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: const Icon(Icons.search, size: 20),
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
@@ -663,8 +708,34 @@ class _MenuPageState extends ConsumerState<MenuPage> {
           ),
           ElevatedButton.icon(
             onPressed: _loadMenuList,
-            icon: const Icon(Icons.refresh),
-            label: Text(S.current.refresh),
+            icon: const Icon(Icons.search, size: 20),
+            label: Text(S.current.search),
+          ),
+          OutlinedButton.icon(
+            onPressed: () {
+              _searchController.clear();
+              _loadMenuList();
+            },
+            icon: const Icon(Icons.refresh, size: 20),
+            label: Text(S.current.reset),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToolbar(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          ElevatedButton.icon(
+            onPressed: () => _showMenuDialog(),
+            icon: const Icon(Icons.add),
+            label: Text(S.current.addMenu),
           ),
           OutlinedButton.icon(
             onPressed: _toggleAll,
@@ -844,27 +915,7 @@ class _MenuPageState extends ConsumerState<MenuPage> {
                         ),
                       ),
                     ),
-                    DataCell(
-                      Wrap(
-                        spacing: 0,
-                        runSpacing: 4,
-                        children: [
-                          TextButton(
-                            onPressed: () => _showMenuDialog(null, menu.id),
-                            child: Text(S.current.addChild),
-                          ),
-                          TextButton(
-                            onPressed: () => _showMenuDialog(menu),
-                            child: Text(S.current.edit),
-                          ),
-                          TextButton(
-                            onPressed: () => _deleteMenu(menu),
-                            style: TextButton.styleFrom(foregroundColor: Colors.red),
-                            child: Text(S.current.delete),
-                          ),
-                        ],
-                      ),
-                    ),
+                    DataCell(_buildActionButtons(menu)),
                   ],
                 );
               }).toList(),

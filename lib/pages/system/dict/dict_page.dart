@@ -832,7 +832,10 @@ class _DictPageState extends ConsumerState<DictPage> {
   Widget _buildTypeSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           SizedBox(
             width: 200,
@@ -840,14 +843,13 @@ class _DictPageState extends ConsumerState<DictPage> {
               controller: _typeSearchController,
               decoration: InputDecoration(
                 hintText: S.current.searchDictNameOrType,
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: const Icon(Icons.search, size: 20),
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
               onSubmitted: (_) => _searchDictType(),
             ),
           ),
-          const SizedBox(width: 16),
           SizedBox(
             width: 150,
             child: DropdownButtonFormField<int?>(
@@ -870,16 +872,14 @@ class _DictPageState extends ConsumerState<DictPage> {
               },
             ),
           ),
-          const SizedBox(width: 16),
           ElevatedButton.icon(
             onPressed: _searchDictType,
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.search, size: 20),
             label: Text(S.current.search),
           ),
-          const SizedBox(width: 8),
           OutlinedButton.icon(
             onPressed: _resetDictTypeSearch,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, size: 20),
             label: Text(S.current.reset),
           ),
         ],
@@ -890,14 +890,16 @@ class _DictPageState extends ConsumerState<DictPage> {
   Widget _buildTypeToolbar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           ElevatedButton.icon(
             onPressed: () => _showDictTypeDialog(),
             icon: const Icon(Icons.add),
             label: Text(S.current.addDictType),
           ),
-          const SizedBox(width: 8),
           ElevatedButton.icon(
             onPressed: _selectedTypeIds.isEmpty ? null : _deleteSelectedDictTypes,
             style: ElevatedButton.styleFrom(
@@ -907,7 +909,7 @@ class _DictPageState extends ConsumerState<DictPage> {
             icon: const Icon(Icons.delete),
             label: Text(S.current.deleteBatch),
           ),
-          const Spacer(),
+          const SizedBox(width: 16),
           Text('${S.current.total}: $_typeTotalCount'),
         ],
       ),
@@ -1027,10 +1029,27 @@ class _DictPageState extends ConsumerState<DictPage> {
                             onPressed: () => _showDictTypeDialog(dictType),
                             child: Text(S.current.edit),
                           ),
-                          TextButton(
-                            onPressed: () => _deleteDictType(dictType),
-                            style: TextButton.styleFrom(foregroundColor: Colors.red),
-                            child: Text(S.current.delete),
+                          PopupMenuButton<String>(
+                            tooltip: S.current.more,
+                            itemBuilder: (context) => [
+                              PopupMenuItem(
+                                value: 'delete',
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.delete, size: 18, color: Colors.red),
+                                    const SizedBox(width: 8),
+                                    Text(S.current.delete, style: const TextStyle(color: Colors.red)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            onSelected: (value) {
+                              switch (value) {
+                                case 'delete':
+                                  _deleteDictType(dictType);
+                                  break;
+                              }
+                            },
                           ),
                         ],
                       ),
@@ -1108,27 +1127,28 @@ class _DictPageState extends ConsumerState<DictPage> {
   Widget _buildDataSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           Text(
             '${S.current.currentDictType}: ${_selectedDictType ?? S.current.pleaseSelectDictType}',
             style: Theme.of(context).textTheme.titleMedium,
           ),
-          const SizedBox(width: 16),
           SizedBox(
             width: 180,
             child: TextField(
               controller: _dataSearchController,
               decoration: InputDecoration(
                 hintText: S.current.dataLabel,
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: const Icon(Icons.search, size: 20),
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
               onSubmitted: (_) => _searchDictData(),
             ),
           ),
-          const SizedBox(width: 16),
           SizedBox(
             width: 120,
             child: DropdownButtonFormField<int?>(
@@ -1151,16 +1171,14 @@ class _DictPageState extends ConsumerState<DictPage> {
               },
             ),
           ),
-          const SizedBox(width: 16),
           ElevatedButton.icon(
             onPressed: _selectedDictType == null ? null : _searchDictData,
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.search, size: 20),
             label: Text(S.current.search),
           ),
-          const SizedBox(width: 8),
           OutlinedButton.icon(
             onPressed: _selectedDictType == null ? null : _resetDictDataSearch,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, size: 20),
             label: Text(S.current.reset),
           ),
         ],
@@ -1171,14 +1189,16 @@ class _DictPageState extends ConsumerState<DictPage> {
   Widget _buildDataToolbar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           ElevatedButton.icon(
             onPressed: _selectedDictType == null ? null : () => _showDictDataDialog(),
             icon: const Icon(Icons.add),
             label: Text(S.current.addDictData),
           ),
-          const SizedBox(width: 8),
           ElevatedButton.icon(
             onPressed: _selectedDataIds.isEmpty ? null : _deleteSelectedDictData,
             style: ElevatedButton.styleFrom(
@@ -1188,7 +1208,7 @@ class _DictPageState extends ConsumerState<DictPage> {
             icon: const Icon(Icons.delete),
             label: Text(S.current.deleteBatch),
           ),
-          const Spacer(),
+          const SizedBox(width: 16),
           Text('${S.current.total}: $_dataTotalCount'),
         ],
       ),
@@ -1312,10 +1332,27 @@ class _DictPageState extends ConsumerState<DictPage> {
                             onPressed: () => _showDictDataDialog(dictData),
                             child: Text(S.current.edit),
                           ),
-                          TextButton(
-                            onPressed: () => _deleteDictData(dictData),
-                            style: TextButton.styleFrom(foregroundColor: Colors.red),
-                            child: Text(S.current.delete),
+                          PopupMenuButton<String>(
+                            tooltip: S.current.more,
+                            itemBuilder: (context) => [
+                              PopupMenuItem(
+                                value: 'delete',
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.delete, size: 18, color: Colors.red),
+                                    const SizedBox(width: 8),
+                                    Text(S.current.delete, style: const TextStyle(color: Colors.red)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            onSelected: (value) {
+                              switch (value) {
+                                case 'delete':
+                                  _deleteDictData(dictData);
+                                  break;
+                              }
+                            },
                           ),
                         ],
                       ),
