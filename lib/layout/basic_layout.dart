@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../router/router.dart';
-import '../../stores/stores.dart';
-import '../../api/core/auth_api.dart';
-import '../../i18n/i18n.dart';
+import '../router/router.dart';
+import '../stores/stores.dart';
+import '../api/core/auth_api.dart';
+import '../i18n/i18n.dart';
 
 /// 响应式断点
 class Breakpoints {
@@ -514,7 +514,7 @@ class _BasicLayoutState extends ConsumerState<BasicLayout> {
     );
   }
 
-  
+
   /// 构建移动端抽屉菜单
   Widget _buildDrawer(List<NavigationItem> menuItems) {
     return Drawer(

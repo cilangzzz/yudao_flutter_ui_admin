@@ -70,6 +70,80 @@ class Demo03StudentApi {
       queryParameters: params,
     );
   }
+
+  // ============ 课程相关 API ============
+
+  /// 查询学生的课程列表
+  Future<ApiResponse<List<Demo03Course>>> getDemo03CourseListByStudentId(int studentId) async {
+    return _client.get<List<Demo03Course>>(
+      '/infra/demo03-course/list-by-student-id',
+      queryParameters: {'studentId': studentId},
+      fromJsonT: (json) => (json as List)
+          .map((e) => Demo03Course.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  /// 新增课程
+  Future<ApiResponse<void>> createDemo03Course(Demo03Course data) async {
+    return _client.post<void>(
+      '/infra/demo03-course/create',
+      data: data.toJson(),
+    );
+  }
+
+  /// 修改课程
+  Future<ApiResponse<void>> updateDemo03Course(Demo03Course data) async {
+    return _client.put<void>(
+      '/infra/demo03-course/update',
+      data: data.toJson(),
+    );
+  }
+
+  /// 删除课程
+  Future<ApiResponse<void>> deleteDemo03Course(int id) async {
+    return _client.delete<void>(
+      '/infra/demo03-course/delete',
+      queryParameters: {'id': id},
+    );
+  }
+
+  // ============ 班级相关 API ============
+
+  /// 查询学生的班级信息
+  Future<ApiResponse<Demo03Grade?>> getDemo03GradeByStudentId(int studentId) async {
+    return _client.get<Demo03Grade?>(
+      '/infra/demo03-grade/get-by-student-id',
+      queryParameters: {'studentId': studentId},
+      fromJsonT: (json) => json != null
+          ? Demo03Grade.fromJson(json as Map<String, dynamic>)
+          : null,
+    );
+  }
+
+  /// 新增班级
+  Future<ApiResponse<void>> createDemo03Grade(Demo03Grade data) async {
+    return _client.post<void>(
+      '/infra/demo03-grade/create',
+      data: data.toJson(),
+    );
+  }
+
+  /// 修改班级
+  Future<ApiResponse<void>> updateDemo03Grade(Demo03Grade data) async {
+    return _client.put<void>(
+      '/infra/demo03-grade/update',
+      data: data.toJson(),
+    );
+  }
+
+  /// 删除班级
+  Future<ApiResponse<void>> deleteDemo03Grade(int id) async {
+    return _client.delete<void>(
+      '/infra/demo03-grade/delete',
+      queryParameters: {'id': id},
+    );
+  }
 }
 
 /// Demo03StudentApi 提供者

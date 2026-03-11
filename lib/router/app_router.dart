@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:yudao_flutter_ui_admin/stores/access_store.dart';
 import 'package:yudao_flutter_ui_admin/pages/auth/login_page.dart';
-import 'package:yudao_flutter_ui_admin/pages/layout/basic_layout.dart';
+import 'package:yudao_flutter_ui_admin/layout/basic_layout.dart';
 import 'package:yudao_flutter_ui_admin/pages/dashboard/dashboard_page.dart';
 import 'package:yudao_flutter_ui_admin/pages/system/user/user_page.dart';
 import 'package:yudao_flutter_ui_admin/pages/system/role/role_page.dart';

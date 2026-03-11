@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:yudao_flutter_ui_admin/models/infra/demo03_student.dart';
 import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import 'demo03_expandable_row.dart';
 
-/// 学生数据表格组件
-class Demo03DataTable extends StatelessWidget {
+/// 可展开的学生数据表格组件 - Inner模式
+class Demo03ExpandableDataTable extends StatelessWidget {
   final List<Demo03Student> studentList;
   final int totalCount;
   final int currentPage;
@@ -18,10 +19,10 @@ class Demo03DataTable extends StatelessWidget {
   final void Function(Demo03Student student) onDelete;
   final Set<int> selectedIds;
   final void Function(Set<int> ids) onSelectionChanged;
-  final void Function(Demo03Student student)? onRowTap;
-  final int? selectedStudentId;
+  final Set<int> expandedRows;
+  final void Function(int id, bool isExpanded) onExpandChanged;
 
-  const Demo03DataTable({
+  const Demo03ExpandableDataTable({
     super.key,
     required this.studentList,
     required this.totalCount,
@@ -36,8 +37,8 @@ class Demo03DataTable extends StatelessWidget {
     required this.onDelete,
     required this.selectedIds,
     required this.onSelectionChanged,
-    this.onRowTap,
-    this.selectedStudentId,
+    required this.expandedRows,
+    required this.onExpandChanged,
   });
 
   @override
@@ -51,7 +52,8 @@ class Demo03DataTable extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('${S.current.loadFailed}: $error', style: const TextStyle(color: Colors.red)),
+            Text('${S.current.loadFailed}: $error',
+                style: const TextStyle(color: Colors.red)),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: onReload,
@@ -96,7 +98,8 @@ class Demo03DataTable extends StatelessWidget {
               columns: [
                 DataColumn2(
                   label: Checkbox(
-                    value: selectedIds.length == studentList.length && studentList.isNotEmpty,
+                    value: selectedIds.length == studentList.length &&
+                        studentList.isNotEmpty,
                     onChanged: (value) {
                       if (value == true) {
                         onSelectionChanged(studentList.map((e) => e.id!).toSet());
@@ -105,6 +108,10 @@ class Demo03DataTable extends StatelessWidget {
                       }
                     },
                   ),
+                  size: ColumnSize.S,
+                ),
+                DataColumn2(
+                  label: const SizedBox.shrink(), // 展开按钮列
                   size: ColumnSize.S,
                 ),
                 DataColumn2(
@@ -139,18 +146,9 @@ class Demo03DataTable extends StatelessWidget {
               ],
               rows: studentList.map((student) {
                 final isSelected = selectedIds.contains(student.id);
-                final isRowSelected = selectedStudentId == student.id;
+                final isExpanded = expandedRows.contains(student.id);
                 return DataRow2(
                   selected: isSelected,
-                  onTap: onRowTap != null ? () => onRowTap!(student) : null,
-                  color: WidgetStateProperty.resolveWith<Color?>(
-                    (states) {
-                      if (isRowSelected) {
-                        return Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3);
-                      }
-                      return null;
-                    },
-                  ),
                   onSelectChanged: (value) {
                     final newSet = Set<int>.from(selectedIds);
                     if (value == true) {
@@ -173,6 +171,16 @@ class Demo03DataTable extends StatelessWidget {
                         onSelectionChanged(newSet);
                       },
                     )),
+                    DataCell(
+                      IconButton(
+                        icon: Icon(
+                          isExpanded
+                              ? Icons.keyboard_arrow_down
+                              : Icons.keyboard_arrow_right,
+                        ),
+                        onPressed: () => onExpandChanged(student.id!, !isExpanded),
+                      ),
+                    ),
                     DataCell(Text(student.id?.toString() ?? '-')),
                     DataCell(Text(student.name)),
                     DataCell(_buildSexCell(student)),
@@ -185,6 +193,10 @@ class Demo03DataTable extends StatelessWidget {
               }).toList(),
             ),
           ),
+          // 展开的内容
+          ...studentList.where((s) => expandedRows.contains(s.id)).map((student) {
+            return Demo03ExpandableRow(student: student);
+          }),
           // 分页控件
           const SizedBox(height: 8),
           Row(

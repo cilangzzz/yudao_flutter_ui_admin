@@ -1,0 +1,350 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:yudao_flutter_ui_admin/api/infra/demo03_student_api.dart';
+import 'package:yudao_flutter_ui_admin/models/infra/demo03_student.dart';
+import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
+import '../demo03-normal/widgets/demo03_search_form.dart';
+import '../demo03-normal/widgets/demo03_action_buttons.dart';
+import '../demo03-normal/widgets/demo03_data_table.dart';
+import '../demo03-normal/dialogs/demo03_form_dialog.dart';
+import 'widgets/demo03_course_list.dart';
+import 'widgets/demo03_grade_list.dart';
+
+/// 学生管理页面 - Demo03 ERP模式（主表在上，子表在下）
+class Demo03ErpPage extends ConsumerStatefulWidget {
+  const Demo03ErpPage({super.key});
+
+  @override
+  ConsumerState<Demo03ErpPage> createState() => _Demo03ErpPageState();
+}
+
+class _Demo03ErpPageState extends ConsumerState<Demo03ErpPage>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  final _nameController = TextEditingController();
+  int? _selectedSex;
+
+  List<Demo03Student> _studentList = [];
+  int _totalCount = 0;
+  int _currentPage = 1;
+  int _pageSize = 10;
+  bool _isLoading = true;
+  String? _error;
+  Set<int> _selectedIds = {};
+
+  // ERP模式：选中的学生
+  Demo03Student? _selectedStudent;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _loadStudentList();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadStudentList() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final studentApi = ref.read(demo03StudentApiProvider);
+      final params = <String, dynamic>{
+        'pageNo': _currentPage,
+        'pageSize': _pageSize,
+        if (_nameController.text.isNotEmpty) 'name': _nameController.text,
+        if (_selectedSex != null) 'sex': _selectedSex,
+      };
+
+      final response = await studentApi.getDemo03StudentPage(params);
+
+      if (response.isSuccess && response.data != null) {
+        setState(() {
+          _studentList = response.data!.list;
+          _totalCount = response.data!.total;
+          _isLoading = false;
+          // 如果有数据且没有选中，默认选中第一个
+          if (_studentList.isNotEmpty && _selectedStudent == null) {
+            _selectedStudent = _studentList.first;
+          }
+        });
+      } else {
+        setState(() {
+          _error = response.msg ?? S.current.loadFailed;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _search() {
+    setState(() => _currentPage = 1);
+    _loadStudentList();
+  }
+
+  void _reset() {
+    _nameController.clear();
+    setState(() {
+      _selectedSex = null;
+      _currentPage = 1;
+    });
+    _loadStudentList();
+  }
+
+  Future<void> _deleteStudent(Demo03Student student) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(S.current.confirmDelete),
+        content: Text('${S.current.confirmDeleteItem} "${student.name}" ?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(S.current.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: Text(S.current.delete),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final studentApi = ref.read(demo03StudentApiProvider);
+        final response = await studentApi.deleteDemo03Student(student.id!);
+
+        if (response.isSuccess) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(S.current.deleteSuccess)),
+            );
+            // 如果删除的是选中的学生，清除选中
+            if (_selectedStudent?.id == student.id) {
+              setState(() => _selectedStudent = null);
+            }
+            _loadStudentList();
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(response.msg ?? S.current.deleteFailed)),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${S.current.deleteFailed}: $e')),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _deleteBatch() async {
+    if (_selectedIds.isEmpty) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(S.current.confirmDelete),
+        content: Text(
+            '${S.current.confirmDeleteSelected} ${_selectedIds.length} ${S.current.items}'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(S.current.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: Text(S.current.delete),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final studentApi = ref.read(demo03StudentApiProvider);
+        final response =
+            await studentApi.deleteDemo03StudentList(_selectedIds.toList());
+
+        if (response.isSuccess) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(S.current.deleteSuccess)),
+            );
+            setState(() => _selectedIds = {});
+            // 如果删除的学生包含选中的学生，清除选中
+            if (_selectedStudent != null &&
+                _selectedIds.contains(_selectedStudent!.id)) {
+              setState(() => _selectedStudent = null);
+            }
+            _loadStudentList();
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(response.msg ?? S.current.deleteFailed)),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${S.current.deleteFailed}: $e')),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _export() async {
+    try {
+      final studentApi = ref.read(demo03StudentApiProvider);
+      final params = <String, dynamic>{
+        if (_nameController.text.isNotEmpty) 'name': _nameController.text,
+        if (_selectedSex != null) 'sex': _selectedSex,
+      };
+      await studentApi.exportDemo03Student(params);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(S.current.exportSuccess)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${S.current.exportFailed}: $e')),
+        );
+      }
+    }
+  }
+
+  void _selectStudent(Demo03Student student) {
+    setState(() {
+      _selectedStudent = student;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Column(
+        children: [
+          // 搜索栏
+          Demo03SearchForm(
+            nameController: _nameController,
+            selectedSex: _selectedSex,
+            onSexChanged: (value) => setState(() => _selectedSex = value),
+            onSearch: _search,
+            onReset: _reset,
+          ),
+          const Divider(height: 1),
+
+          // 工具栏
+          Demo03ActionButtons(
+            onAdd: () => showDemo03FormDialog(
+              context,
+              ref: ref,
+              onSuccess: _loadStudentList,
+            ),
+            onExport: _export,
+            onDeleteBatch: _selectedIds.isNotEmpty ? _deleteBatch : null,
+            hasSelection: _selectedIds.isNotEmpty,
+          ),
+          const Divider(height: 1),
+
+          // 主表
+          Expanded(
+            flex: 2,
+            child: Demo03DataTable(
+              studentList: _studentList,
+              totalCount: _totalCount,
+              currentPage: _currentPage,
+              pageSize: _pageSize,
+              isLoading: _isLoading,
+              error: _error,
+              onReload: _loadStudentList,
+              onPageSizeChanged: (value) {
+                setState(() {
+                  _pageSize = value;
+                  _currentPage = 1;
+                });
+                _loadStudentList();
+              },
+              onPageChanged: (page) {
+                setState(() => _currentPage = page);
+                _loadStudentList();
+              },
+              onEdit: (student) => showDemo03FormDialog(
+                context,
+                student: student,
+                ref: ref,
+                onSuccess: _loadStudentList,
+              ),
+              onDelete: _deleteStudent,
+              selectedIds: _selectedIds,
+              onSelectionChanged: (ids) => setState(() => _selectedIds = ids),
+              onRowTap: _selectStudent,
+              selectedStudentId: _selectedStudent?.id,
+            ),
+          ),
+
+          const Divider(height: 1),
+
+          // 子表 Tab
+          Container(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            child: TabBar(
+              controller: _tabController,
+              tabs: [
+                Tab(text: S.current.courseList),
+                Tab(text: S.current.gradeInfo),
+              ],
+            ),
+          ),
+
+          // 子表内容
+          Expanded(
+            flex: 3,
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                // 课程列表
+                Demo03CourseList(
+                  studentId: _selectedStudent?.id,
+                ),
+                // 班级列表
+                Demo03GradeList(
+                  studentId: _selectedStudent?.id,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

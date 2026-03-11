@@ -5,7 +5,7 @@ import 'package:yudao_flutter_ui_admin/router/app_router.dart' show Routes;
 // ==================== 导入所有页面 ====================
 import 'package:yudao_flutter_ui_admin/pages/auth/login_page.dart';
 import 'package:yudao_flutter_ui_admin/pages/dashboard/dashboard_page.dart';
-import 'package:yudao_flutter_ui_admin/pages/layout/basic_layout.dart';
+import 'package:yudao_flutter_ui_admin/layout/basic_layout.dart';
 import 'package:yudao_flutter_ui_admin/pages/system/user/user_page.dart' show UserPage;
 import 'package:yudao_flutter_ui_admin/pages/system/role/role_page.dart' show RolePage;
 import 'package:yudao_flutter_ui_admin/pages/system/menu/menu_page.dart' show MenuPage;

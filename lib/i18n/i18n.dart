@@ -1051,6 +1051,7 @@ abstract class S {
   String get pleaseFillGradeInfo;
   String get confirmDeleteItem;
   String get parentId;
+  String get pleaseSelectStudent;
 
   // 带参数的方法
   // String common_totalCount(int count);
@@ -3073,6 +3074,8 @@ class _AppLocalizations extends S {
   String get confirmDeleteItem => _get('confirmDeleteItem', 'Confirm delete this item?');
   @override
   String get parentId => _get('parentId', 'Parent ID');
+  @override
+  String get pleaseSelectStudent => _get('pleaseSelectStudent', 'Please select a student');
 
   // 带参数的方法
   @override

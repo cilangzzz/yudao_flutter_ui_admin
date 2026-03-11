@@ -629,5 +629,27 @@
   "private": "私有",
   "region": "区域",
   "regionHint": "请填写区域，一般仅 AWS 需要填写",
-  "customDomain": "自定义域名"
+  "customDomain": "自定义域名",
+
+  "demo01Contact": "联系人",
+  "demo02Category": "分类",
+  "student": "学生",
+  "birthday": "出生日期",
+  "description": "描述",
+  "avatarUrl": "头像地址",
+  "selectDate": "选择日期",
+  "parentCategory": "父级分类",
+  "topLevel": "顶级",
+  "addSub": "新增子级",
+  "cannotDeleteWithChildren": "存在子级，无法删除",
+  "courseList": "课程列表",
+  "courseName": "课程名称",
+  "score": "分数",
+  "gradeInfo": "班级信息",
+  "gradeName": "班级名称",
+  "teacher": "班主任",
+  "pleaseFillGradeInfo": "请填写班级信息",
+  "confirmDeleteItem": "确认删除该条数据吗？",
+  "parentId": "父级ID",
+  "pleaseSelectStudent": "请选择学生"
 }

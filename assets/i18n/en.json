@@ -615,5 +615,27 @@
   "private": "Private",
   "region": "Region",
   "regionHint": "Enter region, usually only required for AWS",
-  "customDomain": "Custom Domain"
+  "customDomain": "Custom Domain",
+
+  "demo01Contact": "Contact",
+  "demo02Category": "Category",
+  "student": "Student",
+  "birthday": "Birthday",
+  "description": "Description",
+  "avatarUrl": "Avatar URL",
+  "selectDate": "Select Date",
+  "parentCategory": "Parent Category",
+  "topLevel": "Top Level",
+  "addSub": "Add Sub",
+  "cannotDeleteWithChildren": "Cannot delete item with children",
+  "courseList": "Course List",
+  "courseName": "Course Name",
+  "score": "Score",
+  "gradeInfo": "Grade Info",
+  "gradeName": "Grade Name",
+  "teacher": "Teacher",
+  "pleaseFillGradeInfo": "Please fill in grade information",
+  "confirmDeleteItem": "Confirm delete this item?",
+  "parentId": "Parent ID",
+  "pleaseSelectStudent": "Please select a student"
 }
