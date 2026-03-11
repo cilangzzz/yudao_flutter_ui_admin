@@ -1,21 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
-import 'package:data_table_2/data_table_2.dart';
 import '../../../api/system/user_api.dart';
 import '../../../api/system/dept_api.dart';
 import '../../../api/system/role_api.dart';
 import '../../../api/system/post_api.dart';
-import '../../../api/system/permission_api.dart';
 import '../../../core/api_client.dart';
 import '../../../models/system/user.dart';
 import '../../../models/system/dept.dart';
 import '../../../models/system/role.dart';
 import '../../../models/system/post.dart';
-import '../../../models/system/permission.dart';
 import '../../../models/common/api_response.dart';
 import '../../../i18n/i18n.dart';
 import '../../../router/route_registry.dart';
+
+// 导入提取的组件
+import 'widgets/dept_tree_widget.dart';
+import 'widgets/user_data_table.dart';
+import 'dialogs/user_edit_dialog.dart';
+import 'dialogs/reset_password_dialog.dart';
+import 'dialogs/assign_role_dialog.dart';
 
 /// 用户管理页面
 class UserPage extends ConsumerStatefulWidget {
@@ -71,28 +75,22 @@ class _UserPageState extends ConsumerState<UserPage> {
         });
       }
     } catch (e) {
-      // 部门列表加载失败不影响用户列表
       debugPrint('加载部门树失败: $e');
     }
   }
 
   /// 构建部门树结构
   List<Dept> _buildDeptTree(List<Dept> allDepts) {
-    // 找出根节点（parentId 为 0 或 null 的部门）
     final rootDepts = allDepts.where((dept) => dept.parentId == null || dept.parentId == 0).toList();
 
     List<Dept> buildChildren(int parentId) {
       return allDepts
           .where((dept) => dept.parentId == parentId)
-          .map((dept) => dept.copyWith(
-                children: buildChildren(dept.id!),
-              ))
+          .map((dept) => dept.copyWith(children: buildChildren(dept.id!)))
           .toList();
     }
 
-    return rootDepts.map((dept) => dept.copyWith(
-      children: buildChildren(dept.id!),
-    )).toList();
+    return rootDepts.map((dept) => dept.copyWith(children: buildChildren(dept.id!))).toList();
   }
 
   Future<void> _loadRoleList() async {
@@ -188,10 +186,8 @@ class _UserPageState extends ConsumerState<UserPage> {
     _loadUserList();
   }
 
-  /// 切换部门树节点展开/折叠状态
   void _toggleDeptExpand(int deptId) {
     setState(() {
-      // 默认折叠，切换时取反
       _deptExpandedMap[deptId] = !(_deptExpandedMap[deptId] ?? false);
     });
   }
@@ -210,15 +206,12 @@ class _UserPageState extends ConsumerState<UserPage> {
         params['deptId'] = _selectedDeptId;
       }
 
-      // ignore: unused_local_variable
-      final response = await dio.get<List<int>>(
+      await dio.get<List<int>>(
         '/system/user/export-excel',
         queryParameters: params,
         options: Options(responseType: ResponseType.bytes),
       );
 
-      // 这里应该调用文件保存功能，简化处理
-      // response.data 包含导出的 Excel 文件字节数据
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(S.current.exportSuccess)),
@@ -289,6 +282,171 @@ class _UserPageState extends ConsumerState<UserPage> {
     }
   }
 
+  void _showUserDialog([User? user]) {
+    showUserEditDialog(
+      context: context,
+      user: user,
+      deptTree: _deptTree,
+      postList: _postList,
+      defaultDeptId: _selectedDeptId,
+      ref: ref,
+      onSuccess: _loadUserList,
+    );
+  }
+
+  void _editUser(User user) {
+    _showUserDialog(user);
+  }
+
+  Future<void> _deleteUser(User user) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(S.current.confirmDelete),
+        content: Text('${S.current.confirmDeleteUser} "${user.nickname}" ?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(S.current.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(S.current.delete),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final userApi = ref.read(userApiProvider);
+        final response = await userApi.deleteUser(user.id!);
+
+        if (response.isSuccess) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(S.current.deleteSuccess)),
+            );
+            _loadUserList();
+          }
+        } else {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(response.msg.isNotEmpty ? response.msg : S.current.deleteFailed)),
+            );
+          }
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${S.current.deleteFailed}: $e')),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _updateStatus(User user) async {
+    final newStatus = user.status == 0 ? 1 : 0;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(S.current.confirm),
+        content: Text(newStatus == 0 ? S.current.confirmEnableUser : S.current.confirmDisableUser),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(S.current.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(S.current.confirm),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final userApi = ref.read(userApiProvider);
+        final response = await userApi.updateUserStatus(user.id!, newStatus);
+
+        if (response.isSuccess) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(S.current.operationSuccess)),
+            );
+            _loadUserList();
+          }
+        } else {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(response.msg.isNotEmpty ? response.msg : S.current.operationFailed)),
+            );
+          }
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${S.current.operationFailed}: $e')),
+          );
+        }
+      }
+    }
+  }
+
+  void _showResetPasswordDialog(User user) {
+    showResetPasswordDialog(
+      context: context,
+      user: user,
+      ref: ref,
+      onSuccess: () {}, // 重置密码成功后无需刷新列表
+    );
+  }
+
+  void _showAssignRoleDialog(User user) {
+    showAssignRoleDialog(
+      context: context,
+      user: user,
+      roleList: _roleList,
+      ref: ref,
+      onSuccess: () {}, // 分配角色成功后无需刷新列表
+    );
+  }
+
+  void _handleSelectChanged(int userId, bool selected) {
+    setState(() {
+      if (selected) {
+        _selectedIds.add(userId);
+      } else {
+        _selectedIds.remove(userId);
+      }
+    });
+  }
+
+  void _handleSelectAll(bool selectAll) {
+    setState(() {
+      if (selectAll) {
+        _selectedIds = _userList.where((u) => u.id != null).map((u) => u.id!).toSet();
+      } else {
+        _selectedIds.clear();
+      }
+    });
+  }
+
+  void _handlePageSizeChanged(int newPageSize) {
+    setState(() {
+      _pageSize = newPageSize;
+      _currentPage = 1;
+    });
+    _loadUserList();
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -323,7 +481,13 @@ class _UserPageState extends ConsumerState<UserPage> {
                 Expanded(
                   child: _deptTree.isEmpty
                       ? Center(child: Text(S.current.noData, style: TextStyle(color: Colors.grey[500])))
-                      : _buildDeptTreeWidget(context, _deptTree),
+                      : DeptTreeWidget(
+                          depts: _deptTree,
+                          selectedDeptId: _selectedDeptId,
+                          expandedMap: _deptExpandedMap,
+                          onDeptSelect: _handleDeptSelect,
+                          onToggleExpand: _toggleDeptExpand,
+                        ),
                 ),
               ],
             ),
@@ -340,7 +504,34 @@ class _UserPageState extends ConsumerState<UserPage> {
               _buildToolbar(context),
               const Divider(height: 1),
               // 数据表格
-              Expanded(child: _buildDataTable(context)),
+              Expanded(
+                child: UserDataTable(
+                  userList: _userList,
+                  selectedIds: _selectedIds,
+                  totalCount: _totalCount,
+                  currentPage: _currentPage,
+                  pageSize: _pageSize,
+                  isLoading: _isLoading,
+                  error: _error,
+                  onSelectChanged: _handleSelectChanged,
+                  onSelectAll: _handleSelectAll,
+                  onEdit: _editUser,
+                  onDelete: _deleteUser,
+                  onResetPassword: _showResetPasswordDialog,
+                  onAssignRole: _showAssignRoleDialog,
+                  onUpdateStatus: _updateStatus,
+                  onRetry: _loadUserList,
+                  onPageSizeChanged: _handlePageSizeChanged,
+                  onPreviousPage: () {
+                    setState(() => _currentPage--);
+                    _loadUserList();
+                  },
+                  onNextPage: () {
+                    setState(() => _currentPage++);
+                    _loadUserList();
+                  },
+                ),
+              ),
             ],
           ),
         ),
@@ -367,7 +558,7 @@ class _UserPageState extends ConsumerState<UserPage> {
       child: Row(
         children: [
           ElevatedButton.icon(
-            onPressed: () => _showUserDialog(context),
+            onPressed: () => _showUserDialog(),
             icon: const Icon(Icons.add, size: 20),
             label: Text(S.current.addUser),
           ),
@@ -380,70 +571,6 @@ class _UserPageState extends ConsumerState<UserPage> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildDeptTreeWidget(BuildContext context, List<Dept> depts) {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: depts.length,
-      itemBuilder: (context, index) {
-        final dept = depts[index];
-        return _buildDeptTile(context, dept, 0);
-      },
-    );
-  }
-
-  Widget _buildDeptTile(BuildContext context, Dept dept, int level) {
-    final hasChildren = dept.children != null && dept.children!.isNotEmpty;
-    final isSelected = _selectedDeptId == dept.id;
-    // 默认折叠所有节点
-    final isExpanded = _deptExpandedMap[dept.id] ?? false;
-
-    return Column(
-      children: [
-        InkWell(
-          onTap: () => _handleDeptSelect(dept),
-          child: Padding(
-            padding: EdgeInsets.only(left: 16.0 * level, top: 8, bottom: 8),
-            child: Row(
-              children: [
-                // 展开/折叠图标
-                if (hasChildren)
-                  GestureDetector(
-                    onTap: () => _toggleDeptExpand(dept.id!),
-                    child: Icon(
-                      isExpanded ? Icons.expand_more : Icons.chevron_right,
-                      size: 20,
-                      color: Colors.grey[600],
-                    ),
-                  )
-                else
-                  const SizedBox(width: 20),
-                const SizedBox(width: 4),
-                Icon(
-                  hasChildren ? Icons.folder : Icons.folder_open,
-                  size: 18,
-                  color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey[600],
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    dept.name,
-                    style: TextStyle(
-                      color: isSelected ? Theme.of(context).colorScheme.primary : null,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        // 只在展开时渲染子节点
-        if (hasChildren && isExpanded)
-          ...dept.children!.map((child) => _buildDeptTile(context, child, level + 1)),
-      ],
     );
   }
 
@@ -603,7 +730,7 @@ class _UserPageState extends ConsumerState<UserPage> {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           ElevatedButton.icon(
-            onPressed: () => _showUserDialog(context),
+            onPressed: () => _showUserDialog(),
             icon: const Icon(Icons.add),
             label: Text(S.current.addUser),
           ),
@@ -620,211 +747,6 @@ class _UserPageState extends ConsumerState<UserPage> {
             ),
             icon: const Icon(Icons.delete),
             label: Text(S.current.deleteBatch),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDataTable(BuildContext context) {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_error != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('${S.current.loadFailed}: $_error', style: const TextStyle(color: Colors.red)),
-            const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadUserList, child: Text(S.current.retry)),
-          ],
-        ),
-      );
-    }
-
-    if (_userList.isEmpty) {
-      return Center(child: Text(S.current.noData));
-    }
-
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // 表头工具栏
-          Row(
-            children: [
-              Checkbox(
-                value: _selectedIds.length == _userList.length && _userList.isNotEmpty,
-                tristate: true,
-                onChanged: (value) {
-                  setState(() {
-                    if (value == true) {
-                      _selectedIds = _userList.where((u) => u.id != null).map((u) => u.id!).toSet();
-                    } else {
-                      _selectedIds.clear();
-                    }
-                  });
-                },
-              ),
-              Text(S.current.userList),
-              const Spacer(),
-              Text('${S.current.total}: $_totalCount'),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // 表格
-          Expanded(
-            child: DataTable2(
-              columnSpacing: 12,
-              horizontalMargin: 12,
-              minWidth: 900,
-              smRatio: 0.75,
-              lmRatio: 1.5,
-              headingRowColor: WidgetStateProperty.resolveWith(
-                (states) => Theme.of(context).colorScheme.surfaceContainerHighest,
-              ),
-              headingTextStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-              dataRowColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected)) {
-                  return Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3);
-                }
-                return null;
-              }),
-              columns: [
-                DataColumn2(
-                  label: Text('ID'),
-                  size: ColumnSize.S,
-                ),
-                DataColumn2(
-                  label: Text(S.current.username),
-                  size: ColumnSize.M,
-                ),
-                DataColumn2(
-                  label: Text(S.current.nickname),
-                  size: ColumnSize.M,
-                ),
-                DataColumn2(
-                  label: Text(S.current.department),
-                  size: ColumnSize.L,
-                ),
-                DataColumn2(
-                  label: Text(S.current.mobile),
-                  size: ColumnSize.M,
-                ),
-                DataColumn2(
-                  label: Text(S.current.status),
-                  size: ColumnSize.S,
-                ),
-                DataColumn2(
-                  label: Text(S.current.createTime),
-                  size: ColumnSize.L,
-                ),
-                DataColumn2(
-                  label: Text(S.current.operation),
-                  size: ColumnSize.M,
-                ),
-              ],
-              rows: _userList.map((user) {
-                final isSelected = user.id != null && _selectedIds.contains(user.id);
-                return DataRow2(
-                  selected: isSelected,
-                  onSelectChanged: (selected) {
-                    if (user.id != null) {
-                      setState(() {
-                        if (selected == true) {
-                          _selectedIds.add(user.id!);
-                        } else {
-                          _selectedIds.remove(user.id!);
-                        }
-                      });
-                    }
-                  },
-                  cells: [
-                    DataCell(Text(user.id?.toString() ?? '-')),
-                    DataCell(Text(user.username)),
-                    DataCell(Text(user.nickname)),
-                    DataCell(Text(user.deptName ?? '-')),
-                    DataCell(Text(user.mobile ?? '-')),
-                    DataCell(
-                      _StatusSwitch(
-                        isEnabled: user.status == 0,
-                        onChanged: () => _updateStatus(user),
-                      ),
-                    ),
-                    DataCell(Text(user.createTime?.toString().substring(0, 19) ?? '-')),
-                    DataCell(
-                      _ActionButtons(
-                        user: user,
-                        onEdit: _editUser,
-                        onDelete: _deleteUser,
-                        onResetPassword: _showResetPasswordDialog,
-                        onAssignRole: _showAssignRoleDialog,
-                      ),
-                    ),
-                  ],
-                );
-              }).toList(),
-            ),
-          ),
-          // 分页控件
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              // 每页行数选择
-              Row(
-                children: [
-                  Text('${S.current.pageSize}: '),
-                  DropdownButton<int>(
-                    value: _pageSize,
-                    items: [10, 20, 50, 100].map((value) {
-                      return DropdownMenuItem(
-                        value: value,
-                        child: Text('$value'),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _pageSize = value;
-                          _currentPage = 1;
-                        });
-                        _loadUserList();
-                      }
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(width: 24),
-              // 分页导航
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left),
-                    onPressed: _currentPage > 1
-                        ? () {
-                            setState(() => _currentPage--);
-                            _loadUserList();
-                          }
-                        : null,
-                  ),
-                  Text('$_currentPage / ${(_totalCount / _pageSize).ceil()}'),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right),
-                    onPressed: _currentPage * _pageSize < _totalCount
-                        ? () {
-                            setState(() => _currentPage++);
-                            _loadUserList();
-                          }
-                        : null,
-                  ),
-                ],
-              ),
-            ],
           ),
         ],
       ),
@@ -998,625 +920,6 @@ class _UserPageState extends ConsumerState<UserPage> {
           Expanded(child: Text(value, style: const TextStyle(fontSize: 13))),
         ],
       ),
-    );
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-  }
-
-  void _showUserDialog(BuildContext context, [User? user]) {
-    final usernameController = TextEditingController(text: user?.username ?? '');
-    final nicknameController = TextEditingController(text: user?.nickname ?? '');
-    final mobileController = TextEditingController(text: user?.mobile ?? '');
-    final emailController = TextEditingController(text: user?.email ?? '');
-    final passwordController = TextEditingController();
-    final remarkController = TextEditingController(text: user?.remark ?? '');
-    int? selectedDeptId = user?.deptId ?? _selectedDeptId;
-    List<int> selectedPostIds = user?.postIds ?? [];
-    int sex = user?.sex ?? 1;
-    int status = user?.status ?? 0;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(user == null ? S.current.addUser : S.current.editUser),
-          content: SizedBox(
-            width: 450,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: usernameController,
-                    decoration: InputDecoration(
-                      labelText: '${S.current.username} *',
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  if (user == null)
-                    TextField(
-                      controller: passwordController,
-                      decoration: InputDecoration(
-                        labelText: '${S.current.password} *',
-                        border: const OutlineInputBorder(),
-                      ),
-                      obscureText: true,
-                    ),
-                  if (user == null) const SizedBox(height: 16),
-                  TextField(
-                    controller: nicknameController,
-                    decoration: InputDecoration(
-                      labelText: '${S.current.nickname} *',
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // 部门选择
-                  DropdownButtonFormField<int?>(
-                    value: selectedDeptId,
-                    decoration: InputDecoration(
-                      labelText: S.current.department,
-                      border: const OutlineInputBorder(),
-                    ),
-                    items: _buildDeptDropdownItems(_deptTree, 0),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedDeptId = value;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  // 岗位选择
-                  DropdownButtonFormField<int>(
-                    value: selectedPostIds.isNotEmpty ? selectedPostIds.first : null,
-                    decoration: InputDecoration(
-                      labelText: S.current.post,
-                      border: const OutlineInputBorder(),
-                    ),
-                    items: _postList.map((post) => DropdownMenuItem(
-                      value: post.id,
-                      child: Text(post.name),
-                    )).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedPostIds = value != null ? [value] : [];
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: mobileController,
-                    decoration: InputDecoration(
-                      labelText: S.current.mobile,
-                      border: const OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.phone,
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: emailController,
-                    decoration: InputDecoration(
-                      labelText: S.current.email,
-                      border: const OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                  const SizedBox(height: 16),
-                  // 性别
-                  Row(
-                    children: [
-                      Text('${S.current.sex}: '),
-                      Radio<int>(
-                        value: 1,
-                        groupValue: sex,
-                        onChanged: (value) {
-                          setState(() {
-                            sex = value!;
-                          });
-                        },
-                      ),
-                      Text(S.current.male),
-                      Radio<int>(
-                        value: 2,
-                        groupValue: sex,
-                        onChanged: (value) {
-                          setState(() {
-                            sex = value!;
-                          });
-                        },
-                      ),
-                      Text(S.current.female),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  // 状态
-                  Row(
-                    children: [
-                      Text('${S.current.status}: '),
-                      Radio<int>(
-                        value: 0,
-                        groupValue: status,
-                        onChanged: (value) {
-                          setState(() {
-                            status = value!;
-                          });
-                        },
-                      ),
-                      Text(S.current.enabled),
-                      Radio<int>(
-                        value: 1,
-                        groupValue: status,
-                        onChanged: (value) {
-                          setState(() {
-                            status = value!;
-                          });
-                        },
-                      ),
-                      Text(S.current.disabled),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: remarkController,
-                    decoration: InputDecoration(
-                      labelText: S.current.remark,
-                      border: const OutlineInputBorder(),
-                    ),
-                    maxLines: 2,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(S.current.cancel),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (usernameController.text.isEmpty || nicknameController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(S.current.pleaseFillRequired)),
-                  );
-                  return;
-                }
-
-                if (user == null && passwordController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(S.current.passwordRequired)),
-                  );
-                  return;
-                }
-
-                final userData = User(
-                  id: user?.id,
-                  username: usernameController.text,
-                  nickname: nicknameController.text,
-                  deptId: selectedDeptId,
-                  postIds: selectedPostIds,
-                  mobile: mobileController.text.isEmpty ? null : mobileController.text,
-                  email: emailController.text.isEmpty ? null : emailController.text,
-                  sex: sex,
-                  status: status,
-                  remark: remarkController.text.isEmpty ? null : remarkController.text,
-                );
-
-                try {
-                  final userApi = ref.read(userApiProvider);
-                  ApiResponse<void> response;
-
-                  if (user == null) {
-                    response = await userApi.createUser(userData);
-                  } else {
-                    response = await userApi.updateUser(userData);
-                  }
-
-                  if (response.isSuccess) {
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(user == null ? S.current.addSuccess : S.current.editSuccess)),
-                      );
-                      _loadUserList();
-                    }
-                  } else {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(response.msg.isNotEmpty ? response.msg : S.current.operationFailed)),
-                      );
-                    }
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('${S.current.operationFailed}: $e')),
-                    );
-                  }
-                }
-              },
-              child: Text(S.current.confirm),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  List<DropdownMenuItem<int?>> _buildDeptDropdownItems(List<Dept> depts, int level) {
-    final items = <DropdownMenuItem<int?>>[];
-    for (final dept in depts) {
-      items.add(DropdownMenuItem(
-        value: dept.id,
-        child: Padding(
-          padding: EdgeInsets.only(left: 16.0 * level),
-          child: Text(dept.name),
-        ),
-      ));
-      if (dept.children != null && dept.children!.isNotEmpty) {
-        items.addAll(_buildDeptDropdownItems(dept.children!, level + 1));
-      }
-    }
-    return items;
-  }
-
-  void _editUser(User user) {
-    _showUserDialog(context, user);
-  }
-
-  Future<void> _updateStatus(User user) async {
-    final newStatus = user.status == 0 ? 1 : 0;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(S.current.confirm),
-        content: Text(newStatus == 0 ? S.current.confirmEnableUser : S.current.confirmDisableUser),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(S.current.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(S.current.confirm),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        final userApi = ref.read(userApiProvider);
-        final response = await userApi.updateUserStatus(user.id!, newStatus);
-
-        if (response.isSuccess) {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(S.current.operationSuccess)),
-            );
-            _loadUserList();
-          }
-        } else {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(response.msg.isNotEmpty ? response.msg : S.current.operationFailed)),
-            );
-          }
-        }
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${S.current.operationFailed}: $e')),
-          );
-        }
-      }
-    }
-  }
-
-  Future<void> _deleteUser(User user) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(S.current.confirmDelete),
-        content: Text('${S.current.confirmDeleteUser} "${user.nickname}" ?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(S.current.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text(S.current.delete),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        final userApi = ref.read(userApiProvider);
-        final response = await userApi.deleteUser(user.id!);
-
-        if (response.isSuccess) {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(S.current.deleteSuccess)),
-            );
-            _loadUserList();
-          }
-        } else {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(response.msg.isNotEmpty ? response.msg : S.current.deleteFailed)),
-            );
-          }
-        }
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${S.current.deleteFailed}: $e')),
-          );
-        }
-      }
-    }
-  }
-
-  void _showResetPasswordDialog(User user) {
-    final passwordController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(S.current.resetPassword),
-        content: SizedBox(
-          width: 350,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('${S.current.username}: ${user.username}'),
-              const SizedBox(height: 16),
-              TextField(
-                controller: passwordController,
-                decoration: InputDecoration(
-                  labelText: '${S.current.newPassword} *',
-                  border: const OutlineInputBorder(),
-                ),
-                obscureText: true,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(S.current.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (passwordController.text.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(S.current.passwordRequired)),
-                );
-                return;
-              }
-
-              try {
-                final userApi = ref.read(userApiProvider);
-                final response = await userApi.resetUserPassword(user.id!, passwordController.text);
-
-                if (response.isSuccess) {
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(S.current.operationSuccess)),
-                    );
-                  }
-                } else {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(response.msg.isNotEmpty ? response.msg : S.current.operationFailed)),
-                    );
-                  }
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('${S.current.operationFailed}: $e')),
-                  );
-                }
-              }
-            },
-            child: Text(S.current.confirm),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showAssignRoleDialog(User user) {
-    List<int> selectedRoleIds = [];
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(S.current.assignRole),
-          content: SizedBox(
-            width: 400,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('${S.current.username}: ${user.username}'),
-                const SizedBox(height: 8),
-                Text('${S.current.nickname}: ${user.nickname}'),
-                const SizedBox(height: 16),
-                Text(S.current.role, style: const TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _roleList.map((role) {
-                    final isSelected = selectedRoleIds.contains(role.id);
-                    return FilterChip(
-                      label: Text(role.name),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        setState(() {
-                          if (selected) {
-                            selectedRoleIds.add(role.id!);
-                          } else {
-                            selectedRoleIds.remove(role.id);
-                          }
-                        });
-                      },
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(S.current.cancel),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  final permissionApi = ref.read(permissionApiProvider);
-                  final response = await permissionApi.assignUserRole(
-                    AssignUserRoleReq(userId: user.id!, roleIds: selectedRoleIds),
-                  );
-
-                  if (response.isSuccess) {
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(S.current.operationSuccess)),
-                      );
-                    }
-                  } else {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(response.msg.isNotEmpty ? response.msg : S.current.operationFailed)),
-                      );
-                    }
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('${S.current.operationFailed}: $e')),
-                    );
-                  }
-                }
-              },
-              child: Text(S.current.confirm),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// 状态开关组件 - 使用 StatelessWidget 避免不必要的重建
-class _StatusSwitch extends StatelessWidget {
-  final bool isEnabled;
-  final VoidCallback onChanged;
-
-  const _StatusSwitch({
-    required this.isEnabled,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Switch(
-      value: isEnabled,
-      onChanged: (_) => onChanged(),
-    );
-  }
-}
-
-/// 操作按钮组件 - 使用 StatelessWidget 避免不必要的重建
-class _ActionButtons extends StatelessWidget {
-  final User user;
-  final void Function(User) onEdit;
-  final Future<void> Function(User) onDelete;
-  final void Function(User) onResetPassword;
-  final void Function(User) onAssignRole;
-
-  const _ActionButtons({
-    required this.user,
-    required this.onEdit,
-    required this.onDelete,
-    required this.onResetPassword,
-    required this.onAssignRole,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        TextButton(
-          onPressed: () => onEdit(user),
-          child: Text(S.current.edit),
-        ),
-        PopupMenuButton<String>(
-          tooltip: S.current.more,
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              value: 'resetPassword',
-              child: Row(
-                children: [
-                  const Icon(Icons.lock_reset, size: 18),
-                  const SizedBox(width: 8),
-                  Text(S.current.resetPassword),
-                ],
-              ),
-            ),
-            PopupMenuItem(
-              value: 'assignRole',
-              child: Row(
-                children: [
-                  const Icon(Icons.admin_panel_settings, size: 18),
-                  const SizedBox(width: 8),
-                  Text(S.current.assignRole),
-                ],
-              ),
-            ),
-            PopupMenuItem(
-              value: 'delete',
-              child: Row(
-                children: [
-                  const Icon(Icons.delete, size: 18, color: Colors.red),
-                  const SizedBox(width: 8),
-                  Text(S.current.delete, style: const TextStyle(color: Colors.red)),
-                ],
-              ),
-            ),
-          ],
-          onSelected: (value) {
-            switch (value) {
-              case 'resetPassword':
-                onResetPassword(user);
-                break;
-              case 'assignRole':
-                onAssignRole(user);
-                break;
-              case 'delete':
-                onDelete(user);
-                break;
-            }
-          },
-        ),
-      ],
     );
   }
 }

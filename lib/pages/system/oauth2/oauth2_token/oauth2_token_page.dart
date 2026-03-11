@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:data_table_2/data_table_2.dart';
-import '../../../../api/system/oauth2_token_api.dart';
-import '../../../../models/system/oauth2_token.dart';
-import '../../../../models/common/api_response.dart';
+import 'package:yudao_flutter_ui_admin/api/system/oauth2_token_api.dart';
+import 'package:yudao_flutter_ui_admin/models/system/oauth2_token.dart';
+import 'package:yudao_flutter_ui_admin/models/common/api_response.dart';
 
 /// OAuth2 令牌管理页面
 class OAuth2TokenPage extends ConsumerStatefulWidget {

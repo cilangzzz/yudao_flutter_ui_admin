@@ -49,7 +49,10 @@
       "Bash(git config --local --get-all safe.directory)",
       "Read(//c/Users/sysadmin/**)",
       "Bash(flutter clean)",
-      "Bash(flutter analyze lib/pages/system/post/post_page.dart)"
+      "Bash(flutter analyze lib/pages/system/post/post_page.dart)",
+      "Bash(flutter analyze lib/pages/system/menu/ lib/core/utils/menu_icon_helper.dart)",
+      "Bash(flutter analyze lib/pages/system/role/)",
+      "Bash(flutter analyze lib/pages/system/user lib/pages/system/role lib/pages/system/menu lib/pages/system/common)"
     ],
     "additionalDirectories": [
       "h:\\Documents\\toly_ui\\.claude\\skills",

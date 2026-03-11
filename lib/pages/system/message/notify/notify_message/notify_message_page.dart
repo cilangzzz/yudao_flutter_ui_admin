@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:data_table_2/data_table_2.dart';
-import '../../../../../api/system/notify_message_api.dart';
-import '../../../../../models/system/notify_message.dart';
-import '../../../../../i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/api/system/notify_message_api.dart';
+import 'package:yudao_flutter_ui_admin/models/system/notify_message.dart';
+import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
 
 /// 站内信消息管理页面 - 管理员视角
 class NotifyMessagePage extends ConsumerStatefulWidget {

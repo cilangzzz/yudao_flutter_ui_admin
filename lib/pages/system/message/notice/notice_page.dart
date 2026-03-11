@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../api/system/notice_api.dart';
-import '../../../../models/system/notice.dart';
-import '../../../../models/common/api_response.dart';
-import '../../../../i18n/i18n.dart';
+import 'package:yudao_flutter_ui_admin/api/system/notice_api.dart';
+import 'package:yudao_flutter_ui_admin/models/system/notice.dart';
+import 'package:yudao_flutter_ui_admin/models/common/api_response.dart';
+import 'package:yudao_flutter_ui_admin/i18n/i18n.dart';
 
 /// 公告管理页面
 class NoticePage extends ConsumerStatefulWidget {
