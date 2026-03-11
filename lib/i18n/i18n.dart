@@ -197,6 +197,53 @@ abstract class S {
   String get permission;
   String get area;
 
+  // Infra 模块 - 监控相关
+  String get infra;
+  String get serverMonitor;
+  String get serverMonitorDesc;
+  String get apiDocs;
+  String get apiDocsDesc;
+  String get druidMonitor;
+  String get druidMonitorDesc;
+  String get skywalkingMonitor;
+  String get skywalkingMonitorDesc;
+  String get webSocketMonitor;
+  String get formDesigner;
+
+  // Infra 模块 - WebSocket
+  String get connectionManagement;
+  String get connectionStatus;
+  String get connected;
+  String get disconnected;
+  String get connect;
+  String get disconnect;
+  String get connecting;
+  String get serverAddress;
+  String get sendMessage;
+  String get selectReceiver;
+  String get everyone;
+  String get messageHistory;
+  String get messagesCount;
+  String get messageCannotBeEmpty;
+  String get pleaseConnectFirst;
+  String get groupMessage;
+  String get singleMessage;
+  String get systemMessage;
+  String get copiedToClipboard;
+
+  // Infra 模块 - 表单设计器
+  String get componentLibrary;
+  String get dragComponentHere;
+  String get selectFieldToConfig;
+  String get fieldProperties;
+  String get fieldName;
+  String get label;
+  String get placeholder;
+  String get defaultValue;
+  String get required;
+  String get preview;
+  String get clear;
+
   // 通用翻译 - 其他
   String get yes;
   String get no;
@@ -589,6 +636,46 @@ abstract class S {
   String get editPost;
   String get confirmDeletePost;
 
+  // 定时任务管理
+  String get jobId;
+  String get jobName;
+  String get jobList;
+  String get addJob;
+  String get editJob;
+  String get jobDetail;
+  String get confirmDeleteJob;
+  String get handlerName;
+  String get handlerParam;
+  String get handlerNamePlaceholder;
+  String get cronExpression;
+  String get cronExpressionPlaceholder;
+  String get retryCount;
+  String get retryCountPlaceholder;
+  String get retryInterval;
+  String get retryIntervalPlaceholder;
+  String get monitorTimeout;
+  String get monitorTimeoutPlaceholder;
+  String get nextExecuteTime;
+  String get noNextExecuteTime;
+  String get jobStatusNormal;
+  String get jobStatusStop;
+  String get jobStart;
+  String get jobPause;
+  String get jobExecute;
+  String get jobLog;
+  String get milliseconds;
+  String get notEnabled;
+
+  // 任务日志管理
+  String get logId;
+  String get jobLogList;
+  String get jobLogDetail;
+  String get executeIndex;
+  String get executeTime;
+  String get jobLogStatusSuccess;
+  String get jobLogStatusFailure;
+  String get result;
+
   // 字典管理
   String get dictName;
   String get addDictType;
@@ -619,6 +706,93 @@ abstract class S {
   String get dictDataList;
   String get color;
   String get remark;
+
+  // 代码生成
+  String get codegenList;
+  String get importTable;
+  String get preview;
+  String get generateCode;
+  String get sync;
+  String get syncSuccess;
+  String get syncFailed;
+  String get confirmSync;
+  String get confirmSyncTable;
+  String get generateSuccess;
+  String get generateFailed;
+  String get confirmDeleteTable;
+  String get confirmDeleteTables;
+  String get confirmDeleteBatch;
+  String get tableName;
+  String get tableComment;
+  String get className;
+  String get classNameHelp;
+  String get classNameHelp2;
+  String get author;
+  String get dataSource;
+  String get pleaseSelectDataSource;
+  String get pleaseSelectTable;
+  String get importSuccess;
+  String get importFailed;
+  String get codePreview;
+  String get pleaseSelectFile;
+  String get copySuccess;
+  String get editCodegen;
+  String get basicInfo;
+  String get columnInfo;
+  String get generationInfo;
+  String get prevStep;
+  String get nextStep;
+  String get columnName;
+  String get columnComment;
+  String get dataType;
+  String get javaType;
+  String get javaField;
+  String get insert;
+  String get query;
+  String get queryType;
+  String get nullable;
+  String get htmlType;
+  String get selectDictType;
+  String get example;
+  String get templateType;
+  String get templateTypeSingle;
+  String get templateTypeTree;
+  String get templateTypeMasterSub;
+  String get frontType;
+  String get frontTypeVue3;
+  String get frontTypeVue2;
+  String get scene;
+  String get sceneAdmin;
+  String get sceneApp;
+  String get moduleName;
+  String get moduleNameHelp;
+  String get businessName;
+  String get businessNameHelp;
+  String get classComment;
+  String get classCommentHelp;
+  String get treeTableInfo;
+  String get treeParentColumn;
+  String get treeParentColumnHelp;
+  String get treeNameColumn;
+  String get treeNameColumnHelp;
+  String get masterSubTableInfo;
+  String get masterTable;
+  String get masterTableHelp;
+  String get subJoinColumn;
+  String get subJoinColumnHelp;
+  String get relationType;
+  String get relationOneToOne;
+  String get relationOneToMany;
+  String get htmlTypeInput;
+  String get htmlTypeTextarea;
+  String get htmlTypeSelect;
+  String get htmlTypeRadio;
+  String get htmlTypeCheckbox;
+  String get htmlTypeDatetime;
+  String get htmlTypeImageUpload;
+  String get htmlTypeFileUpload;
+  String get htmlTypeEditor;
+  String get pleaseSelectData;
 
   // 登录日志
   String get loginLog_loadFailed;
@@ -684,6 +858,7 @@ abstract class S {
   String get confirmDeleteSelected;
   String get exportSuccess;
   String get exportFailed;
+  String get featureNotImplemented;
   String get sex;
   String get male;
   String get female;
@@ -701,6 +876,120 @@ abstract class S {
   String get common_operation;
 
   cacl_common_totalCount(int totalCount) {}
+
+  // Redis 管理
+  String get redisOverview;
+  String get redisVersion;
+  String get redisVersionLabel;
+  String get redisMode;
+  String get standalone;
+  String get cluster;
+  String get port;
+  String get connectedClients;
+  String get uptimeInDays;
+  String get usedMemory;
+  String get usedCpu;
+  String get memoryConfig;
+  String get aofEnabled;
+  String get rdbLastBgsaveStatus;
+  String get keyCount;
+  String get networkIO;
+  String get memoryUsage;
+  String get commandStats;
+  String get memoryConsumption;
+  String get usedMemoryPeak;
+  String get memFragmentationRatio;
+  String get usedMemoryRss;
+  String get totalSystemMemory;
+  String get totalCommands;
+
+  // 参数配置管理
+  String get configId;
+  String get configCategory;
+  String get configName;
+  String get configKey;
+  String get configValue;
+  String get configType;
+  String get configList;
+  String get addConfig;
+  String get editConfig;
+  String get confirmDeleteConfig;
+  String get systemBuiltIn;
+
+  // 数据源配置管理
+  String get dataSourceConfigId;
+  String get dataSourceConfigName;
+  String get dataSourceUrl;
+  String get dataSourceConfigList;
+  String get addDataSourceConfig;
+  String get editDataSourceConfig;
+  String get confirmDeleteDataSourceConfig;
+  String get cannotDeleteMainDataSource;
+
+  // 文件管理
+  String get fileManagement;
+  String get fileList;
+  String get fileName;
+  String get filePath;
+  String get fileSize;
+  String get fileType;
+  String get fileContent;
+  String get uploadFile;
+  String get confirmDeleteFile;
+  String get copyUrl;
+  String get copySuccess;
+  String get copyFailed;
+  String get clickOrDragToUpload;
+  String get supportFileFormats;
+  String get pleaseSelectFile;
+  String get selectFileFailed;
+  String get uploading;
+  String get uploadSuccess;
+  String get uploadFailed;
+
+  // 文件配置管理
+  String get fileConfigManagement;
+  String get fileConfigList;
+  String get addFileConfig;
+  String get editFileConfig;
+  String get confirmDeleteFileConfig;
+  String get storage;
+  String get masterConfig;
+  String get setMasterConfig;
+  String get confirmSetMasterConfig;
+  String get testUploadSuccess;
+  String get confirmOpenFile;
+  String get visit;
+  String get testFailed;
+  String get test;
+
+  // 存储配置
+  String get basicInfo;
+  String get storageConfig;
+  String get commonConfig;
+  String get basePath;
+  String get hostAddress;
+  String get hostPort;
+  String get connectionMode;
+  String get endpoint;
+  String get bucket;
+  String get pleaseEnterName;
+  String get pleaseSelectStorage;
+  String get pleaseEnterBasePath;
+  String get pleaseEnterHost;
+  String get pleaseEnterPort;
+  String get pleaseEnterEndpoint;
+  String get pleaseEnterBucket;
+  String get pleaseEnterAccessKey;
+  String get pleaseEnterAccessSecret;
+  String get pleaseEnterDomain;
+  String get pathStyle;
+  String get publicAccess;
+  String get public;
+  String get private;
+  String get region;
+  String get regionHint;
+  String get customDomain;
 
   // 带参数的方法
   // String common_totalCount(int count);
@@ -1121,6 +1410,94 @@ class _AppLocalizations extends S {
   String get permission => _get('permission', 'Permission');
   @override
   String get area => _get('area', 'Area');
+
+  // Infra 模块 - 监控相关
+  @override
+  String get infra => _get('infra', 'Infrastructure');
+  @override
+  String get serverMonitor => _get('serverMonitor', 'Server Monitor');
+  @override
+  String get serverMonitorDesc => _get('serverMonitorDesc', 'Spring Boot Admin monitoring console');
+  @override
+  String get apiDocs => _get('apiDocs', 'API Documentation');
+  @override
+  String get apiDocsDesc => _get('apiDocsDesc', 'Swagger/Knife4j API documentation');
+  @override
+  String get druidMonitor => _get('druidMonitor', 'Druid Monitor');
+  @override
+  String get druidMonitorDesc => _get('druidMonitorDesc', 'Database connection pool monitoring');
+  @override
+  String get skywalkingMonitor => _get('skywalkingMonitor', 'Skywalking Monitor');
+  @override
+  String get skywalkingMonitorDesc => _get('skywalkingMonitorDesc', 'Distributed tracing and monitoring');
+  @override
+  String get webSocketMonitor => _get('webSocketMonitor', 'WebSocket Monitor');
+  @override
+  String get formDesigner => _get('formDesigner', 'Form Designer');
+
+  // Infra 模块 - WebSocket
+  @override
+  String get connectionManagement => _get('connectionManagement', 'Connection Management');
+  @override
+  String get connectionStatus => _get('connectionStatus', 'Connection Status');
+  @override
+  String get connected => _get('connected', 'Connected');
+  @override
+  String get disconnected => _get('disconnected', 'Disconnected');
+  @override
+  String get connect => _get('connect', 'Connect');
+  @override
+  String get disconnect => _get('disconnect', 'Disconnect');
+  @override
+  String get connecting => _get('connecting', 'Connecting...');
+  @override
+  String get serverAddress => _get('serverAddress', 'Server Address');
+  @override
+  String get sendMessage => _get('sendMessage', 'Send Message');
+  @override
+  String get selectReceiver => _get('selectReceiver', 'Select Receiver');
+  @override
+  String get everyone => _get('everyone', 'Everyone');
+  @override
+  String get messageHistory => _get('messageHistory', 'Message History');
+  @override
+  String get messagesCount => _get('messagesCount', 'messages');
+  @override
+  String get messageCannotBeEmpty => _get('messageCannotBeEmpty', 'Message cannot be empty');
+  @override
+  String get pleaseConnectFirst => _get('pleaseConnectFirst', 'Please connect first');
+  @override
+  String get groupMessage => _get('groupMessage', 'Group Message');
+  @override
+  String get singleMessage => _get('singleMessage', 'Direct Message');
+  @override
+  String get systemMessage => _get('systemMessage', 'System Message');
+  @override
+  String get copiedToClipboard => _get('copiedToClipboard', 'Copied to clipboard');
+
+  // Infra 模块 - 表单设计器
+  @override
+  String get componentLibrary => _get('componentLibrary', 'Component Library');
+  @override
+  String get dragComponentHere => _get('dragComponentHere', 'Drag components here');
+  @override
+  String get selectFieldToConfig => _get('selectFieldToConfig', 'Select a field to configure');
+  @override
+  String get fieldProperties => _get('fieldProperties', 'Field Properties');
+  @override
+  String get fieldName => _get('fieldName', 'Field Name');
+  @override
+  String get label => _get('label', 'Label');
+  @override
+  String get placeholder => _get('placeholder', 'Placeholder');
+  @override
+  String get defaultValue => _get('defaultValue', 'Default Value');
+  @override
+  String get required => _get('required', 'Required');
+  @override
+  String get preview => _get('preview', 'Preview');
+  @override
+  String get clear => _get('clear', 'Clear');
 
   // 其他
   @override
@@ -1844,6 +2221,82 @@ class _AppLocalizations extends S {
   @override
   String get confirmDeletePost => _get('confirmDeletePost', 'Are you sure to delete this post?');
 
+  // 定时任务管理
+  @override
+  String get jobId => _get('jobId', 'Job ID');
+  @override
+  String get jobName => _get('jobName', 'Job Name');
+  @override
+  String get jobList => _get('jobList', 'Job List');
+  @override
+  String get addJob => _get('addJob', 'Add Job');
+  @override
+  String get editJob => _get('editJob', 'Edit Job');
+  @override
+  String get jobDetail => _get('jobDetail', 'Job Detail');
+  @override
+  String get confirmDeleteJob => _get('confirmDeleteJob', 'Are you sure to delete this job?');
+  @override
+  String get handlerName => _get('handlerName', 'Handler Name');
+  @override
+  String get handlerParam => _get('handlerParam', 'Handler Param');
+  @override
+  String get handlerNamePlaceholder => _get('handlerNamePlaceholder', 'Please enter handler name');
+  @override
+  String get cronExpression => _get('cronExpression', 'CRON Expression');
+  @override
+  String get cronExpressionPlaceholder => _get('cronExpressionPlaceholder', 'Please enter CRON expression');
+  @override
+  String get retryCount => _get('retryCount', 'Retry Count');
+  @override
+  String get retryCountPlaceholder => _get('retryCountPlaceholder', 'Set to 0 for no retry');
+  @override
+  String get retryInterval => _get('retryInterval', 'Retry Interval');
+  @override
+  String get retryIntervalPlaceholder => _get('retryIntervalPlaceholder', 'Retry interval in milliseconds, 0 for no interval');
+  @override
+  String get monitorTimeout => _get('monitorTimeout', 'Monitor Timeout');
+  @override
+  String get monitorTimeoutPlaceholder => _get('monitorTimeoutPlaceholder', 'Monitor timeout in milliseconds');
+  @override
+  String get nextExecuteTime => _get('nextExecuteTime', 'Next Execute Time');
+  @override
+  String get noNextExecuteTime => _get('noNextExecuteTime', 'No next execute time');
+  @override
+  String get jobStatusNormal => _get('jobStatusNormal', 'Normal');
+  @override
+  String get jobStatusStop => _get('jobStatusStop', 'Stopped');
+  @override
+  String get jobStart => _get('jobStart', 'Start');
+  @override
+  String get jobPause => _get('jobPause', 'Pause');
+  @override
+  String get jobExecute => _get('jobExecute', 'Execute');
+  @override
+  String get jobLog => _get('jobLog', 'Job Log');
+  @override
+  String get milliseconds => _get('milliseconds', 'ms');
+  @override
+  String get notEnabled => _get('notEnabled', 'Not Enabled');
+
+  // 任务日志管理
+  @override
+  String get logId => _get('logId', 'Log ID');
+  @override
+  String get jobLogList => _get('jobLogList', 'Job Log List');
+  @override
+  String get jobLogDetail => _get('jobLogDetail', 'Job Log Detail');
+  @override
+  String get executeIndex => _get('executeIndex', 'Execute Index');
+  @override
+  String get executeTime => _get('executeTime', 'Execute Time');
+  @override
+  String get jobLogStatusSuccess => _get('jobLogStatusSuccess', 'Success');
+  @override
+  String get jobLogStatusFailure => _get('jobLogStatusFailure', 'Failure');
+  @override
+  String get result => _get('result', 'Result');
+
   // 字典管理
   @override
   String get dictName => _get('dictName', 'Dict Name');
@@ -2024,6 +2477,8 @@ class _AppLocalizations extends S {
   @override
   String get exportFailed => _get('exportFailed', 'Export Failed');
   @override
+  String get featureNotImplemented => _get('featureNotImplemented', 'Feature not implemented');
+  @override
   String get sex => _get('sex', 'Sex');
   @override
   String get male => _get('male', 'Male');
@@ -2053,6 +2508,394 @@ class _AppLocalizations extends S {
 
   @override
   String get remark => _get('remark', 'Remark');
+
+  // 代码生成
+  @override
+  String get codegenList => _get('codegenList', 'Code Generation List');
+  @override
+  String get importTable => _get('importTable', 'Import Table');
+  @override
+  String get preview => _get('preview', 'Preview');
+  @override
+  String get generateCode => _get('generateCode', 'Generate Code');
+  @override
+  String get sync => _get('sync', 'Sync');
+  @override
+  String get syncSuccess => _get('syncSuccess', 'Sync Success');
+  @override
+  String get syncFailed => _get('syncFailed', 'Sync Failed');
+  @override
+  String get confirmSync => _get('confirmSync', 'Confirm Sync');
+  @override
+  String get confirmSyncTable => _get('confirmSyncTable', 'Are you sure to sync table');
+  @override
+  String get generateSuccess => _get('generateSuccess', 'Generate Success');
+  @override
+  String get generateFailed => _get('generateFailed', 'Generate Failed');
+  @override
+  String get confirmDeleteTable => _get('confirmDeleteTable', 'Are you sure to delete table');
+  @override
+  String get confirmDeleteTables => _get('confirmDeleteTables', 'Are you sure to delete selected tables');
+  @override
+  String get confirmDeleteBatch => _get('confirmDeleteBatch', 'Confirm Batch Delete');
+  @override
+  String get tableName => _get('tableName', 'Table Name');
+  @override
+  String get tableComment => _get('tableComment', 'Table Comment');
+  @override
+  String get className => _get('className', 'Class Name');
+  @override
+  String get classNameHelp => _get('classNameHelp', 'Default prefix removed. If duplicate, add prefix manually.');
+  @override
+  String get classNameHelp2 => _get('classNameHelp2', 'Class name (capitalized), e.g. SysUser, SysMenu');
+  @override
+  String get author => _get('author', 'Author');
+  @override
+  String get dataSource => _get('dataSource', 'Data Source');
+  @override
+  String get pleaseSelectDataSource => _get('pleaseSelectDataSource', 'Please select data source');
+  @override
+  String get pleaseSelectTable => _get('pleaseSelectTable', 'Please select table');
+  @override
+  String get importSuccess => _get('importSuccess', 'Import Success');
+  @override
+  String get importFailed => _get('importFailed', 'Import Failed');
+  @override
+  String get codePreview => _get('codePreview', 'Code Preview');
+  @override
+  String get pleaseSelectFile => _get('pleaseSelectFile', 'Please select a file');
+  @override
+  String get copySuccess => _get('copySuccess', 'Copy Success');
+  @override
+  String get editCodegen => _get('editCodegen', 'Edit Code Generation');
+  @override
+  String get basicInfo => _get('basicInfo', 'Basic Info');
+  @override
+  String get columnInfo => _get('columnInfo', 'Column Info');
+  @override
+  String get generationInfo => _get('generationInfo', 'Generation Info');
+  @override
+  String get prevStep => _get('prevStep', 'Previous');
+  @override
+  String get nextStep => _get('nextStep', 'Next');
+  @override
+  String get columnName => _get('columnName', 'Column Name');
+  @override
+  String get columnComment => _get('columnComment', 'Column Comment');
+  @override
+  String get dataType => _get('dataType', 'Data Type');
+  @override
+  String get javaType => _get('javaType', 'Java Type');
+  @override
+  String get javaField => _get('javaField', 'Java Field');
+  @override
+  String get insert => _get('insert', 'Insert');
+  @override
+  String get query => _get('query', 'Query');
+  @override
+  String get queryType => _get('queryType', 'Query Type');
+  @override
+  String get nullable => _get('nullable', 'Nullable');
+  @override
+  String get htmlType => _get('htmlType', 'HTML Type');
+  @override
+  String get selectDictType => _get('selectDictType', 'Select Dict Type');
+  @override
+  String get example => _get('example', 'Example');
+  @override
+  String get templateType => _get('templateType', 'Template Type');
+  @override
+  String get templateTypeSingle => _get('templateTypeSingle', 'Single Table');
+  @override
+  String get templateTypeTree => _get('templateTypeTree', 'Tree Table');
+  @override
+  String get templateTypeMasterSub => _get('templateTypeMasterSub', 'Master-Sub Table');
+  @override
+  String get frontType => _get('frontType', 'Frontend Type');
+  @override
+  String get frontTypeVue3 => _get('frontTypeVue3', 'Vue3');
+  @override
+  String get frontTypeVue2 => _get('frontTypeVue2', 'Vue2');
+  @override
+  String get scene => _get('scene', 'Scene');
+  @override
+  String get sceneAdmin => _get('sceneAdmin', 'Admin');
+  @override
+  String get sceneApp => _get('sceneApp', 'App');
+  @override
+  String get moduleName => _get('moduleName', 'Module Name');
+  @override
+  String get moduleNameHelp => _get('moduleNameHelp', 'Module name, e.g. system, infra, tool');
+  @override
+  String get businessName => _get('businessName', 'Business Name');
+  @override
+  String get businessNameHelp => _get('businessNameHelp', 'Business name, e.g. user, permission, dict');
+  @override
+  String get classComment => _get('classComment', 'Class Comment');
+  @override
+  String get classCommentHelp => _get('classCommentHelp', 'Class description, e.g. User');
+  @override
+  String get treeTableInfo => _get('treeTableInfo', 'Tree Table Info');
+  @override
+  String get treeParentColumn => _get('treeParentColumn', 'Parent Column');
+  @override
+  String get treeParentColumnHelp => _get('treeParentColumnHelp', 'Parent column for tree, e.g. parent_id');
+  @override
+  String get treeNameColumn => _get('treeNameColumn', 'Name Column');
+  @override
+  String get treeNameColumnHelp => _get('treeNameColumnHelp', 'Tree node name field, usually name');
+  @override
+  String get masterSubTableInfo => _get('masterSubTableInfo', 'Master-Sub Table Info');
+  @override
+  String get masterTable => _get('masterTable', 'Master Table');
+  @override
+  String get masterTableHelp => _get('masterTableHelp', 'Master table name, e.g. system_user');
+  @override
+  String get subJoinColumn => _get('subJoinColumn', 'Sub Join Column');
+  @override
+  String get subJoinColumnHelp => _get('subJoinColumnHelp', 'Sub table join column, e.g. user_id');
+  @override
+  String get relationType => _get('relationType', 'Relation Type');
+  @override
+  String get relationOneToOne => _get('relationOneToOne', 'One-to-One');
+  @override
+  String get relationOneToMany => _get('relationOneToMany', 'One-to-Many');
+  @override
+  String get htmlTypeInput => _get('htmlTypeInput', 'Input');
+  @override
+  String get htmlTypeTextarea => _get('htmlTypeTextarea', 'Textarea');
+  @override
+  String get htmlTypeSelect => _get('htmlTypeSelect', 'Select');
+  @override
+  String get htmlTypeRadio => _get('htmlTypeRadio', 'Radio');
+  @override
+  String get htmlTypeCheckbox => _get('htmlTypeCheckbox', 'Checkbox');
+  @override
+  String get htmlTypeDatetime => _get('htmlTypeDatetime', 'Datetime');
+  @override
+  String get htmlTypeImageUpload => _get('htmlTypeImageUpload', 'Image Upload');
+  @override
+  String get htmlTypeFileUpload => _get('htmlTypeFileUpload', 'File Upload');
+  @override
+  String get htmlTypeEditor => _get('htmlTypeEditor', 'Editor');
+  @override
+  String get pleaseSelectData => _get('pleaseSelectData', 'Please select data');
+
+  // Redis 管理
+  @override
+  String get redisOverview => _get('redisOverview', 'Redis Overview');
+  @override
+  String get redisVersion => _get('redisVersion', 'Redis Version: %s');
+  @override
+  String get redisVersionLabel => _get('redisVersionLabel', 'Redis Version');
+  @override
+  String get redisMode => _get('redisMode', 'Redis Mode');
+  @override
+  String get standalone => _get('standalone', 'Standalone');
+  @override
+  String get cluster => _get('cluster', 'Cluster');
+  @override
+  String get port => _get('port', 'Port');
+  @override
+  String get connectedClients => _get('connectedClients', 'Connected Clients');
+  @override
+  String get uptimeInDays => _get('uptimeInDays', 'Uptime (days)');
+  @override
+  String get usedMemory => _get('usedMemory', 'Used Memory');
+  @override
+  String get usedCpu => _get('usedCpu', 'Used CPU');
+  @override
+  String get memoryConfig => _get('memoryConfig', 'Memory Config');
+  @override
+  String get aofEnabled => _get('aofEnabled', 'AOF Enabled');
+  @override
+  String get rdbLastBgsaveStatus => _get('rdbLastBgsaveStatus', 'RDB Status');
+  @override
+  String get keyCount => _get('keyCount', 'Key Count');
+  @override
+  String get networkIO => _get('networkIO', 'Network I/O');
+  @override
+  String get memoryUsage => _get('memoryUsage', 'Memory Usage');
+  @override
+  String get commandStats => _get('commandStats', 'Command Stats');
+  @override
+  String get memoryConsumption => _get('memoryConsumption', 'Memory Consumption');
+  @override
+  String get usedMemoryPeak => _get('usedMemoryPeak', 'Peak Memory');
+  @override
+  String get memFragmentationRatio => _get('memFragmentationRatio', 'Fragmentation Ratio');
+  @override
+  String get usedMemoryRss => _get('usedMemoryRss', 'RSS Memory');
+  @override
+  String get totalSystemMemory => _get('totalSystemMemory', 'Total System Memory');
+  @override
+  String get totalCommands => _get('totalCommands', 'Total Commands: %s');
+
+  // 参数配置管理
+  @override
+  String get configId => _get('configId', 'Config ID');
+  @override
+  String get configCategory => _get('configCategory', 'Category');
+  @override
+  String get configName => _get('configName', 'Config Name');
+  @override
+  String get configKey => _get('configKey', 'Config Key');
+  @override
+  String get configValue => _get('configValue', 'Config Value');
+  @override
+  String get configType => _get('configType', 'Built-in');
+  @override
+  String get configList => _get('configList', 'Config List');
+  @override
+  String get addConfig => _get('addConfig', 'Add Config');
+  @override
+  String get editConfig => _get('editConfig', 'Edit Config');
+  @override
+  String get confirmDeleteConfig => _get('confirmDeleteConfig', 'Are you sure to delete this config?');
+  @override
+  String get systemBuiltIn => _get('systemBuiltIn', 'System Built-in');
+
+  // 数据源配置管理
+  @override
+  String get dataSourceConfigId => _get('dataSourceConfigId', 'ID');
+  @override
+  String get dataSourceConfigName => _get('dataSourceConfigName', 'Data Source Name');
+  @override
+  String get dataSourceUrl => _get('dataSourceUrl', 'Data Source URL');
+  @override
+  String get dataSourceConfigList => _get('dataSourceConfigList', 'Data Source List');
+  @override
+  String get addDataSourceConfig => _get('addDataSourceConfig', 'Add Data Source');
+  @override
+  String get editDataSourceConfig => _get('editDataSourceConfig', 'Edit Data Source');
+  @override
+  String get confirmDeleteDataSourceConfig => _get('confirmDeleteDataSourceConfig', 'Are you sure to delete this data source?');
+  @override
+  String get cannotDeleteMainDataSource => _get('cannotDeleteMainDataSource', 'Main data source cannot be deleted');
+
+  // 文件管理
+  @override
+  String get fileManagement => _get('fileManagement', 'File Management');
+  @override
+  String get fileList => _get('fileList', 'File List');
+  @override
+  String get fileName => _get('fileName', 'File Name');
+  @override
+  String get filePath => _get('filePath', 'File Path');
+  @override
+  String get fileSize => _get('fileSize', 'File Size');
+  @override
+  String get fileType => _get('fileType', 'File Type');
+  @override
+  String get fileContent => _get('fileContent', 'File Content');
+  @override
+  String get uploadFile => _get('uploadFile', 'Upload File');
+  @override
+  String get confirmDeleteFile => _get('confirmDeleteFile', 'Are you sure to delete this file?');
+  @override
+  String get copyUrl => _get('copyUrl', 'Copy URL');
+  @override
+  String get copySuccess => _get('copySuccess', 'Copy Success');
+  @override
+  String get copyFailed => _get('copyFailed', 'Copy Failed');
+  @override
+  String get clickOrDragToUpload => _get('clickOrDragToUpload', 'Click or drag files to this area to upload');
+  @override
+  String get supportFileFormats => _get('supportFileFormats', 'Support common image and document formats');
+  @override
+  String get pleaseSelectFile => _get('pleaseSelectFile', 'Please select a file');
+  @override
+  String get selectFileFailed => _get('selectFileFailed', 'Select file failed');
+  @override
+  String get uploading => _get('uploading', 'Uploading...');
+  @override
+  String get uploadSuccess => _get('uploadSuccess', 'Upload Success');
+  @override
+  String get uploadFailed => _get('uploadFailed', 'Upload Failed');
+
+  // 文件配置管理
+  @override
+  String get fileConfigManagement => _get('fileConfigManagement', 'File Config Management');
+  @override
+  String get fileConfigList => _get('fileConfigList', 'File Config List');
+  @override
+  String get addFileConfig => _get('addFileConfig', 'Add File Config');
+  @override
+  String get editFileConfig => _get('editFileConfig', 'Edit File Config');
+  @override
+  String get confirmDeleteFileConfig => _get('confirmDeleteFileConfig', 'Are you sure to delete this file config?');
+  @override
+  String get storage => _get('storage', 'Storage');
+  @override
+  String get masterConfig => _get('masterConfig', 'Master Config');
+  @override
+  String get setMasterConfig => _get('setMasterConfig', 'Set as Master');
+  @override
+  String get confirmSetMasterConfig => _get('confirmSetMasterConfig', 'Are you sure to set this config as master?');
+  @override
+  String get testUploadSuccess => _get('testUploadSuccess', 'Test Upload Success');
+  @override
+  String get confirmOpenFile => _get('confirmOpenFile', 'Do you want to open the file?');
+  @override
+  String get visit => _get('visit', 'Visit');
+  @override
+  String get testFailed => _get('testFailed', 'Test Failed');
+  @override
+  String get test => _get('test', 'Test');
+
+  // 存储配置
+  @override
+  String get basicInfo => _get('basicInfo', 'Basic Info');
+  @override
+  String get storageConfig => _get('storageConfig', 'Storage Config');
+  @override
+  String get commonConfig => _get('commonConfig', 'Common Config');
+  @override
+  String get basePath => _get('basePath', 'Base Path');
+  @override
+  String get hostAddress => _get('hostAddress', 'Host Address');
+  @override
+  String get hostPort => _get('hostPort', 'Host Port');
+  @override
+  String get connectionMode => _get('connectionMode', 'Connection Mode');
+  @override
+  String get endpoint => _get('endpoint', 'Endpoint');
+  @override
+  String get bucket => _get('bucket', 'Bucket');
+  @override
+  String get pleaseEnterName => _get('pleaseEnterName', 'Please enter name');
+  @override
+  String get pleaseSelectStorage => _get('pleaseSelectStorage', 'Please select storage');
+  @override
+  String get pleaseEnterBasePath => _get('pleaseEnterBasePath', 'Please enter base path');
+  @override
+  String get pleaseEnterHost => _get('pleaseEnterHost', 'Please enter host address');
+  @override
+  String get pleaseEnterPort => _get('pleaseEnterPort', 'Please enter port');
+  @override
+  String get pleaseEnterEndpoint => _get('pleaseEnterEndpoint', 'Please enter endpoint');
+  @override
+  String get pleaseEnterBucket => _get('pleaseEnterBucket', 'Please enter bucket');
+  @override
+  String get pleaseEnterAccessKey => _get('pleaseEnterAccessKey', 'Please enter Access Key');
+  @override
+  String get pleaseEnterAccessSecret => _get('pleaseEnterAccessSecret', 'Please enter Access Secret');
+  @override
+  String get pleaseEnterDomain => _get('pleaseEnterDomain', 'Please enter custom domain');
+  @override
+  String get pathStyle => _get('pathStyle', 'Path Style');
+  @override
+  String get publicAccess => _get('publicAccess', 'Public Access');
+  @override
+  String get public => _get('public', 'Public');
+  @override
+  String get private => _get('private', 'Private');
+  @override
+  String get region => _get('region', 'Region');
+  @override
+  String get regionHint => _get('regionHint', 'Enter region, usually only required for AWS');
+  @override
+  String get customDomain => _get('customDomain', 'Custom Domain');
 
   // 带参数的方法
   @override

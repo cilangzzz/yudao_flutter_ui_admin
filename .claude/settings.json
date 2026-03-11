@@ -56,7 +56,9 @@
       "Bash(flutter analyze lib/pages/system/post/)",
       "Bash(flutter analyze lib/pages/system/)",
       "Bash(flutter analyze lib/pages/system/dept/)",
-      "Bash(flutter analyze lib/pages/system/dict/ lib/pages/system/post/ lib/pages/system/loginlog/ lib/pages/system/operatelog/)"
+      "Bash(flutter analyze lib/pages/system/dict/ lib/pages/system/post/ lib/pages/system/loginlog/ lib/pages/system/operatelog/)",
+      "Bash(ls -la \"C:\\\\Users\\\\sysadmin\\\\.claude\\\\tasks\\\\infra-migration\"\" 2>/dev/null || echo \"No task files found \")",
+      "Read(//c/Users/sysadmin/.claude/tasks/infra-migration/**)"
     ],
     "additionalDirectories": [
       "h:\\Documents\\toly_ui\\.claude\\skills",
